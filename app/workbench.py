@@ -7,7 +7,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 import streamlit as st
-from assay_engine.local_store import records, review, proposal_id, permission_status
+STORE = os.environ.get('ASSAY_STORE', 'local')  # 'delta' on Databricks: reviews + links in a Delta table
+if STORE == 'delta':
+    from assay_engine.delta_store import records, review, proposal_id, permission_status
+else:
+    from assay_engine.local_store import records, review, proposal_id, permission_status
 from assay_triage.identity import legacy_config
 
 
@@ -29,6 +33,17 @@ def latest_json(root, pattern):
         return None
 
 
+@st.cache_resource
+def fetch_volume(volume):
+    """Databricks App: copy the input files from the Unity Catalog volume once per app start (files > 10 MB can't ship in the app)."""
+    from assay_triage.dbx import client
+    w, out = client(), Path('/tmp/assay-data')
+    out.mkdir(parents=True, exist_ok=True)
+    for name in ('tickets.jsonl', 'judgments.jsonl'):
+        (out / name).write_bytes(w.files.download(f"{volume}/{name}").contents.read())
+    return out
+
+
 def main():
     st.set_page_config(page_title='Assay | Review workbench', page_icon='A', layout='wide')
     st.markdown('''<style>
@@ -37,6 +52,8 @@ def main():
     [data-testid="stMetric"] {background:white;border:1px solid #dce5eb;border-radius:12px;padding:16px}
     </style>''', unsafe_allow_html=True)
     folder = Path(os.environ.get('ASSAY_WORKBENCH_DATA', ROOT / 'data'))
+    if os.environ.get('ASSAY_DATA_VOLUME'):
+        folder = fetch_volume(os.environ['ASSAY_DATA_VOLUME'])
     db = Path(os.environ.get('ASSAY_WORKBENCH_DB', ROOT / 'local-state' / 'workbench.sqlite3'))
     result_dir = Path(os.environ.get('ASSAY_RESULTS_DIR', ROOT / 'results' / 'stage-2-3-runs'))
     stamp = tuple((folder / n).stat().st_mtime_ns if (folder/n).exists() else 0 for n in ['tickets.jsonl','judgments.jsonl'])
@@ -51,13 +68,16 @@ def main():
         names = {legacy_config(r): f"{r.get('model','unknown')} / {r.get('prompt','legacy')}" for r in rows}
         config = st.selectbox('Recorded configuration', configs, format_func=lambda x:names[x]) if configs else ''
         user = st.text_input('Reviewer', value='Local reviewer')
-        st.caption('LOCAL DEMO · one reviewer\n\nRecorded evidence · no model calls\n\nWrites affect this sandbox only.')
+        if STORE == 'delta':
+            st.caption('DATABRICKS · Unity Catalog\n\nReviews and links are written to the Delta table workspace.assay_triage.actions.\n\nRecorded evidence · no model calls')
+        else:
+            st.caption('LOCAL DEMO · one reviewer\n\nRecorded evidence · no model calls\n\nWrites affect this sandbox only.')
     selected = [r for r in rows if legacy_config(r) == config]
     try:
         reviews = records(db)
         links = records(db, 'links')
     except Exception as e:
-        st.error(f'Local storage unavailable. Actions are disabled ({type(e).__name__}).')
+        st.error(f'Storage unavailable. Actions are disabled ({type(e).__name__}: {str(e)[:200]}).')
         st.stop()
     scoped = [r for r in reviews if r['config_id'] == config]
     scoped_links = [r for r in links if r['config_id'] == config]
@@ -101,7 +121,7 @@ def main():
                         st.session_state['saved']='Saved. One sandbox link was written.' if receipt['decision']=='accept' else 'Review saved. No link was written.'
                         if not created: st.session_state['saved']='Already reviewed; no duplicate action was created.'
                         st.rerun()
-                    except (ValueError, OSError, sqlite3.Error) as e:
+                    except (ValueError, OSError, RuntimeError, sqlite3.Error) as e:
                         st.error(f'Review was not confirmed. Check storage before retrying: {e}')
         else: st.success('No proposals waiting in this filter.')
         if st.session_state.get('saved'): st.success(st.session_state.pop('saved'))
