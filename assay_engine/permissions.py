@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from assay_triage.identity import digest
+from .bands import extra_needed
 from .bounds import lower_bound
 from .policy import RELATIONS, scored_actions
 
@@ -36,7 +37,10 @@ def build_receipt(rows: list[dict], labels: list[dict], config_id: str, *, targe
         precision = k / n if n else None
         low = lower_bound(k, n, alpha_each) if n else 0.0
         mode = "auto" if n and low >= target else ("quiet" if n and precision < 0.5 else "suggest")
+        # "needs N more" labelled actions in the zone if precision holds (None: the target is out of reach at this rate)
+        need = extra_needed(k, n, target, alpha_each) if n and mode != "auto" else (0 if mode == "auto" else None)
         decisions.append({"relation": relation, "mode": mode, "threshold": cutoff, "n": n, "k": k,
+                          "needs_more": need,
                           "precision": precision, "lower": low, "target": target, "alpha": alpha_each,
                           "evidence_action_ids": [a["action_id"] for a in labelled],
                           "excluded": {"unknown_or_missing_label": len(eligible) - n,

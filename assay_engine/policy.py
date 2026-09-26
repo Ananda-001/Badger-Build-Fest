@@ -29,7 +29,12 @@ def select_action(rows: list[dict]) -> dict:
         first = rows[0]
         action = {"key": task, "candidate": None, "relation": "none", "confidence": 0.0,
                   "config_id": config_id, "plan_id": first.get("plan_id"), "run_id": first.get("run_id")}
-    return {**action, "action_id": digest(action)}
+    return {**action, "action_id": digest(action), "label_key": label_key(action)}
+
+
+def label_key(action: dict) -> str:
+    """What a human judges: this ticket, this candidate, this relation. Config and confidence don't change it."""
+    return digest({"key": action["key"], "candidate": action.get("candidate"), "relation": action["relation"]})
 
 
 def selected_actions(rows: list[dict], config_id: str) -> list[dict]:
@@ -48,9 +53,9 @@ def label_template(rows: list[dict], config_id: str) -> list[dict]:
 def validate_labels(labels: list[dict]) -> dict[str, dict]:
     out = {}
     for row in labels:
-        action_id = row.get("action_id")
+        action_id = row.get("label_key") or row.get("action_id")
         if not action_id or action_id in out:
-            raise ValueError("Labels need unique action_id values")
+            raise ValueError("Labels need unique label_key (or action_id) values")
         correct = row.get("correct")
         if correct not in (True, False, None):
             raise ValueError("correct must be true, false, or null")
@@ -62,6 +67,34 @@ def validate_labels(labels: list[dict]) -> dict[str, dict]:
 
 def scored_actions(rows: list[dict], labels: list[dict], config_id: str) -> list[dict]:
     by_id = validate_labels(labels)
-    return [{**action, "correct": by_id.get(action["action_id"], {}).get("correct"),
-             "label_status": by_id.get(action["action_id"], {}).get("label_status", "missing")}
+    def label(action):
+        return by_id.get(action["label_key"]) or by_id.get(action["action_id"]) or {}
+    return [{**action, "correct": label(action).get("correct"),
+             "label_status": label(action).get("label_status", "missing")}
             for action in selected_actions(rows, config_id)]
+
+
+def prefill_from_truth(labels: list[dict], rows: list[dict], truth: list[dict]) -> list[dict]:
+    """Settle what the maintainers' own links already decide; leave everything else for blind human review.
+
+    - action X -> Y with relation R and a maintainer link X -> Y of type R: correct.
+    - "no action", but a maintainer link joins the ticket to one of its shortlisted candidates: incorrect.
+    Absence of a link proves nothing (maintainers miss real duplicates), so it is never used.
+    """
+    links = {(t["src"], t["dst"]): t["relation"] for t in truth}
+    shortlist = defaultdict(set)
+    for r in rows:
+        shortlist[r.get("key")].add(r.get("candidate"))
+    out = []
+    for lab in labels:
+        if lab.get("correct") is None:
+            if lab["relation"] != "none" and links.get((lab["key"], lab.get("candidate"))) == lab["relation"]:
+                lab = {**lab, "correct": True, "reviewer": "maintainer-link", "label_status": "adjudicated",
+                       "reason": f"Apache maintainers linked {lab['key']} -> {lab['candidate']} as {lab['relation']}"}
+            elif lab["relation"] == "none":
+                hit = sorted(c for c in shortlist[lab["key"]] if (lab["key"], c) in links)
+                if hit:
+                    lab = {**lab, "correct": False, "reviewer": "maintainer-link", "label_status": "adjudicated",
+                           "reason": f"Maintainers linked {lab['key']} -> {hit[0]} ({links[(lab['key'], hit[0])]})"}
+        out.append(lab)
+    return out

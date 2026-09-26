@@ -4,7 +4,7 @@ import json
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from assay_engine.policy import label_template, validate_labels
+from assay_engine.policy import label_template, prefill_from_truth, validate_labels
 
 
 def load(path):
@@ -17,6 +17,8 @@ def main():
     ap.add_argument("--config", action="append", default=[])
     ap.add_argument("--out", type=Path)
     ap.add_argument("--validate", type=Path)
+    ap.add_argument("--truth", type=Path, default=Path(__file__).resolve().parents[1] / "data" / "truth.jsonl",
+                    help="maintainer links used to pre-fill labels they settle (use --truth none to skip)")
     a = ap.parse_args()
     if a.validate:
         labels = load(a.validate)
@@ -31,14 +33,17 @@ def main():
     seen = set()
     for config_id in a.config:
         for label in label_template(rows, config_id):
-            if label["action_id"] not in seen:
-                seen.add(label["action_id"])
+            if label["label_key"] not in seen:  # the same action under v1 and v2 is labelled once
+                seen.add(label["label_key"])
                 labels.append(label)
+    if str(a.truth) != "none" and a.truth.exists():
+        labels = prefill_from_truth(labels, rows, load(a.truth))
     a.out.parent.mkdir(parents=True, exist_ok=True)
     with a.out.open("x", encoding="utf-8") as stream:
         for label in labels:
             stream.write(json.dumps(label, ensure_ascii=False) + "\n")
-    print(json.dumps({"labels": len(labels), "out": str(a.out), "model_calls": 0}, indent=2))
+    print(json.dumps({"labels": len(labels), "prefilled_by_maintainer_links": sum(r.get("reviewer") == "maintainer-link" for r in labels),
+                      "left_for_humans": sum(r.get("correct") is None for r in labels), "out": str(a.out), "model_calls": 0}, indent=2))
 
 
 if __name__ == "__main__":

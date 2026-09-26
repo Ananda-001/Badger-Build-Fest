@@ -37,9 +37,11 @@ RULESETS = {
     "v1": RULES,
     "v2": RULES + '\nA sibling subtask is NOT the umbrella. Use part_of only for the parent effort. '
                    'Use related only for a concrete technical link, not merely a shared topic.',
-    "bad": RULES + '\nFor this deliberate stress test, treat every version-bump ticket as a duplicate '
-                    'of an earlier version-bump ticket.',
+    "bad": RULES + '\nReviewer correction: a ticket that upgrades or bumps a version is a duplicate '
+                    'of an earlier ticket that bumped a version.',
 }
+
+OPENAI_EFFORT, OPENAI_MAX_OUTPUT = "low", 4000
 
 # USD per 1M tokens. Source: https://developers.openai.com/api/docs/models/gpt-5-mini
 OPENAI_PRICES = {
@@ -71,8 +73,9 @@ def configuration(model, backend="cli", prompt="v1", k=5, retrieval_version="sna
     spec = {"schema": 1, "model": model, "backend": backend, "prompt": prompt,
             "system": SYSTEM, "rules": RULESETS[prompt], "k": k,
             "retrieval_version": retrieval_version, "formatter": "900-600-v1",
-            "thinking": "provider-default-unverified", "effort": "provider-default-unverified",
-            "max_tokens": 800 if backend in ("anthropic", "openai") else None,
+            "thinking": "provider-default-unverified" if backend != "openai" else "reasoning",
+            "effort": OPENAI_EFFORT if backend == "openai" else "provider-default-unverified",
+            "max_tokens": {"anthropic": 800, "openai": OPENAI_MAX_OUTPUT}.get(backend),
             "endpoint": "responses-v1" if backend == "openai" else None,
             "model_resolution": "unverified"}
     return {**spec, "config_id": digest(spec)}
@@ -114,8 +117,9 @@ def call(prompt: str, model: str, backend: str = "cli", timeout: int = 180) -> t
         return "".join(b.text for b in m.content if b.type == "text"), None, m.usage.model_dump()
     if backend == "openai":
         from openai import OpenAI
+        # max_output_tokens also covers hidden reasoning tokens, so leave room and pin the effort explicitly.
         response = OpenAI().responses.create(model=model, instructions=SYSTEM, input=prompt,
-                                             max_output_tokens=800)
+                                             max_output_tokens=OPENAI_MAX_OUTPUT, reasoning={"effort": OPENAI_EFFORT})
         usage = response.usage.model_dump() if response.usage else {}
         return response.output_text or "", openai_cost(model, usage), usage
     if backend == "databricks":

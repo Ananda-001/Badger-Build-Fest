@@ -150,3 +150,27 @@ def test_openai_cost_uses_cached_input_and_output_prices():
     expected = (6_000 * .25 + 4_000 * .025 + 2_000 * 2.0) / 1_000_000
     assert openai_cost("gpt-5-mini", usage) == pytest.approx(expected)
     assert openai_cost("unknown-model", usage) is None
+
+
+def test_label_key_dedupes_across_configs_and_truth_prefill():
+    from assay_engine.policy import prefill_from_truth, scored_actions
+    def rows(cfg, conf):
+        return [dict(key='T-2', candidate='T-1', relation='duplicate', confidence=conf, config_id=cfg, parsed=True),
+                dict(key='T-2', candidate='T-0', relation='none', confidence=.9, config_id=cfg, parsed=True),
+                dict(key='T-9', candidate='T-3', relation='none', confidence=.9, config_id=cfg, parsed=True)]
+    a, b = rows('v1', .7), rows('v2', .99)
+    la, lb = label_template(a, 'v1'), label_template(b, 'v2')
+    assert la[0]['action_id'] != lb[0]['action_id'] and la[0]['label_key'] == lb[0]['label_key']
+    truth = [{'src': 'T-2', 'dst': 'T-1', 'relation': 'duplicate'}, {'src': 'T-9', 'dst': 'T-3', 'relation': 'related'}]
+    labels = prefill_from_truth(la, a, truth)
+    assert [l['correct'] for l in labels] == [True, False]  # linked duplicate confirmed; "none" contradicted by a link
+    assert [s['correct'] for s in scored_actions(b, labels, 'v2')] == [True, False]  # one label serves both configs
+
+
+def test_receipt_reports_needs_more():
+    from assay_engine.permissions import build_receipt
+    rows = [dict(key=f'K-{i}', candidate=f'C-{i}', relation='duplicate', confidence=.97, config_id='c', parsed=True)
+            for i in range(10)]
+    labels = [{**l, 'correct': True, 'reviewer': 't', 'label_status': 'adjudicated'} for l in label_template(rows, 'c')]
+    dup = build_receipt(rows, labels, 'c')['decisions'][0]
+    assert dup['mode'] == 'suggest' and dup['n'] == 10 and dup['needs_more'] > 0
