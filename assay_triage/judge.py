@@ -124,7 +124,10 @@ def call(prompt: str, model: str, backend: str = "cli", timeout: int = 180) -> t
                         api_key=os.environ["DATABRICKS_TOKEN"])
         r = client.chat.completions.create(model=model, messages=[{"role": "system", "content": SYSTEM},
                                                                   {"role": "user", "content": prompt}])
-        return r.choices[0].message.content or "", None, r.usage.model_dump() if r.usage else {}
+        content = r.choices[0].message.content or ""
+        if isinstance(content, list):  # reasoning models (gpt-oss) return [{type: reasoning}, {type: text}]
+            content = "".join(b.get("text", "") for b in content if isinstance(b, dict) and b.get("type") == "text")
+        return content, None, r.usage.model_dump() if r.usage else {}
     raise ValueError(backend)
 
 
