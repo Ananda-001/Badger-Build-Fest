@@ -61,3 +61,44 @@ def pending(plan, config, completed):
     validate(plan)
     done = {r['run_id'] for r in completed if r.get('status') == 'complete'}
     return [j for j in plan['jobs'] if resume_key(j['key'], config['config_id'], plan['plan_id']) not in done]
+
+
+def freeze_stream(tickets, candidates, *, n=90, seed=11, k=5, min_score=0.0,
+                  excluded=(), slice_pattern=None):
+    """Freeze a uniform, outcome-blind sample from a declared retrieval-score stream."""
+    import re
+    by = {t["key"]: t for t in tickets}
+    cand_by = {r["key"]: r["candidates"] for r in candidates}
+    excluded = set(excluded)
+    pattern = re.compile(slice_pattern, re.I) if slice_pattern else None
+    eligible = []
+    for key, cs in cand_by.items():
+        ticket = by.get(key)
+        if not ticket or ticket.get("created", "") < "2025-01-01" or key in excluded or not cs:
+            continue
+        if float(cs[0].get("score") or 0) < min_score:
+            continue
+        if pattern and not pattern.search(ticket.get("summary") or ""):
+            continue
+        eligible.append(key)
+    eligible.sort()
+    chosen = random.Random(seed).sample(eligible, min(n, len(eligible)))
+    jobs = []
+    for key in chosen:
+        source = by[key]
+        ordered = []
+        for candidate in cand_by[key]:
+            other = by.get(candidate["key"])
+            if other and other.get("created", "") < source.get("created", ""):
+                ordered.append({"ticket": other, "retrieval": candidate})
+            if len(ordered) == k:
+                break
+        jobs.append({"key": key, "ticket": source, "candidates": ordered})
+    base = {"schema": 2, "seed": seed, "requested_n": n, "k": k,
+            "eligible_n": len(eligible), "min_top_score": min_score,
+            "slice_pattern": slice_pattern, "scope": "honest-stream-confirmation",
+            "selection": "uniform over eligible keys; no outcome or truth used", "injected": False,
+            "limitations": ["Maintainer links are incomplete and are not used as negative labels.",
+                            "Ticket fields are a present-day snapshot; historical leakage must be disclosed."],
+            "source_hashes": {"tickets": digest(tickets), "candidates": digest(candidates)}, "jobs": jobs}
+    return {**base, "plan_id": digest(base)}

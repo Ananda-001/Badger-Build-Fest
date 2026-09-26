@@ -19,6 +19,16 @@ def load_data(folder, stamp):
     return read('tickets.jsonl'), read('judgments.jsonl')
 
 
+def latest_json(root, pattern):
+    matches = sorted(Path(root).glob(pattern), key=lambda p: p.stat().st_mtime_ns, reverse=True)
+    if not matches:
+        return None
+    try:
+        return json.loads(matches[0].read_text(encoding='utf-8'))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
 def main():
     st.set_page_config(page_title='Assay | Review workbench', page_icon='A', layout='wide')
     st.markdown('''<style>
@@ -28,6 +38,7 @@ def main():
     </style>''', unsafe_allow_html=True)
     folder = Path(os.environ.get('ASSAY_WORKBENCH_DATA', ROOT / 'data'))
     db = Path(os.environ.get('ASSAY_WORKBENCH_DB', ROOT / 'local-state' / 'workbench.sqlite3'))
+    result_dir = Path(os.environ.get('ASSAY_RESULTS_DIR', ROOT / 'results' / 'stage-2-3-runs'))
     stamp = tuple((folder / n).stat().st_mtime_ns if (folder/n).exists() else 0 for n in ['tickets.jsonl','judgments.jsonl'])
     tickets, rows = load_data(str(folder), stamp)
     by = {t['key']:t for t in tickets}
@@ -98,8 +109,13 @@ def main():
             st.dataframe(scoped,hide_index=True)
             st.download_button('Download review receipts',json.dumps(scoped,indent=2),file_name='assay-reviews.json',mime='application/json')
     elif page == 'Trust':
-        st.info(permission_status(config)['reason'])
-        st.dataframe([{'relation':r,'mode':'SUGGEST','permission':'Not validated','configuration':config} for r in ['duplicate','part_of','related']],hide_index=True)
+        receipt = latest_json(result_dir, '**/permission-latest.json')
+        if receipt and receipt.get('config_id') == config:
+            st.success(f"Permission receipt {receipt['receipt_id'][:12]} · valid until {receipt['valid_until']}")
+            st.dataframe(receipt['decisions'], hide_index=True)
+        else:
+            st.info(permission_status(config)['reason'])
+            st.dataframe([{'relation':r,'mode':'SUGGEST','permission':'Not validated','configuration':config} for r in ['duplicate','part_of','related']],hide_index=True)
         st.subheader('What needs to happen next')
         st.write('Freeze the action policy and quality target, collect an honest sample without inserted answers, and evaluate independent tasks. A later stage will issue version-scoped permission receipts.')
         st.warning('The imported hardness set balances classes and includes inserted targets. Its candidate pairs are not independent tasks.')
@@ -130,6 +146,15 @@ def main():
         st.subheader('Prepare the next experiment')
         st.code('.\\.venv\\Scripts\\python.exe scripts/prepare_eval.py --fresh --n 60 --seed 1 --save-plan results/frozen-plan.json',language='powershell')
         st.caption('This command freezes inputs only. It makes zero model calls and refuses to overwrite an existing plan.')
+        gates = [latest_json(result_dir, '**/gate-v1-to-v2-latest.json'),
+                 latest_json(result_dir, '**/gate-v1-to-bad-latest.json')]
+        gates = [g for g in gates if g]
+        st.subheader('Correction gates')
+        if gates:
+            st.dataframe([{k:g.get(k) for k in ('label','verdict','n_adjudicated','fixed','broke','excluded_unknown','p_keep','p_discard')}
+                          for g in gates], hide_index=True)
+        else:
+            st.info('No adjudicated correction-gate receipts yet. Frozen plans and model outputs are still required.')
 
 
 if __name__ == '__main__':

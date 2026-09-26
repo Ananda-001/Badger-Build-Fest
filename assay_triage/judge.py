@@ -41,13 +41,39 @@ RULESETS = {
                     'of an earlier version-bump ticket.',
 }
 
+# USD per 1M tokens. Source: https://developers.openai.com/api/docs/models/gpt-5-mini
+OPENAI_PRICES = {
+    "gpt-5-mini": {"input": 0.25, "cached_input": 0.025, "output": 2.00},
+}
+
+
+def openai_cost(model: str, usage: dict) -> float | None:
+    """Calculate list-price cost from Responses or Chat Completions usage."""
+    prices = OPENAI_PRICES.get(model)
+    if not prices or not usage:
+        return None
+    input_tokens = int(usage.get("input_tokens", usage.get("prompt_tokens", 0)) or 0)
+    output_tokens = int(usage.get("output_tokens", usage.get("completion_tokens", 0)) or 0)
+    details = usage.get("input_tokens_details") or usage.get("prompt_tokens_details") or {}
+    cached_tokens = int(details.get("cached_tokens", 0) or 0)
+    cache_write_tokens = int(details.get("cache_write_tokens", 0) or 0)
+    if cached_tokens < 0 or cache_write_tokens < 0 or cached_tokens + cache_write_tokens > input_tokens:
+        raise ValueError("Invalid OpenAI input token breakdown")
+    ordinary_tokens = input_tokens - cached_tokens - cache_write_tokens
+    # GPT-5 Mini has no separately listed cache-write price, so any reported
+    # cache-write tokens are conservatively charged at the ordinary input rate.
+    ordinary_tokens += cache_write_tokens
+    return ((ordinary_tokens * prices["input"] + cached_tokens * prices["cached_input"]
+             + output_tokens * prices["output"]) / 1_000_000)
+
 
 def configuration(model, backend="cli", prompt="v1", k=5, retrieval_version="snapshot-v1"):
     spec = {"schema": 1, "model": model, "backend": backend, "prompt": prompt,
             "system": SYSTEM, "rules": RULESETS[prompt], "k": k,
             "retrieval_version": retrieval_version, "formatter": "900-600-v1",
             "thinking": "provider-default-unverified", "effort": "provider-default-unverified",
-            "max_tokens": 800 if backend == "anthropic" else None,
+            "max_tokens": 800 if backend in ("anthropic", "openai") else None,
+            "endpoint": "responses-v1" if backend == "openai" else None,
             "model_resolution": "unverified"}
     return {**spec, "config_id": digest(spec)}
 
@@ -86,32 +112,52 @@ def call(prompt: str, model: str, backend: str = "cli", timeout: int = 180) -> t
         client = anthropic.Anthropic()
         m = client.messages.create(model=model, max_tokens=800, system=SYSTEM, messages=[{"role": "user", "content": prompt}])
         return "".join(b.text for b in m.content if b.type == "text"), None, m.usage.model_dump()
-    if backend in ("openai", "databricks"):
+    if backend == "openai":
         from openai import OpenAI
-        client = (OpenAI(base_url=os.environ["DATABRICKS_HOST"].rstrip("/") + "/serving-endpoints",
-                         api_key=os.environ["DATABRICKS_TOKEN"]) if backend == "databricks" else OpenAI())
+        response = OpenAI().responses.create(model=model, instructions=SYSTEM, input=prompt,
+                                             max_output_tokens=800)
+        usage = response.usage.model_dump() if response.usage else {}
+        return response.output_text or "", openai_cost(model, usage), usage
+    if backend == "databricks":
+        from openai import OpenAI
+        client = OpenAI(base_url=os.environ["DATABRICKS_HOST"].rstrip("/") + "/serving-endpoints",
+                        api_key=os.environ["DATABRICKS_TOKEN"])
         r = client.chat.completions.create(model=model, messages=[{"role": "system", "content": SYSTEM},
                                                                   {"role": "user", "content": prompt}])
         return r.choices[0].message.content or "", None, r.usage.model_dump() if r.usage else {}
     raise ValueError(backend)
 
 
-def judge(ticket: dict, candidates: list[dict], model: str, backend: str = "cli", prompt="v1") -> list[dict]:
+def judge(ticket: dict, candidates: list[dict], model: str, backend: str = "cli", prompt="v1",
+          retrieval_k: int | None = None, retrieval_version: str = "snapshot-v1") -> list[dict]:
     """One call judges all candidates for a ticket. Returns schema rows (without truth fields)."""
     text, cost, usage = call(build_prompt(ticket, candidates, prompt), model, backend)
-    config = configuration(model, backend, prompt, len(candidates))
+    config = configuration(model, backend, prompt, retrieval_k or len(candidates), retrieval_version)
     got = {j.get("candidate"): j for j in _parse(text)}
+    invalid = []
+    for candidate in candidates:
+        item = got.get(candidate["key"])
+        try:
+            confidence = float(item.get("confidence")) if item else -1.0
+        except (TypeError, ValueError):
+            confidence = -1.0
+        if (not item or item.get("relation") not in ("duplicate", "part_of", "related", "none")
+                or not 0.0 <= confidence <= 1.0):
+            invalid.append(candidate["key"])
+    if invalid:
+        raise RuntimeError("Incomplete or invalid model JSON for candidates: " + ", ".join(invalid))
     share = (cost / max(len(candidates), 1)) if cost is not None else None
     rows = []
     for c in candidates:
         j = got.get(c["key"], {})
-        rel = j.get("relation") if j.get("relation") in ("duplicate", "part_of", "related", "none") else "none"
+        rel = j["relation"]
         rows.append({"key": ticket["key"], "candidate": c["key"], "model": model, "relation": rel,
-                     "confidence": float(j.get("confidence") or 0.0), "reason": (j.get("reason") or "")[:200],
+                     "confidence": float(j["confidence"]), "reason": (j.get("reason") or "")[:200],
                      "cost_usd": share, "parsed": bool(j), "prompt": prompt,
                      "config_id": config["config_id"], "backend": backend,
                      "task_cost_usd": cost, "usage": usage,
-                     "cost_basis": "cli-api-equivalent" if backend == "cli" else "unpriced-usage"})
+                     "cost_basis": ("openai-list-price" if backend == "openai" else
+                                    "cli-api-equivalent" if backend == "cli" else "unpriced-usage")})
     return rows
 
 

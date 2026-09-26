@@ -14,3 +14,6 @@ app/_bundle/
 *.parquet
 local-state/
 results/frozen-plan*.json
+data/candidates_all.jsonl
+results/stage-2-3-plans/
+results/stage-2-3-runs/
