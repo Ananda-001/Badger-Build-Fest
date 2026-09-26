@@ -1,0 +1,16 @@
+# Databricks Apps config (https://docs.databricks.com/aws/en/dev-tools/databricks-apps/app-runtime).
+# Deploy the folder built by `python app/make_bundle.py` (app/_bundle/), where app.py sits at the root.
+# The runtime sets STREAMLIT_SERVER_PORT / ADDRESS / HEADLESS and DATABRICKS_HOST for us.
+command: ['streamlit', 'run', 'app.py']
+env:
+  - name: 'STREAMLIT_BROWSER_GATHER_USAGE_STATS'
+    value: 'false'
+  # "Try a ticket" asks this Foundation Model API endpoint for a verdict (OpenAI-compatible, pay-per-token).
+  - name: 'ASSAY_JUDGE_BACKEND'
+    value: 'databricks'
+  - name: 'ASSAY_JUDGE_MODEL'
+    value: 'databricks-claude-haiku-4-5'
+  # Where the data lives in Unity Catalog. The app downloads it on start and writes feedback.jsonl back.
+  # Remove this entry to use only the data files bundled next to app.py.
+  - name: 'ASSAY_DATA_VOLUME'
+    value: '/Volumes/workspace/assay_triage/data'
