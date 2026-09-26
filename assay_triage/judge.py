@@ -12,6 +12,8 @@ import json
 import os
 import re
 import subprocess
+import tempfile
+from .identity import digest
 
 SYSTEM = ("You triage software issue tickets. You answer with JSON only, no prose, no code fences.")
 
@@ -31,9 +33,28 @@ def _fmt(t: dict, n: int = 900) -> str:
     return f"{t['key']} ({t.get('issuetype')}){comp}: {t['summary']}\n{(t.get('description') or '')[:n]}"
 
 
-def build_prompt(ticket: dict, candidates: list[dict]) -> str:
+RULESETS = {
+    "v1": RULES,
+    "v2": RULES + '\nA sibling subtask is NOT the umbrella. Use part_of only for the parent effort. '
+                   'Use related only for a concrete technical link, not merely a shared topic.',
+    "bad": RULES + '\nFor this deliberate stress test, treat every version-bump ticket as a duplicate '
+                    'of an earlier version-bump ticket.',
+}
+
+
+def configuration(model, backend="cli", prompt="v1", k=5, retrieval_version="snapshot-v1"):
+    spec = {"schema": 1, "model": model, "backend": backend, "prompt": prompt,
+            "system": SYSTEM, "rules": RULESETS[prompt], "k": k,
+            "retrieval_version": retrieval_version, "formatter": "900-600-v1",
+            "thinking": "provider-default-unverified", "effort": "provider-default-unverified",
+            "max_tokens": 800 if backend == "anthropic" else None,
+            "model_resolution": "unverified"}
+    return {**spec, "config_id": digest(spec)}
+
+
+def build_prompt(ticket: dict, candidates: list[dict], prompt="v1") -> str:
     cands = "\n\n".join(f"--- CANDIDATE {i + 1}\n{_fmt(c, 600)}" for i, c in enumerate(candidates))
-    return f"{RULES}\n\n=== NEW ticket\n{_fmt(ticket)}\n\n=== EARLIER candidates\n{cands}"
+    return f"{RULESETS[prompt]}\n\n=== NEW ticket\n{_fmt(ticket)}\n\n=== EARLIER candidates\n{cands}"
 
 
 def _parse(text: str) -> list[dict]:
@@ -48,11 +69,13 @@ def _parse(text: str) -> list[dict]:
 
 def call(prompt: str, model: str, backend: str = "cli", timeout: int = 180) -> tuple[str, float | None, dict]:
     """Returns (text, cost_usd or None, usage)."""
+    if os.environ.get("ASSAY_ALLOW_MODEL_CALLS") != "1":
+        raise RuntimeError("Model calls are disabled. Obtain explicit usage/budget approval before enabling them.")
     if backend == "cli":
         env = {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")}
         r = subprocess.run(["claude", "-p", prompt, "--model", model, "--output-format", "json", "--strict-mcp-config",
                             "--system-prompt", SYSTEM, "--tools", "", "--no-session-persistence"],
-                           capture_output=True, text=True, env=env, timeout=timeout, stdin=subprocess.DEVNULL, cwd="/tmp")
+                           capture_output=True, text=True, env=env, timeout=timeout, stdin=subprocess.DEVNULL, cwd=tempfile.gettempdir())
         s = r.stdout
         d = json.loads(s[s.find("{"):]) if "{" in s else {}
         if d.get("is_error") or not d:
@@ -73,9 +96,10 @@ def call(prompt: str, model: str, backend: str = "cli", timeout: int = 180) -> t
     raise ValueError(backend)
 
 
-def judge(ticket: dict, candidates: list[dict], model: str, backend: str = "cli") -> list[dict]:
+def judge(ticket: dict, candidates: list[dict], model: str, backend: str = "cli", prompt="v1") -> list[dict]:
     """One call judges all candidates for a ticket. Returns schema rows (without truth fields)."""
-    text, cost, usage = call(build_prompt(ticket, candidates), model, backend)
+    text, cost, usage = call(build_prompt(ticket, candidates, prompt), model, backend)
+    config = configuration(model, backend, prompt, len(candidates))
     got = {j.get("candidate"): j for j in _parse(text)}
     share = (cost / max(len(candidates), 1)) if cost is not None else None
     rows = []
@@ -84,7 +108,10 @@ def judge(ticket: dict, candidates: list[dict], model: str, backend: str = "cli"
         rel = j.get("relation") if j.get("relation") in ("duplicate", "part_of", "related", "none") else "none"
         rows.append({"key": ticket["key"], "candidate": c["key"], "model": model, "relation": rel,
                      "confidence": float(j.get("confidence") or 0.0), "reason": (j.get("reason") or "")[:200],
-                     "cost_usd": share, "parsed": bool(j)})
+                     "cost_usd": share, "parsed": bool(j), "prompt": prompt,
+                     "config_id": config["config_id"], "backend": backend,
+                     "task_cost_usd": cost, "usage": usage,
+                     "cost_basis": "cli-api-equivalent" if backend == "cli" else "unpriced-usage"})
     return rows
 
 

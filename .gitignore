@@ -12,3 +12,5 @@ data/judgments.jsonl
 data/feedback.jsonl
 app/_bundle/
 *.parquet
+local-state/
+results/frozen-plan*.json
