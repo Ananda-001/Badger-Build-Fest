@@ -18,6 +18,13 @@ ROOT = Path(__file__).resolve().parents[1]
 W = min(os.get_terminal_size().columns if sys.stdout.isatty() else 110, 140)
 
 
+DEFS = """\033[2mDEFINITIONS (what Apache maintainers do)
+  duplicate = the SAME problem/request; one would be closed for the other. Bumping the same library to a DIFFERENT
+              version is NOT a duplicate (maintainers link only same-target-version bumps: 22 of 6,743 bump pairs).
+  part of   = NEW is one piece of the EARLIER ticket's bigger effort (umbrella/epic). Two sibling pieces: NOT part of.
+  related   = different problems in the same code/feature that a maintainer would link. Same topic alone: NO.\033[0m"""
+
+
 def getkey() -> str:
     if not sys.stdin.isatty():
         return (sys.stdin.readline().strip() or "q")[0].lower()
@@ -48,7 +55,7 @@ def main():
     by = {t["key"]: t for t in map(json.loads, (ROOT / "data" / "tickets.jsonl").read_text(encoding="utf-8").splitlines())}
     shortlist: dict[str, list[str]] = {}
     for p in (ROOT / "results" / "stage-2-3-runs").glob("*.jsonl"):
-        if not p.name.endswith(("labels.jsonl", "failures.jsonl", ".ai.jsonl", "spot-check.jsonl")):
+        if not p.name.endswith(("labels.jsonl", "failures.jsonl", ".ai.jsonl")) and not p.name.startswith("spot-check"):
             for line in p.read_text(encoding="utf-8").splitlines():
                 r = json.loads(line)
                 s = shortlist.setdefault(r["key"], [])
@@ -69,7 +76,8 @@ def main():
         i = todo[0]
         r = rows[i]
         print("\033[2J\033[H", end="")
-        print(f"[{len(rows) - len(todo) + 1}/{len(rows)}]  y/d = YES   n/a = NO   s/w = can't tell   u = undo   q = quit\n")
+        print(f"[{len(rows) - len(todo) + 1}/{len(rows)}]  y/d = YES   n/a = NO   s/w = can't tell   u = undo   q = quit")
+        print(DEFS + "\n")
         print(block(by.get(r["key"], {"key": r["key"]}), "NEW", 900) + "\n")
         if r["relation"] == "none":
             for c in shortlist.get(r["key"], []):

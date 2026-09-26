@@ -39,7 +39,8 @@ def main():
     mk = sub.add_parser("make")
     mk.add_argument("--n", type=int, default=20)
     mk.add_argument("--seed", type=int, default=7)
-    sub.add_parser("compare")
+    cmp_ = sub.add_parser("compare")
+    cmp_.add_argument("--file", type=Path, default=SPOT)
     apl = sub.add_parser("apply")
     apl.add_argument("file", type=Path)
     a = ap.parse_args()
@@ -54,7 +55,7 @@ def main():
                 f.write(json.dumps({**r, "correct": None, "reviewer": "", "reason": "", "label_status": "unknown"}) + "\n")
         print(json.dumps({"spot_check": str(SPOT), "items": len(pick), "pool": len(pool), "seed": a.seed}))
     elif a.cmd == "compare":
-        rows, human = ai_rows(), [r for r in load(SPOT) if r.get("correct") is not None]
+        rows, human = ai_rows(), [r for r in load(a.file) if r.get("correct") is not None]
         pairs = [(h["correct"], rows[h["label_key"]]["correct"]) for h in human
                  if rows.get(h["label_key"], {}).get("correct") is not None]
         n, k = len(pairs), sum(x == y for x, y in pairs)

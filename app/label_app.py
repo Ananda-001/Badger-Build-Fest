@@ -27,7 +27,7 @@ def tickets():
 def shortlists():
     out = {}
     for p in (ROOT / "results" / "stage-2-3-runs").glob("*.jsonl"):
-        if p.name.endswith(("labels.jsonl", "failures.jsonl")):
+        if p.name.endswith(("labels.jsonl", "failures.jsonl", ".ai.jsonl")) or p.name.startswith("spot-check"):
             continue
         for line in p.read_text(encoding="utf-8").splitlines():
             r = json.loads(line)

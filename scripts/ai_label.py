@@ -75,7 +75,7 @@ def main():
     by = {t["key"]: t for t in map(json.loads, (ROOT / "data" / "tickets.jsonl").read_text(encoding="utf-8").splitlines())}
     shortlists: dict[str, list[str]] = {}
     for p in (ROOT / "results" / "stage-2-3-runs").glob("*.jsonl"):
-        if not p.name.endswith(("labels.jsonl", "failures.jsonl", ".ai.jsonl")):
+        if not p.name.endswith(("labels.jsonl", "failures.jsonl", ".ai.jsonl")) and not p.name.startswith("spot-check"):
             for line in p.read_text(encoding="utf-8").splitlines():
                 r = json.loads(line)
                 lst = shortlists.setdefault(r["key"], [])
