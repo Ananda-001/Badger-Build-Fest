@@ -1,0 +1,8 @@
+numpy
+scipy
+scikit-learn
+streamlit>=1.45
+openai
+anthropic
+databricks-sdk
+pytest
