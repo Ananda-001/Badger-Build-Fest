@@ -21,7 +21,10 @@ def build_gate(before_rows: list[dict], after_rows: list[dict], labels: list[dic
     before = {a["key"]: a for a in scored_actions(before_rows, labels, before_config)}
     after = {a["key"]: a for a in scored_actions(after_rows, labels, after_config)}
     common = sorted(set(before) & set(after))
-    labelled = [key for key in common if before[key]["correct"] is not None and after[key]["correct"] is not None]
+    # Same action before and after = the same outcome whatever the truth: a tie for the sign test, no label needed.
+    same = [key for key in common if before[key].get("label_key") and before[key]["label_key"] == after[key]["label_key"]]
+    labelled = [key for key in common if key not in same
+                and before[key]["correct"] is not None and after[key]["correct"] is not None]
     usable = []
     seen_clusters = set()
     for key in labelled:
@@ -42,9 +45,10 @@ def build_gate(before_rows: list[dict], after_rows: list[dict], labels: list[dic
                "method": "exact paired sign test on discordant task outcomes",
                "family_alpha": family_alpha, "comparisons": comparisons, "alpha": alpha,
                "unit": "task, deduplicated by predicted part-of umbrella", "n_common": len(common),
-               "n_adjudicated": len(usable), "excluded_unknown": len(common) - len(labelled),
+               "n_same_action": len(same), "n_adjudicated": len(usable),
+               "excluded_unknown": len(common) - len(same) - len(labelled),
                "excluded_dependent": len(labelled) - len(usable), "fixed": len(fixed), "broke": len(broke),
-               "unchanged": len(usable) - len(fixed) - len(broke),
+               "unchanged": len(usable) - len(fixed) - len(broke) + len(same),
                "observed_delta": ((len(fixed) - len(broke)) / len(usable)) if usable else None,
                "p_keep": p_keep, "p_discard": p_discard, "verdict": verdict,
                "fixed_tasks": fixed, "broke_tasks": broke,

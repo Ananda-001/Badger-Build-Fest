@@ -11,8 +11,10 @@ from __future__ import annotations
 import json
 import os
 import re
+import random
 import subprocess
 import tempfile
+import time
 from .identity import digest
 
 SYSTEM = ("You triage software issue tickets. You answer with JSON only, no prose, no code fences.")
@@ -126,8 +128,15 @@ def call(prompt: str, model: str, backend: str = "cli", timeout: int = 180) -> t
         from openai import OpenAI
         client = OpenAI(base_url=os.environ["DATABRICKS_HOST"].rstrip("/") + "/serving-endpoints",
                         api_key=os.environ["DATABRICKS_TOKEN"])
-        r = client.chat.completions.create(model=model, messages=[{"role": "system", "content": SYSTEM},
-                                                                  {"role": "user", "content": prompt}])
+        for attempt in range(6):  # Free Edition has a per-workspace QPS limit: back off on 429 instead of failing
+            try:
+                r = client.chat.completions.create(model=model, messages=[{"role": "system", "content": SYSTEM},
+                                                                          {"role": "user", "content": prompt}])
+                break
+            except Exception as e:  # noqa: BLE001
+                if "429" not in str(e) or attempt == 5:
+                    raise
+                time.sleep(2 ** attempt + random.random())
         content = r.choices[0].message.content or ""
         if isinstance(content, list):  # reasoning models (gpt-oss) return [{type: reasoning}, {type: text}]
             content = "".join(b.get("text", "") for b in content if isinstance(b, dict) and b.get("type") == "text")

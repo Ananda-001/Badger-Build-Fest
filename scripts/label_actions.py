@@ -17,6 +17,11 @@ def main():
     ap.add_argument("--config", action="append", default=[])
     ap.add_argument("--out", type=Path)
     ap.add_argument("--validate", type=Path)
+    ap.add_argument("--min-confidence", type=float,
+                    help="permission worksheets: keep only actions at/above the AUTO cutoff (the only ones a receipt uses)")
+    ap.add_argument("--discordant-only", action="store_true",
+                    help="gate worksheets (two --config): keep only tasks where the configs chose different actions; "
+                         "the sign test's verdict depends only on those")
     ap.add_argument("--truth", type=Path, default=Path(__file__).resolve().parents[1] / "data" / "truth.jsonl",
                     help="maintainer links used to pre-fill labels they settle (use --truth none to skip)")
     a = ap.parse_args()
@@ -31,8 +36,19 @@ def main():
     rows = [row for path in a.judgments for row in load(path)]
     labels = []
     seen = set()
+    per_config = {c: {l["key"]: l for l in label_template(rows, c)} for c in a.config}
+    keep = None
+    if a.discordant_only:
+        if len(a.config) != 2:
+            ap.error("--discordant-only needs exactly two --config values")
+        x, y = per_config.values()
+        keep = {k for k in set(x) & set(y) if x[k]["label_key"] != y[k]["label_key"]}
     for config_id in a.config:
-        for label in label_template(rows, config_id):
+        for label in per_config[config_id].values():
+            if keep is not None and label["key"] not in keep:
+                continue
+            if a.min_confidence is not None and (label["relation"] == "none" or label["confidence"] < a.min_confidence):
+                continue
             if label["label_key"] not in seen:  # the same action under v1 and v2 is labelled once
                 seen.add(label["label_key"])
                 labels.append(label)

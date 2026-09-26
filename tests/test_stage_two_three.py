@@ -174,3 +174,16 @@ def test_receipt_reports_needs_more():
     labels = [{**l, 'correct': True, 'reviewer': 't', 'label_status': 'adjudicated'} for l in label_template(rows, 'c')]
     dup = build_receipt(rows, labels, 'c')['decisions'][0]
     assert dup['mode'] == 'suggest' and dup['n'] == 10 and dup['needs_more'] > 0
+
+
+def test_gate_counts_same_action_as_tie_without_labels():
+    from assay_engine.learning import build_gate
+    def rows(cfg, rel_for):
+        return [dict(key=f'K-{i}', candidate=f'C-{i}', relation=rel_for(i), confidence=.9, config_id=cfg,
+                     plan_id='p', parsed=True) for i in range(10)]
+    before = rows('v1', lambda i: 'duplicate')
+    after = rows('v2', lambda i: 'duplicate' if i < 6 else 'none')  # 6 identical actions, 4 changed
+    labels = [{**l, 'correct': l['relation'] == 'none', 'reviewer': 't', 'label_status': 'adjudicated'}
+              for l in label_template(before, 'v1')[6:] + label_template(after, 'v2')[6:]]
+    g = build_gate(before, after, labels, 'v1', 'v2')
+    assert (g['n_same_action'], g['fixed'], g['broke'], g['excluded_unknown'], g['unchanged']) == (6, 4, 0, 0, 6)
