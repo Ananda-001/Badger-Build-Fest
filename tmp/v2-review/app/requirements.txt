@@ -1,0 +1,6 @@
+streamlit>=1.45
+numpy
+scipy
+scikit-learn
+openai
+databricks-sdk
