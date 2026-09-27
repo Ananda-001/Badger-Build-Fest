@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ticket Assistant</title>
+<meta name="description" content="Manager view of an AI triage agent checked by Assay, running on Databricks.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --ground:#F3F5F1; --panel:#FFFFFF; --panel-2:#EBEFE8; --ink:#17262B; --ink-2:#4A5A5E; --line:#D5DCD3;
+  --accent:#3A5BA0; --accent-ink:#FFFFFF; --accent-soft:#E3E9F6;
+  --go:#1F7A52; --go-soft:#DDF1E6; --ask:#8A5A00; --ask-soft:#FBEFD2; --stop:#B23A27; --stop-soft:#F8E0DB;
+  --shade:rgba(10,20,24,.62); --shadow:0 1px 2px rgba(20,30,30,.06),0 10px 28px rgba(20,30,30,.08);
+  --display:"Bricolage Grotesque","Public Sans",system-ui,sans-serif; --body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  color-scheme:dark;--ground:#121A1C;--panel:#1A2427;--panel-2:#223034;--ink:#E7EDEA;--ink-2:#A9B7B6;--line:#2E3D41;
+  --accent:#8EA8E6;--accent-ink:#0F1A2E;--accent-soft:#223050;--go:#57C28F;--go-soft:#173A2A;--ask:#E3B04B;--ask-soft:#3A2E12;
+  --stop:#EE7D69;--stop-soft:#3F1E18;--shade:rgba(0,0,0,.7);--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{
+  color-scheme:dark;--ground:#121A1C;--panel:#1A2427;--panel-2:#223034;--ink:#E7EDEA;--ink-2:#A9B7B6;--line:#2E3D41;
+  --accent:#8EA8E6;--accent-ink:#0F1A2E;--accent-soft:#223050;--go:#57C28F;--go-soft:#173A2A;--ask:#E3B04B;--ask-soft:#3A2E12;
+  --stop:#EE7D69;--stop-soft:#3F1E18;--shade:rgba(0,0,0,.7);--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35)}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+[data-tour]{scroll-margin-top:90px}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--ground);color:var(--ink);font:15px/1.55 var(--body);margin:0}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:clamp(24px,3.4vw,32px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:19px;font-weight:700}
+h3{font-size:15.5px;font-weight:600}
+p{margin:0}
+.muted{color:var(--ink-2)}
+.small{font-size:13.5px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
+svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px}
+button{font:inherit;cursor:pointer;color:inherit}
+button:disabled{cursor:not-allowed;opacity:.55}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:9px 14px;font-weight:600;min-height:40px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.yes{background:var(--go);color:#fff;border-color:var(--go)}
+:root[data-theme="dark"] .btn.yes{color:#0B1F15}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.yes{color:#0B1F15}}
+.btn.no{background:var(--panel);color:var(--stop);border-color:var(--stop)}
+.btn.ghost{background:transparent}
+.btn:hover:not(:disabled){filter:brightness(.95)}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+/* top bar */
+.top{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line)}
+.top-in{max-width:1200px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:18px}
+.logo i{width:30px;height:30px;border-radius:8px;background:var(--accent);display:inline-grid;place-items:center;color:var(--accent-ink)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--ink-2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--go)}
+.dot.off{background:var(--stop)}
+/* page */
+.page{max-width:1200px;margin:0 auto;padding:24px 20px 60px;display:grid;gap:20px}
+.hello{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:14px}
+.hello p{margin-top:6px;max-width:66ch}
+.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.stat .n{font-family:var(--display);font-size:30px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat .l{font-size:13.5px;color:var(--ink-2)}
+.cols{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.panel-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.panel-h h2{display:flex;align-items:center;gap:8px}
+.count{background:var(--ask-soft);color:var(--ask);font-weight:700;border-radius:999px;padding:2px 10px;font-size:13px}
+.stack{display:grid;gap:20px}
+/* inbox */
+.inbox{display:grid;gap:12px}
+.sugg{border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:10px;transition:opacity .28s,transform .28s}
+.sugg.gone{opacity:0;transform:translateX(24px)}
+.sugg.fresh{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.kind{display:flex;align-items:center;gap:8px;font-weight:700;flex-wrap:wrap}
+.kind .ico{width:28px;height:28px;border-radius:7px;display:inline-grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.badge{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 8px;letter-spacing:.02em}
+.badge.new{background:var(--accent);color:var(--accent-ink)}
+.badge.by{background:var(--panel-2);color:var(--ink-2);font-weight:600}
+.pair{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+.tk{background:var(--panel-2);border-radius:9px;padding:9px 11px;font-size:14px;min-width:0;overflow-wrap:anywhere}
+.tk small{display:block;font-family:var(--mono);font-size:11.5px;color:var(--ink-2);margin-top:2px}
+.tk a{color:inherit}
+.arrow{color:var(--ink-2)}
+.why{font-size:14px;color:var(--ink-2)}
+.why q{color:var(--ink)}
+.past{font-size:13.5px;border-left:3px solid var(--accent);padding-left:10px;color:var(--ink-2)}
+.past b{color:var(--ink)}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.more{display:flex;justify-content:center;margin-top:4px}
+.empty{text-align:center;padding:26px 10px;color:var(--ink-2)}
+.empty b{display:block;font-family:var(--display);font-size:19px;color:var(--ink);margin-bottom:4px}
+/* trust */
+.goal{display:grid;gap:6px;padding-block:11px;border-top:1px solid var(--line)}
+.goal:first-child{border-top:0;padding-top:0}
+.goal .row{display:flex;justify-content:space-between;gap:10px;font-size:14px;font-weight:600;align-items:start}
+.meter{height:10px;background:var(--panel-2);border-radius:5px;overflow:hidden}
+.meter span{display:block;height:100%;background:var(--go);border-radius:5px;transition:width .5s}
+.goal p{font-size:13px;color:var(--ink-2)}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.tag.ask{background:var(--ask-soft);color:var(--ask)} .tag.stop{background:var(--stop-soft);color:var(--stop)} .tag.go{background:var(--go-soft);color:var(--go)}
+.sub{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.sub h3{margin-bottom:6px}
+.sub li{font-size:13.5px;color:var(--ink-2);margin:4px 0}
+.sub ul{margin:0;padding-left:18px}
+/* held + handled */
+.held{display:grid;gap:10px}
+.hold{border-left:4px solid var(--stop);background:var(--stop-soft);border-radius:0 10px 10px 0;padding:10px 12px;font-size:14px}
+.hold.hold-ask{border-left-color:var(--ask);background:var(--ask-soft)}
+.hold b{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:2px}
+.hold .ex{font-size:12.5px;color:var(--ink-2);margin-top:6px}
+.hand{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;display:grid;gap:6px}
+/* models */
+.policy{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.pm{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13.5px}
+.pm b{display:block;font-size:14.5px}
+.log{display:grid;gap:8px}
+.lg{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13.5px;padding:9px 0;border-top:1px solid var(--line)}
+.lg:first-child{border-top:0}
+.lg .k{font-family:var(--mono);font-size:12.5px;color:var(--ink-2)}
+.lg .r{grid-column:1/-1;color:var(--ink-2)}
+/* savings */
+.save{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.save .stat{background:var(--panel-2);border:0}
+.save .stat .n{font-size:26px}
+.est{font-size:12.5px;color:var(--ink-2);margin-top:10px}
+/* banners, toast, loading */
+.banner{border:1px solid var(--stop);background:var(--stop-soft);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.loading{padding:40px 10px;text-align:center;color:var(--ink-2)}
+.spin{width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;display:inline-block;animation:spin 1s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--ground);border-radius:10px;padding:10px 14px;display:flex;gap:12px;align-items:center;z-index:60;box-shadow:var(--shadow);max-width:calc(100% - 32px);font-size:14px}
+#toast button{background:none;border:0;color:var(--ground);text-decoration:underline;font-weight:700}
+.foot{font-size:12.5px;color:var(--ink-2);border-top:1px solid var(--line);padding-top:14px}
+.foot code{font-family:var(--mono);font-size:12px}
+/* welcome + tour */
+#welcome{position:fixed;inset:0;z-index:70;background:var(--shade);display:grid;place-items:center;padding:16px}
+#welcome .box{background:var(--panel);border-radius:16px;padding:24px;max-width:480px;box-shadow:var(--shadow);display:grid;gap:12px}
+#tour-ring{position:fixed;border-radius:14px;box-shadow:0 0 0 4px var(--accent),0 0 0 9999px var(--shade);transition:all .25s ease;z-index:41;pointer-events:none}
+#tour-tip{position:fixed;z-index:42;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+#tour-tip .step{font-size:12px;color:var(--ink-2);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+#tour-tip h3{margin-top:4px;font-size:17px}
+#tour-tip p{margin:6px 0 12px;font-size:14.5px}
+#tour-tip .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.tour-live [data-tour-active]{position:relative;z-index:43}
+@media (max-width:1000px){.cols{grid-template-columns:1fr}.summary,.save{grid-template-columns:repeat(2,minmax(0,1fr))}.policy{grid-template-columns:1fr}}
+@media (max-width:520px){.pair{grid-template-columns:1fr}.arrow{transform:rotate(90deg);justify-self:center}.chips{margin-left:0}.top-in{padding:10px 16px}.page{padding:18px 16px 60px}.stat .n{font-size:26px}}
+@media (prefers-reduced-motion:reduce){#tour-ring,.sugg,.meter span{transition:none}.spin{animation:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.8 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 3l14 9-14 9z"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+  <symbol id="i-switch" viewBox="0 0 24 24"><path d="m16 3 4 4-4 4M20 7H4M8 21l-4-4 4-4M4 17h16"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"/><path d="M16 7h6v6"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></symbol>
+</svg>
+
+<header class="top">
+  <div class="top-in">
+    <span class="logo"><i><svg class="i"><use href="#i-check"/></svg></i>Ticket Assistant</span>
+    <span class="muted small">for the Apache Jira backlog</span>
+    <div class="chips">
+      <span class="chip" id="live-chip"><span class="dot" id="live-dot"></span><span id="live-text">Connecting to Databricks…</span></span>
+      <span class="chip">Checked by Assay</span>
+      <button class="btn" id="help" data-tour="help"><svg class="i"><use href="#i-help"/></svg>Show me around</button>
+    </div>
+  </div>
+</header>
+
+<main class="page" id="page">
+  <section class="hello" data-tour="hello">
+    <div>
+      <h1 id="greet">Here's what your assistant did.</h1>
+      <p class="muted">It reads new tickets and spots ones that are the same problem, part of a bigger project, or connected.
+        It only acts on its own where your past answers have proven it right. Everything else waits for your OK.</p>
+    </div>
+    <button class="btn primary" id="run" data-tour="run"><svg class="i"><use href="#i-play"/></svg>Check new tickets now</button>
+  </section>
+
+  <div id="err" hidden></div>
+  <div id="loading" class="loading"><span class="spin"></span>&nbsp; Loading your data from Databricks… (the first load can take up to a minute while the warehouse wakes up)</div>
+
+  <div id="content" hidden style="display:grid;gap:20px">
+    <section class="summary" data-tour="summary" aria-label="Summary">
+      <div class="stat"><div class="n" id="s-read">–</div><div class="l">tickets read by the agent</div></div>
+      <div class="stat"><div class="n" id="s-sugg">–</div><div class="l">tidy-ups suggested</div></div>
+      <div class="stat"><div class="n" id="s-auto">–</div><div class="l">handled without asking you</div></div>
+      <div class="stat"><div class="n" id="s-ans">–</div><div class="l">answered by you here</div></div>
+    </section>
+
+    <div class="cols">
+      <section class="panel" data-tour="inbox" aria-label="Needs your OK">
+        <div class="panel-h"><h2>Needs your OK</h2><span class="count" id="left-count"></span></div>
+        <div class="inbox" id="inbox"></div>
+        <div class="more" id="more-wrap" hidden><button class="btn ghost" id="more">Show more</button></div>
+      </section>
+
+      <div class="stack">
+        <section class="panel" data-tour="learning" aria-label="Earning your trust">
+          <div class="panel-h"><h2><svg class="i"><use href="#i-trend"/></svg>Earning your trust</h2></div>
+          <p class="muted small" style="margin-bottom:12px">Your answers are remembered by <b>kind of case</b>. When answers on one kind are consistent enough to prove a pattern (90% sure, with a margin for luck), the assistant handles that kind for you, and you can always overrule it.</p>
+          <div id="learning"></div>
+          <div class="sub" id="alone"></div>
+        </section>
+
+        <section class="panel" data-tour="handled" aria-label="Handled for you">
+          <div class="panel-h"><h2><svg class="i"><use href="#i-spark"/></svg>Handled for you</h2><span class="count" id="handled-count" style="background:var(--go-soft);color:var(--go)"></span></div>
+          <div class="held" id="handled"></div>
+        </section>
+
+        <section class="panel" data-tour="held" aria-label="Held back for your safety">
+          <div class="panel-h"><h2><svg class="i"><use href="#i-shield"/></svg>Held back for your safety</h2></div>
+          <div class="held" id="held"></div>
+        </section>
+      </div>
+    </div>
+
+    <section class="panel" data-tour="models" aria-label="Which AI answered">
+      <div class="panel-h"><h2><svg class="i"><use href="#i-cpu"/></svg>Which AI answered</h2><span class="muted small" id="models-sub"></span></div>
+      <div class="policy" id="policy"></div>
+      <h3 style="margin-bottom:4px">Latest requests</h3>
+      <div class="log" id="log"></div>
+    </section>
+
+    <section class="panel" data-tour="savings" aria-label="What it saved you">
+      <div class="panel-h"><h2>What it saved you</h2><span class="muted small">so far</span></div>
+      <div class="save" id="save"></div>
+      <p class="est" id="est"></p>
+    </section>
+
+    <p class="foot" id="foot"></p>
+  </div>
+</main>
+
+<div id="toast" hidden role="status"><span id="toast-text"></span><button id="toast-undo" hidden>Undo</button></div>
+
+<div id="welcome" hidden role="dialog" aria-modal="true" aria-labelledby="w-title">
+  <div class="box">
+    <p class="eyebrow">Welcome</p>
+    <h2 id="w-title">Your assistant tidies up tickets. You stay in charge.</h2>
+    <p class="muted">It suggests which tickets are the same problem or belong together. You answer yes or no, and every answer is saved on Databricks. The more your answers prove it right on a kind of case, the more it may do on its own. The tour takes about a minute, and you'll try one answer yourself.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="w-start">Show me around</button><button class="btn" id="w-skip">I'll explore myself</button></div>
+  </div>
+</div>
+
+<div id="tour-ring" hidden></div>
+<div id="tour-tip" hidden role="dialog" aria-live="polite"><div class="step" id="tour-step"></div><h3 id="tour-h"></h3><p id="tour-text"></p>
+  <div class="row"><button class="btn" id="tour-back">Back</button><button class="btn" id="tour-end">Close</button><button class="btn primary" id="tour-next">Next</button></div></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const RM = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const icon = (id, extra = "") => `<svg class="i" ${extra}><use href="#i-${id}"/></svg>`;
+const jira = k => `https://issues.apache.org/jira/browse/${encodeURIComponent(k)}`;
+const fmt = n => (n ?? 0).toLocaleString();
+
+const REL = {
+  duplicate: { ico: "copy", title: "Same problem reported twice", yes: "Yes, merge them", no: "No, they're different",
+               done: "Merged: the newer ticket now points to the older one.", plain: "the same problem" },
+  part_of:   { ico: "folder", title: "Part of a bigger project", yes: "Yes, file it under", no: "No, it's separate",
+               done: "Filed under the bigger project.", plain: "part of a bigger project" },
+  related:   { ico: "link", title: "These look connected", yes: "Yes, link them", no: "No, not connected",
+               done: "Linked with a \"see also\".", plain: "connected" }
+};
+const KIND = {
+  "bump-same-lib-diff-version": "version upgrades of the same library, to different versions",
+  "bump-same-lib-same-version": "two upgrades of the same library to the same version",
+  "same-title": "two tickets with the exact same title",
+  "candidate-is-parent": "a ticket and the project it already sits under",
+  "siblings": "two pieces of the same bigger project",
+  "both-test-failures": "two failing-test reports",
+  "other": "no recognised pattern"
+};
+
+let S = null, shown = 6, last = null, busy = false, freshIds = new Set();
+
+async function api(path, body) {
+  const r = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
+  let j = {}; try { j = await r.json(); } catch (e) {}
+  if (!r.ok) throw new Error(j.detail || j.error || `HTTP ${r.status}`);
+  return j;
+}
+
+async function load(fresh) {
+  try {
+    const s = await api("/api/state" + (fresh ? "?fresh=1" : ""));
+    S = s; $("err").hidden = true; render();
+  } catch (e) {
+    $("loading").hidden = true;
+    $("err").hidden = false;
+    $("err").innerHTML = `<div class="banner" role="alert">${icon("x")}<span><b>Can't reach the data on Databricks right now.</b> ${esc(e.message)}</span><button class="btn" id="retry">${icon("refresh")}Try again</button></div>`;
+    $("retry").onclick = () => { $("loading").hidden = false; $("err").hidden = true; load(true); };
+    $("live-dot").className = "dot off"; $("live-text").textContent = "Not connected";
+  }
+}
+
+function greet() {
+  const h = new Date().getHours();
+  return (h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening") + ". Here's what your assistant did.";
+}
+
+function pastLine(it) {
+  const p = it.precedent;
+  if (!p) return "";
+  const said = p.answer === "accept" ? "Yes" : "No";
+  const kind = KIND[it.kind] || it.kind_text;
+  let tail;
+  if (p.agree === p.n && p.needs_more) tail = ` About <b>${p.needs_more} more</b> answers like that and it will handle this kind for you.`;
+  else if (p.agree !== p.n) tail = ` Answers are mixed, so this kind stays with you.`;
+  else tail = "";
+  return `<p class="past">Seen before: for <b>${esc(kind)}</b>, reviewers said <b>${said}</b> ${p.agree === p.n ? (p.n === 1 ? "the one time" : `all ${p.n} times`) : `${p.agree} of ${p.n} times`}.${tail}</p>`;
+}
+
+function card(it, i) {
+  const k = REL[it.relation];
+  const conf = it.confidence != null ? ` · ${Math.round(it.confidence * 100)}% sure` : "";
+  return `<article class="sugg${freshIds.has(it.id) ? " fresh" : ""}" id="c${i}" ${i === 0 ? 'data-tour="card"' : ""}>
+    <div class="kind"><span class="ico" aria-hidden="true">${icon(k.ico)}</span>${k.title}
+      ${it.new ? '<span class="badge new">New</span>' : ""}<span class="badge by">${esc(it.model || "agent")}${conf}</span></div>
+    <div class="pair">
+      <div class="tk">${esc(it.a.title)}<small><a href="${jira(it.a.key)}" target="_blank" rel="noopener">${esc(it.a.key)}</a> · new · ${esc(it.a.date)}</small></div>
+      <span class="arrow" aria-hidden="true">${icon("arrow")}</span>
+      <div class="tk">${esc(it.b.title)}<small><a href="${jira(it.b.key)}" target="_blank" rel="noopener">${esc(it.b.key)}</a> · earlier · ${esc(it.b.date)}</small></div>
+    </div>
+    ${it.reason ? `<p class="why">The agent's reason: <q>${esc(it.reason)}</q></p>` : ""}
+    ${pastLine(it)}
+    <div class="acts" ${i === 0 ? 'data-tour="buttons"' : ""}>
+      <button class="btn yes" data-i="${i}" data-a="accept">${icon("check")}${k.yes}</button>
+      <button class="btn no" data-i="${i}" data-a="reject">${icon("x")}${k.no}</button>
+      <button class="btn ghost" data-i="${i}" data-a="skip">Not sure, skip</button>
+    </div></article>`;
+}
+
+let skipped = new Set();
+function inboxItems() { return S.inbox.filter(it => !skipped.has(it.id)).concat(S.inbox.filter(it => skipped.has(it.id))); }
+
+function render() {
+  $("loading").hidden = true; $("content").hidden = false;
+  $("greet").textContent = greet();
+  $("live-dot").className = "dot"; $("live-text").textContent = `Live · ${S.catalog}`;
+  const c = S.counts;
+  $("s-read").textContent = fmt(c.tickets_read); $("s-sugg").textContent = fmt(c.suggestions);
+  $("s-auto").textContent = fmt(c.auto_handled); $("s-ans").textContent = fmt(c.answered);
+  $("run").hidden = !S.can_run;
+
+  const items = inboxItems();
+  window._items = items;
+  $("inbox").innerHTML = items.slice(0, shown).map(card).join("") ||
+    `<div class="empty"><b>You're all caught up.</b>Press "Check new tickets now" to have the agent read a few more.</div>`;
+  $("left-count").textContent = items.length ? `${items.length} waiting` : "all done";
+  $("more-wrap").hidden = items.length <= shown;
+  $("more").textContent = `Show ${Math.min(6, items.length - shown)} more (${items.length - shown} left)`;
+
+  // learning from answers
+  const L = S.learning.filter(m => m.n >= 2).slice(0, 5);
+  $("learning").innerHTML = L.map(m => {
+    const said = m.answer === "accept" ? "Yes" : "No";
+    const title = `"${REL[m.relation].plain}" for ${KIND[m.kind] || m.kind_text}`;
+    if (m.enabled) return `<div class="goal"><div class="row"><span>${esc(title)}</span><span class="tag go">${icon("check")}Handled for you</span></div>
+      <div class="meter"><span style="width:100%"></span></div><p>Reviewers said ${said} ${m.agree} of ${m.n} times. Proven, so matching suggestions are answered "${said}" automatically.</p></div>`;
+    if (m.agree === m.n && m.needs_more) {
+      const w = Math.max(4, Math.round(100 * m.agree / (m.agree + m.needs_more)));
+      return `<div class="goal" ${m.kind === "bump-same-lib-diff-version" ? 'data-tour="meter"' : ""}><div class="row"><span>${esc(title)}</span><span class="tag ask">Learning</span></div>
+        <div class="meter" role="img" aria-label="${m.agree} of about ${m.agree + m.needs_more} answers"><span style="width:${w}%"></span></div>
+        <p>Reviewers said <b>${said}</b> every time (${m.agree} of ${m.n}). About <b>${m.needs_more} more</b> answers like that and it takes over this kind.${m.open ? ` ${m.open} ${m.open === 1 ? "is" : "are"} in your list.` : ""}</p></div>`;
+    }
+    return `<div class="goal"><div class="row"><span>${esc(title)}</span><span class="tag stop">Stays with you</span></div>
+      <p>Answers are mixed (${m.agree} ${said}, ${m.n - m.agree} the other way), so there's no pattern to reuse.</p></div>`;
+  }).join("") || `<p class="muted small">No answers yet.</p>`;
+
+  const pr = S.permission || {};
+  const al = [];
+  if (pr.part_of) al.push(`<li><b>Filing under a bigger project:</b> ${pr.part_of.right} of ${pr.part_of.n} checked high-confidence answers right; needs about ${pr.part_of.needs_more ?? "?"} more checks.</li>`);
+  if (pr.duplicate) al.push(`<li><b>Merging the same problem:</b> ${pr.duplicate.right} of ${pr.duplicate.n} checked right. Not enough proof.</li>`);
+  if (pr.related) al.push(`<li><b>"See also" links:</b> people disagree too often on these, so they always stay with you.</li>`);
+  $("alone").innerHTML = `<h3>May the agent act alone?</h3><p class="muted small" style="margin-bottom:4px">Separately, the agent's own confidence is tested against checked answers. Not yet, for any kind of tidy-up:</p><ul>${al.join("")}</ul>`;
+
+  // handled for you
+  $("handled-count").textContent = S.handled.length ? `${S.handled.length}` : "none yet";
+  $("handled").innerHTML = S.handled.slice(0, 5).map((h, i) => `<div class="hand">
+      <div><b>${h.mode === "auto-reject" ? "Kept separate" : "Applied"}:</b> ${esc(h.a.title)} <span class="muted">→</span> ${esc(h.b.title)}</div>
+      <p class="muted small">${esc(h.precedent_reason)}</p>
+      <div><button class="linkbtn" data-over="${i}">That's wrong, overrule it</button></div></div>`).join("") ||
+    `<p class="muted small">Nothing yet. Once your answers prove a pattern (see "Earning your trust"), matching suggestions are answered here for you, with the reason, and you can overrule any of them.</p>`;
+
+  // held back
+  const H = S.held || {}, hc = H["cheap-model"], hb = H["bad-rule"], hv = H["new-instructions"];
+  const ex = e => {
+    if (!e || !e.length) return "";
+    const x = e[0], other = x.key.split("-")[0] !== x.candidate.split("-")[0];
+    return `<p class="ex">For example, it wanted to merge "${esc(x.key_summary)}" (${esc(x.key)}) into "${esc(x.cand_summary)}" (${esc(x.candidate)}${other ? ", a different project" : ""}). A check found that wrong.</p>`;
+  };
+  $("held").innerHTML = [
+    hc && `<div class="hold"><b><span>A cheaper AI model isn't allowed to act</span><span class="tag stop">Blocked</span></b>${esc(hc.model)} said it was ${Math.round(hc.cutoff * 100)}%+ sure about ${hc.said_sure} merges. Checks showed only ${hc.right} were right. ${hc.unusable} of its ${hc.tasks} answers couldn't even be read.${ex(hc.examples)}</div>`,
+    hb && `<div class="hold"><b><span>A bad rule was blocked before use</span><span class="tag stop">Blocked</span></b>Someone suggested: <q>${esc(hb.rule)}</q> Tested first on ${hb.n} tickets: it fixed ${hb.fixed} and broke ${hb.broke}, so it was switched off.${ex(hb.examples)}</div>`,
+    hv && `<div class="hold hold-ask"><b><span>New instructions are on hold</span><span class="tag ask">On hold</span></b>Rewritten instructions fixed ${hv.fixed} answers but broke ${hv.broke} on the same ${hv.n} tickets. No proof they're better, so the old ones stay.</div>`
+  ].filter(Boolean).join("");
+
+  // models
+  const p = S.policy || {};
+  const nm = { "databricks-meta-llama-3-3-70b-instruct": "Llama 70B", "databricks-meta-llama-3-1-8b-instruct": "Llama 8B",
+               "databricks-qwen3-next-80b-a3b-instruct": "Qwen 80B", "databricks-gpt-oss-120b": "gpt-oss 120B" };
+  const n = m => nm[m] || m;
+  $("policy").innerHTML = `
+    <div class="pm"><span class="tag go">${icon("check")}Main</span><b>${esc(n(p.primary))}</b>Trusted for this task. Answers first.</div>
+    <div class="pm"><span class="tag stop">${icon("x")}Not allowed</span><b>${esc(n(p.cheap))} (cheaper)</b>${esc(p.cheap_evidence || "")}. It would be used only if it earned approval.</div>
+    <div class="pm"><span class="tag ask">${icon("switch")}Backups</span><b>${(p.backups || []).map(n).map(esc).join(", then ")}</b>Used when the main model is busy. Their answers wait for your review.</div>`;
+  $("models-sub").textContent = `${fmt(c.live_runs)} live requests · ${fmt(c.switches)} switch${c.switches === 1 ? "" : "es"}`;
+  $("log").innerHTML = (S.routing || []).slice(0, 6).map(d => {
+    const failed = (d.steps || []).filter(s => s.outcome !== "ok").map(s => `${n(s.model)} was ${s.outcome === "busy" ? "busy" : s.outcome === "bad_output" ? "unreadable" : "failing"}`);
+    const tag = d.switched ? `<span class="tag ask">${icon("switch")}Switched</span>` : d.answered_by ? `<span class="tag go">Normal</span>` : `<span class="tag stop">Sent to you</span>`;
+    const ms = (d.steps || []).reduce((a, s) => a + (s.ms || 0), 0);
+    return `<div class="lg"><span class="k"><a href="${jira(d.ticket)}" target="_blank" rel="noopener">${esc(d.ticket)}</a></span>
+      <span>${tag} Answered by <b>${esc(d.answered_name)}</b> in ${(ms / 1000).toFixed(1)} s${d.needs_review ? " · held for your review" : ""}</span>
+      <span class="r">${failed.length ? esc(failed.join("; ")) + ", so it switched to the next model." : "The main model answered."}</span></div>`;
+  }).join("") || `<p class="muted small">No live requests yet. Press "Check new tickets now".</p>`;
+
+  // savings
+  $("save").innerHTML = `
+    <div class="stat"><div class="n">$0</div><div class="l">AI bill for ${fmt(c.model_requests)} requests (Databricks Free Edition)</div></div>
+    <div class="stat"><div class="n">${fmt(c.wrong_prevented)}</div><div class="l">wrong changes prevented by blocking the cheap model and the bad rule</div></div>
+    <div class="stat"><div class="n">${fmt(c.auto_handled)}</div><div class="l">suggestions answered for you from proven past answers</div></div>
+    <div class="stat"><div class="n">${fmt(c.past_decisions)}</div><div class="l">past answers it learns from (incl. ${fmt(c.answered)} of yours)</div></div>`;
+  $("est").textContent = "Every number here is counted from the tables on Databricks, not estimated.";
+
+  $("foot").innerHTML = `Live data from Unity Catalog <code>${esc(S.catalog)}</code>: suggestions, past answers, your clicks (<code>actions</code>), model log (<code>routing_log</code>). Updated ${new Date(S.generated_at).toLocaleTimeString()}. Tickets are public Apache Jira issues; answers here create links only in a sandbox, never in the real Jira.`;
+
+}
+
+$("more").onclick = () => { shown += 6; render(); };
+
+// ---------- answers ----------
+$("inbox").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-a]"); if (!b || busy) return;
+  const it = window._items[+b.dataset.i], a = b.dataset.a, el = $("c" + b.dataset.i);
+  if (a === "skip") { skipped.add(it.id); el.classList.add("gone"); setTimeout(render, RM() ? 0 : 250); toast("Skipped. It moves to the end of your list."); return; }
+  busy = true; el.classList.add("gone");
+  el.querySelectorAll("button").forEach(x => x.disabled = true);
+  try {
+    const r = await api("/api/answer", { key: it.key, candidate: it.candidate, relation: it.relation, decision: a });
+    S = r.state; last = it; render();
+    toast((a === "accept" ? REL[it.relation].done : "Got it: they stay separate.") + " Saved to Databricks.", true);
+    tourAnswered();
+  } catch (err) { el.classList.remove("gone"); el.querySelectorAll("button").forEach(x => x.disabled = false); toast("Couldn't save: " + err.message); }
+  busy = false;
+});
+
+$("handled").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-over]"); if (!b) return;
+  const h = S.handled[+b.dataset.over];
+  b.disabled = true;
+  try {
+    const r = await api("/api/answer", { key: h.key, candidate: h.candidate, relation: h.relation,
+      decision: h.mode === "auto-reject" ? "accept" : "reject", overrode: h.mode });
+    S = r.state; render(); toast("Overruled and saved. Your answer now counts against that pattern.");
+  } catch (err) { b.disabled = false; toast("Couldn't save: " + err.message); }
+});
+
+let tt = null;
+function toast(msg, undo) {
+  $("toast-text").textContent = msg; $("toast").hidden = false; $("toast-undo").hidden = !undo;
+  clearTimeout(tt); tt = setTimeout(() => $("toast").hidden = true, 6000);
+}
+$("toast-undo").onclick = async () => {
+  if (!last) return; const it = last; last = null; $("toast").hidden = true;
+  try { const r = await api("/api/undo", { key: it.key, candidate: it.candidate, relation: it.relation }); S = r.state; render(); toast("Undone. It's back in your list."); }
+  catch (err) { toast("Couldn't undo: " + err.message); }
+};
+
+// ---------- live agent run ----------
+$("run").onclick = async () => {
+  const b = $("run"); b.disabled = true;
+  b.innerHTML = `<span class="spin" style="width:16px;height:16px;border-width:2px"></span>Reading 3 new tickets… (10–40 s)`;
+  try {
+    const r = await api("/api/run", { n: 3 });
+    freshIds = new Set(r.state.inbox.filter(i => i.new && r.tickets.includes(i.key)).map(i => i.id));
+    S = r.state; shown = Math.max(shown, 6); render();
+    const sw = r.decisions.filter(d => d.switched).length;
+    toast(`Read ${r.tickets.length} new tickets: ${r.suggestions} suggestion${r.suggestions === 1 ? "" : "s"} added${sw ? `, ${sw} live model switch${sw === 1 ? "" : "es"}` : ""}.`);
+  } catch (err) { toast("The check didn't finish: " + err.message); }
+  b.disabled = false; b.innerHTML = `${icon("play")}Check new tickets now`;
+};
+
+// ---------- guided tour (with one hands-on step) ----------
+const TOUR = [
+  ["hello", "What this is", "Your assistant reads new tickets and suggests tidy-ups. It never changes anything unless you've said yes, or your past answers have proven it right."],
+  ["summary", "At a glance", "How many tickets the agent read, what it suggested, what it handled without asking, and how many you've answered here. All counted live from Databricks."],
+  ["inbox", "Your to-do list", "Suggestions waiting for a yes or no. This is the only place you need to act."],
+  ["card", "One suggestion", "What it thinks, the two tickets (click a code to open it in Jira), the agent's own reason, and what reviewers said about cases like this before."],
+  ["buttons", "Your turn: try it", "Answer this one now. Yes applies it, No keeps them separate. Your answer is saved to a Databricks table, and you can undo it.", "try"],
+  ["learning", "How it earns freedom", "Your answer just joined the record. Answers are grouped by kind of case. When a kind is answered the same way often enough to prove it, the assistant takes over that kind."],
+  ["handled", "Handled for you", "Suggestions answered from proven past answers show up here, with the reason. One click overrules any of them."],
+  ["held", "What it's not allowed to do", "Things that were tested and stopped: a cheaper model that was over-confident, a bad rule, and new instructions without proof they're better."],
+  ["models", "Which AI answered", "The main model answers first. If it's busy, the assistant switches to a backup on the spot, and holds that answer for your review."],
+  ["run", "See it work live", "Press this to have the agent read a few brand-new tickets right now, on Databricks. New suggestions appear at the top of your list."],
+  ["savings", "What it saved you", "Cost, mistakes prevented, and work handled for you. Counted, not estimated."],
+  ["help", "Need a reminder?", "Click here any time to take this tour again."]
+];
+let ti = -1;
+function tourEl(key) { const el = document.querySelector(`[data-tour="${key}"]`); return el && el.offsetParent !== null ? el : null; }
+function place() {
+  const [key, , , mode] = TOUR[ti];
+  const el = tourEl(key);
+  if (!el) { ti < TOUR.length - 1 ? (ti++, place()) : endTour(); return; }
+  document.querySelectorAll("[data-tour-active]").forEach(x => x.removeAttribute("data-tour-active"));
+  document.body.classList.toggle("tour-live", mode === "try");
+  if (mode === "try") el.setAttribute("data-tour-active", "");
+  el.scrollIntoView({ block: el.offsetHeight > innerHeight - 260 ? "start" : "center", behavior: "auto" });
+  const [, h, text] = TOUR[ti];
+  $("tour-step").textContent = `Step ${ti + 1} of ${TOUR.length}`; $("tour-h").textContent = h; $("tour-text").textContent = text;
+  $("tour-back").disabled = ti === 0;
+  $("tour-next").textContent = mode === "try" ? "Skip this step" : ti === TOUR.length - 1 ? "Done" : "Next";
+  position();
+  if (mode !== "try") $("tour-next").focus({ preventScroll: true });
+}
+function position() {  // follows the element if the page shifts (fonts loading, data refresh, resize, scroll)
+  if (ti < 0) return;
+  const el = tourEl(TOUR[ti][0]); if (!el) return;
+  const r = el.getBoundingClientRect(), ring = $("tour-ring"), tip = $("tour-tip");
+  Object.assign(ring.style, { left: r.left - 6 + "px", top: r.top - 6 + "px", width: r.width + 12 + "px", height: r.height + 12 + "px" });
+  const tw = Math.min(360, innerWidth - 32); tip.style.width = tw + "px";
+  let top = r.bottom + 14; const th = tip.offsetHeight || 190;
+  if (top + th > innerHeight - 12) top = r.top - th - 14;
+  if (top < 12) top = Math.min(innerHeight - th - 12, Math.max(12, r.top + 12));
+  tip.style.left = Math.max(16, Math.min(r.left, innerWidth - tw - 16)) + "px"; tip.style.top = top + "px";
+}
+new ResizeObserver(position).observe(document.body);
+addEventListener("scroll", position, { passive: true });
+function tourAnswered() { if (ti >= 0 && TOUR[ti][3] === "try") { ti++; setTimeout(place, 400); } }
+function startTour() {
+  $("welcome").hidden = true;
+  if (!S) { toast("Still loading the data. Try the tour again in a moment."); return; }
+  ti = 0; $("tour-ring").hidden = false; $("tour-tip").hidden = false; place();
+}
+function endTour() {
+  ti = -1; $("tour-ring").hidden = true; $("tour-tip").hidden = true; document.body.classList.remove("tour-live");
+  document.querySelectorAll("[data-tour-active]").forEach(x => x.removeAttribute("data-tour-active"));
+  try { localStorage.setItem("ta-toured", "1"); } catch (e) {}
+}
+$("tour-next").onclick = () => { ti >= TOUR.length - 1 ? endTour() : (ti++, place()); };
+$("tour-back").onclick = () => { if (ti > 0) { ti--; place(); } };
+$("tour-end").onclick = endTour;
+$("help").onclick = startTour;
+$("w-start").onclick = startTour;
+$("w-skip").onclick = () => { $("welcome").hidden = true; try { localStorage.setItem("ta-toured", "1"); } catch (e) {} };
+addEventListener("keydown", e => { if (e.key === "Escape") { endTour(); $("welcome").hidden = true; } });
+addEventListener("resize", position);
+
+load(false).then(() => {
+  let toured = false; try { toured = localStorage.getItem("ta-toured") === "1"; } catch (e) {}
+  const m = location.hash.match(/^#tour(?:=(\d+))?$/);  // link straight into the tour: #tour or #tour=5 (step 5)
+  if (m && S) { startTour(); if (m[1]) { ti = Math.min(TOUR.length, +m[1]) - 1; place(); } }
+  else if (!toured && S) { $("welcome").hidden = false; $("w-start").focus(); }
+});
+setInterval(() => { if (!busy && ti < 0 && document.visibilityState === "visible") load(false); }, 60000);
+</script>
+</body>
+</html>

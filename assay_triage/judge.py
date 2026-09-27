@@ -98,6 +98,20 @@ def _parse(text: str) -> list[dict]:
         return []
 
 
+_SDK_CONFIG = None
+
+
+def _databricks_auth() -> tuple[str, str]:
+    """(host, bearer token): DATABRICKS_TOKEN locally; inside a Databricks App, the app's service principal."""
+    global _SDK_CONFIG
+    host, token = os.environ.get("DATABRICKS_HOST", ""), os.environ.get("DATABRICKS_TOKEN")
+    if not token:
+        from databricks.sdk.core import Config
+        _SDK_CONFIG = _SDK_CONFIG or Config()
+        host, token = _SDK_CONFIG.host, _SDK_CONFIG.authenticate()["Authorization"].split(" ", 1)[1]
+    return (host if host.startswith("http") else "https://" + host), token
+
+
 def call(prompt: str, model: str, backend: str = "cli", timeout: int = 180,
          retries: int = 6) -> tuple[str, float | None, dict]:
     """Returns (text, cost_usd or None, usage). `retries`: attempts on a Databricks 429 (1 = fail fast, for routing)."""
@@ -127,8 +141,8 @@ def call(prompt: str, model: str, backend: str = "cli", timeout: int = 180,
         return response.output_text or "", openai_cost(model, usage), usage
     if backend == "databricks":
         from openai import OpenAI
-        client = OpenAI(base_url=os.environ["DATABRICKS_HOST"].rstrip("/") + "/serving-endpoints",
-                        api_key=os.environ["DATABRICKS_TOKEN"])
+        host, token = _databricks_auth()
+        client = OpenAI(base_url=host.rstrip("/") + "/serving-endpoints", api_key=token)
         for attempt in range(max(1, retries)):  # Free Edition has a per-workspace QPS limit: back off on 429
             try:
                 r = client.chat.completions.create(model=model, messages=[{"role": "system", "content": SYSTEM},

@@ -16,3 +16,4 @@ local-state/
 results/frozen-plan*.json
 data/candidates_all.jsonl
 results/stage-2-3-runs/*.log
+app/manager/_bundle/
