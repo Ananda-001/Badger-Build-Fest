@@ -4,13 +4,14 @@
 
 **Challenges: Databricks Real-World Workflows (Xorbix) · The Art of the Break**
 
-Status as of **Saturday 26 September 2026, 20:55 CDT** (submissions close Sunday 11:00).
+Status as of **Saturday 26 September 2026, 21:45 CDT** (submissions close Sunday 11:00).
 
 | | Link |
 |---|---|
 | Code | https://github.com/Ananda-001/Badger-Build-Fest (branch `main`) |
-| Live app on Databricks | https://assay-7474649367590010.aws.databricksapps.com (Databricks login required; stops 24 h after each deploy) |
-| Manager UI mock (the design we are moving to) | https://claude.ai/artifact/MURyj2T5F6QH6ZC4JqfHad |
+| **Manager dashboard on Databricks (the demo)** | https://assay-manager-7474649367590010.aws.databricksapps.com (Databricks login required; stops 24 h after each deploy). Add `#tour` to the link to open the guided tour. |
+| Review workbench on Databricks (technical view) | https://assay-7474649367590010.aws.databricksapps.com |
+| Early UI mock (superseded by the dashboard) | https://claude.ai/artifact/MURyj2T5F6QH6ZC4JqfHad |
 | Verdicts in one page | `results/stage-2-3-runs/VERDICTS.md` |
 
 ---
@@ -37,6 +38,10 @@ It does four things, all of them working today on real data and real models runn
 The demo agent tidies up the **public Apache Jira** (Spark, Kafka, Flink, Hive): it spots tickets that are the same
 problem, or that belong under a bigger ticket. **37,853 real tickets.** Almost half of the tickets closed as
 duplicates were never linked to their original: knowledge the agent can recover.
+
+**All of this is visible in one place:** a manager dashboard running as a Databricks App, in plain words, with a
+guided tour. It reads every number live from Unity Catalog tables, saves every Yes/No to a Delta table, and can run
+the agent on fresh tickets at the press of a button (section 8.8).
 
 What we refuse to claim: no model has earned the right to act alone; the cost question is not certified; the
 labels behind two of the three relation types are too inconsistent to rely on. Section 13 lists every limit.
@@ -110,6 +115,9 @@ everything runs inside Databricks.
 | 19:15–20:10 | Dashboard lab (4 designs), then the manager mock (inbox + savings + guided tour). Product reframed as an "AI agent manager". |
 | 20:36 | Live model switching on Databricks Free Edition. |
 | 20:50 | Reuse of past reviewer decisions, with proof. |
+| 20:55 | This report, first version. |
+| 21:00–21:30 | Results published as Unity Catalog tables; the manager dashboard built (FastAPI + one page, guided tour with a hands-on step) and deployed as the Databricks App `assay-manager`. |
+| 21:31 | First use of the deployed dashboard: one answer saved, one live run of 3 tickets on Databricks. |
 
 ### Why these were not pivots
 The engine never changed: prove before you trust. What changed was the evidence it runs on (synthetic → real
@@ -171,14 +179,17 @@ poisoned correction for the stress test). Model calls are off unless `ASSAY_ALLO
                           |
           auto (proven)   |   ask a person (plain words, Yes / No / Not sure)
                           v
-            Review app on Databricks Apps  ->  actions table (Delta, one link per approval)
+            Manager dashboard (Databricks App "assay-manager", FastAPI + one page)
+              reads:  proposals, live_proposals, past_decisions, verdicts, routing_log, actions
+              writes: actions (every Yes / No), live_proposals + routing_log ("Check new tickets now")
                           |
-            every click = new evidence  ->  receipts, precedents, routing policy (tables)
+            every click = new evidence  ->  precedent memory recomputed on the next page load
 ```
 
-**Where things run today:** models, data tables, the review store and the app run on Databricks. The evaluation
-and routing scripts run on a laptop and call Databricks. Moving the agent loop into a Databricks notebook or job
-is on the next-steps list.
+**Where things run today:** models, data tables, the review store and both apps run on Databricks. The manager
+dashboard also runs the agent itself: "Check new tickets now" routes fresh tickets through the live switcher on
+Databricks, as the app's own service principal. The large evaluation runs and the verdict scripts run on a laptop
+and call Databricks; `scripts/sync_results.py` then publishes their results as tables.
 
 ---
 
@@ -187,14 +198,18 @@ is on the next-steps list.
 | Piece | State |
 |---|---|
 | Workspace | Free Edition, one SQL warehouse (Serverless Starter, 2X-Small) |
-| Unity Catalog schema `workspace.assay_triage` | `tickets` 37,853 · `truth` 13,687 · `candidates` 14,910 · `judgments` 656 · `actions` (review decisions) · `routing_log` 36 · `precedents` 13 |
+| Unity Catalog schema `workspace.assay_triage` | inputs: `tickets` 37,853 · `truth` 13,687 · `candidates` 14,910 · `judgments` 656 · `stream` 4,051 (fresh tickets for live runs) |
+| | results (from `scripts/sync_results.py`): `proposals` 130 (open suggestions) · `past_decisions` 97 · `verdicts` 6 · `precedents` 13 |
+| | live (written by the apps): `actions` (every Yes / No) · `routing_log` 42 · `live_proposals` 6 (as of 21:39 CDT) |
 | Volume `/Volumes/workspace/assay_triage/data` | the four JSONL inputs (tickets file is 42 MB, above the 10 MB app-file limit, so the app reads it from here) |
 | Models (Foundation Model APIs) | chat: Llama 3.3 70B, Llama 3.1 8B, Llama 4 Maverick, Qwen3-Next 80B, Qwen3.5 122B, gpt-oss 120B / 20B, Gemma 3 12B; embeddings: GTE, BGE, Qwen3 0.6B. **No Claude models on Free Edition.** |
+| Databricks App `assay-manager` | **The manager dashboard** (section 8.8). FastAPI + one static page. Resources: the SQL warehouse (CAN_USE) and four model endpoints (CAN_QUERY); the app's service principal gets SELECT on 8 tables and MODIFY on `actions`, `live_proposals`, `routing_log`. Deploy: `scripts/deploy_manager.py`. |
 | Databricks App `assay` | Streamlit workbench; reviews and links written to the Delta `actions` table by one atomic MERGE per decision (live test: 6 simultaneous accepts → exactly 1 link). Redeploy: `scripts/databricks_deploy.py`. |
 | AI Gateway | usage tracking is on for our endpoints, but on Free Edition the usage system tables are managed by Databricks and can't be read ("can only be enabled by Databricks"). We record token counts from every response instead. Fallback routing exists only for external models, so live switching is done in our code. |
 | Limits we hit | per-workspace request rate (HTTP 429) on Llama 70B when 5–16 requests run at once; apps stop 24 h after a deploy; outbound internet limited until LinkedIn verification. |
 
-Scripts: `scripts/databricks_setup.py` (schema, volume, tables), `scripts/databricks_deploy.py` (app),
+Scripts: `scripts/databricks_setup.py` (schema, volume, tables), `scripts/sync_results.py` (results → tables),
+`scripts/deploy_manager.py` (manager dashboard), `scripts/databricks_deploy.py` (workbench),
 `assay_triage/dbx.py` (client, SQL through the warehouse, uploads), `assay_engine/delta_store.py` (review store).
 
 ---
@@ -328,14 +343,57 @@ switches only happen on real rate limits or real unusable answers.
 
 At the 90% bar nothing is automatic yet (leave-one-out: 0 of 97 auto-resolved). At an 85% bar, reported
 separately and never swapped in silently, the version-upgrade precedent switches on: leave-one-out **21 of 21 right**
-(lower bound 0.87), and 5 of 175 unreviewed proposals would be auto-rejected. **Demo moment:** a manager reviews
-about 8 more of those cases in the app, and the precedent switches on in front of the judges. That is the
-"improves when a human corrects it" loop the Xorbix challenge asks for.
+(lower bound 0.87), and 5 of 175 unreviewed proposals would be auto-rejected.
 
-### 8.7 What the manager would see (numbers used in the mock)
+**In the dashboard:** every Yes / No on a version-upgrade duplicate moves that pattern's bar ("8 more" becomes "7").
+Honest caveat: only **1** such case from the main agent is waiting in the list today (the other 4 came from the
+blocked cheap model), so the switch-on can't be shown with today's data alone; it needs new version-upgrade tickets
+from live runs. A test (`tests/test_manager.py`) proves the mechanism: after 8 more consistent answers (29 of 29),
+the pattern is proven and the remaining matching suggestions move to "Handled for you" as auto-rejected.
+
+### 8.7 Numbers in the early mock (superseded by the live dashboard, 8.8)
 180 tickets read · 89 suggestions · 0 done alone · 360 AI calls at $0 · 105 checks instead of 360 (−71%) ·
 ≈6.4 hours saved (estimate: 255 checks × 1.5 min) · 31 wrong changes prevented (15 unearned merges + 16 from the
 blocked rule).
+
+### 8.8 The manager dashboard on Databricks (live)
+
+**Who it is for:** a manager with no background in code or prompts. It answers three questions: *what did the
+agent do, what needs my OK, and what has it earned the right to do alone?* Built from designs B (inbox) and C (cost
+and savings) of our dashboard lab, following a published UI checklist (ui-ux-pro-max: SVG icons instead of emoji,
+visible keyboard focus, 4.5:1 text contrast, badges that never rely on colour alone, works at phone width,
+respects "reduce motion").
+
+**What is on the page, top to bottom** (all numbers read live from the tables; as of 21:39 CDT):
+
+| Panel | What it shows | Source table |
+|---|---|---|
+| At a glance | 186 tickets read · 191 tidy-ups suggested · 0 handled without asking · answers given here | `verdicts` (summary) + `live_proposals` + `actions` |
+| Needs your OK | 130+ open suggestions. Each card: what the agent thinks in words ("Same problem reported twice"), the two tickets with dates and Jira links, the agent's own reason, and "Seen before: reviewers said No all 21 times…". Buttons: Yes / No / Not sure. Undo for 6 s. Newest live suggestions first, then the ones whose answer teaches the most. | `proposals`, `live_proposals` → click writes `actions` |
+| Earning your trust | Past decisions grouped by kind of case, with a bar per pattern: "Learning" (consistent, N more answers to prove), "Stays with you" (answers mixed), "Handled for you" (proven). Plus "May the agent act alone?" from the permission receipts (not yet, for any kind). | `past_decisions` + `actions`, recomputed by `precedent.py` |
+| Handled for you | Suggestions answered from a proven pattern, with the reason and a one-click overrule (saved as a human answer against the pattern). Empty today: nothing is proven at 90% yet. | computed |
+| Held back for your safety | The blocked cheap model (said 95%+ sure on 19 merges, 4 right; 10 of 90 answers unreadable), the blocked bad rule (fixed 0, broke 16 on 30 tickets), the new instructions on hold (fixed 3, broke 3). Each with a real example a check marked wrong. | `verdicts` |
+| Which AI answered | Main model (Llama 70B, trusted), the cheaper model and why it isn't allowed, the backups (Qwen 80B, then gpt-oss 120B; their answers wait for review). The latest requests in words: "Llama 70B was busy, so it switched to the next model." | `verdicts` (routing policy), `routing_log` |
+| Check new tickets now | Reads 3 fresh tickets on Databricks through the live switcher (about 10–40 s); new suggestions appear at the top marked "New". | `stream`, `tickets` → writes `routing_log`, `live_proposals` |
+| What it saved you | $0 AI bill for 402 requests (Free Edition) · 31 wrong changes prevented · suggestions answered from proven answers · past answers it learns from. All counted, none estimated. | all of the above |
+
+**The guided tour ("Show me around")**: 12 steps with a highlight ring. It opens automatically on a first visit,
+can be reopened from the top bar, and can be linked directly (`…/#tour`, or `…/#tour=5` for a given step).
+Step 5 is hands-on: the manager answers a real suggestion, the answer is saved to Databricks, and the tour moves on
+to show the trust bar that answer fed.
+
+**Verified:** locally against the real tables (answer → the bar moved from 21/21 to 22/22 and "8 more" became "7";
+undo restored it; a live run read 3 tickets in 14 s and added 3 suggestions); screenshots at desktop and phone width;
+both deploys succeeded. **On the deployed app**, at 21:31–21:32 CDT a signed-in user answered one suggestion
+(saved to `actions`) and ran "Check new tickets now" (3 tickets answered by Llama 70B on Databricks, logged in
+`routing_log`), so the app's own identity can read and write the tables and call the models.
+
+**How a teammate uses it (5 minutes):**
+1. Open the dashboard link and sign in with the Databricks workspace account.
+2. Take the tour (it opens by itself the first time; otherwise "Show me around").
+3. Answer a few suggestions. Watch "answered by you" and the trust bars change.
+4. Press "Check new tickets now" once and find the "New" cards at the top.
+5. If the page says the app is stopped (24 h limit), run `python scripts/deploy_manager.py` from a laptop with `.env`.
 
 ---
 
@@ -365,18 +423,20 @@ assay_engine/   bounds.py · bands.py (precision bands, auto threshold, extra_ne
                 · gate.py · report.py · policy.py (one action per ticket, label keys, maintainer pre-fill)
                 · permissions.py (receipts, can_act, needs_more) · learning.py (task-level gate, ties)
                 · local_store.py (SQLite) · delta_store.py (Delta) · router.py (live switching) · precedent.py
-app/            workbench.py (review workbench, local or Databricks) · label_app.py (blind labelling page)
+app/            manager/ (the manager dashboard: server.py FastAPI API + static/index.html page and tour)
+                · workbench.py (review workbench, local or Databricks) · label_app.py (blind labelling page)
                 · app.py (first dashboard, superseded)
 scripts/        judge_eval.py · prepare_eval.py · prepare_stream.py · run_frozen_eval.py · run_stage23_databricks.sh
                 · label_actions.py · ai_label.py · quick_label.py (one-key terminal labelling) · spot_check.py
                 · build_permissions.py · evaluate_correction.py · live_route.py · precedents.py
-                · databricks_setup.py · databricks_deploy.py
+                · databricks_setup.py · databricks_deploy.py · sync_results.py (results → tables)
+                · deploy_manager.py (dashboard app)
 results/        hardness test · Stage 2/3 plans, runs, labels, receipts, VERDICTS.md · routing policy + log · precedents
 docs/           SCHEMA.md · DATABRICKS_SETUP.md · STAGE_ONE.md · STAGE_TWO_THREE.md · thinking/ (briefs v1-v3) · this report
-tests/          61 tests, all passing
+tests/          63 tests, all passing
 ```
 
-About 5,600 lines of Python, all written at the event.
+About 6,000 lines of Python plus the dashboard page (about 580 lines), all written at the event.
 
 ---
 
@@ -384,7 +444,7 @@ About 5,600 lines of Python, all written at the event.
 
 ```bash
 pip install -r requirements.txt
-python -m pytest -q                                   # 61 passed
+python -m pytest -q                                   # 63 passed
 # data (public Jira; cached)
 python -m assay_triage.ingest && python -m assay_triage.retrieve --all
 # Databricks (needs .env with DATABRICKS_HOST, DATABRICKS_TOKEN, DATABRICKS_WAREHOUSE_ID)
@@ -399,6 +459,10 @@ python scripts/build_permissions.py ... ; python scripts/evaluate_correction.py 
 # live switching and precedents
 ASSAY_ALLOW_MODEL_CALLS=1 python scripts/live_route.py --n 24 --workers 16 --delta
 python scripts/precedents.py --clicks --delta
+# the manager dashboard
+python scripts/sync_results.py                        # results -> Unity Catalog tables (no model calls)
+python scripts/deploy_manager.py                      # deploy / redeploy the app (re-run within 24 h of judging)
+uvicorn app.manager.server:app --port 8000            # or run it locally against the same tables
 ```
 
 ---
@@ -430,18 +494,22 @@ python scripts/precedents.py --clicks --delta
 - Precedent reuse is not yet proven at 90%; the 85% figure is reported separately.
 - The agent loop runs on a laptop calling Databricks, not yet as a Databricks job.
 - Four Apache projects only; a sibling's parent is read from today's data (slightly optimistic retrieval).
-- The dashboard for managers exists as a mock; the live app still has the earlier, technical design.
+- The dashboard shows real data, but "Handled for you" is empty: no pattern is proven at 90% yet, and only one
+  open case of the strongest pattern exists today, so the switch-on can't be demonstrated live without new tickets.
+- Dashboard answers create links only in our sandbox table, never in the real Apache Jira.
+- The deployed dashboard has been used by one signed-in person so far (1 answer, 1 live run); more hands-on testing
+  by teammates before the demo is advised.
 
 ---
 
 ## 14. What's next (in order)
 
-1. **UI:** turn the manager mock into the Databricks app (inbox, savings, trust meters, held-back items, model
-   decisions, the guided tour), reading the tables live; teammates' GitHub repos to be integrated here.
-2. **Sync results into tables:** runs, labels, receipts, verdicts and routing policy as Unity Catalog tables.
-3. **Run the agent inside Databricks:** a notebook or job reading new tickets from the table and writing
-   decisions back.
-4. **The precedent demo:** review the remaining version-upgrade cases in the app and show the precedent switch on.
+1. ~~UI: the manager dashboard on Databricks~~ **done** (section 8.8); ~~sync results into tables~~ **done**.
+2. **Teammates click through the dashboard** and report anything confusing; redeploy on Sunday morning.
+3. **Run the agent on a schedule inside Databricks:** a job reading new tickets from `stream` and writing
+   suggestions to `live_proposals` (today it runs on demand from the dashboard button).
+4. **The precedent demo:** feed version-upgrade tickets through live runs so that enough cases exist to show the
+   pattern switch on at 90%.
 5. **Story:** Break Card (section 9), 2-minute video, README, Devpost answers, the three mentor visits;
    confirm the challenge declaration; rotate the API key pasted in chat earlier.
 
@@ -465,7 +533,7 @@ python scripts/precedents.py --clicks --delta
 |---|---|
 | Real tickets | 37,853 |
 | Duplicate closures never linked to the original | 48% |
-| Model calls on Databricks | 360 evaluation + 105 labelling + 36 routed |
+| Model calls on Databricks | 360 evaluation + 105 labelling + 42 routed (36 from the script, 6 from the dashboard) |
 | Cost of those calls | $0 (Free Edition) |
 | Cheap model "95% sure" duplicates that were right | 4 of 19 (21%) |
 | Poisoned correction | broke 16, fixed 0 → DISCARD (p = 1.5×10⁻⁵) |
@@ -473,5 +541,6 @@ python scripts/precedents.py --clicks --delta
 | Human–AI label agreement on duplicates | 8 of 9 |
 | Checks needed with Assay vs checking everything | 105 vs 360 (−71%) |
 | Live switches observed | 1 (Llama 70B busy → Qwen 80B, held for review) |
+| Manager dashboard | live on Databricks; 12-step tour; 130 open suggestions; every answer saved to Delta |
 | Strongest precedent | 21 of 21 rejections; ≈8 reviews from proven at 90% |
-| Tests | 61 passing |
+| Tests | 63 passing |

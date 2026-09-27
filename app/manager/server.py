@@ -30,6 +30,7 @@ sys.path.insert(0, str(ROOT))
 from fastapi import FastAPI, HTTPException, Request  # noqa: E402
 from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
+from starlette.concurrency import run_in_threadpool  # noqa: E402
 
 from assay_engine import precedent as P  # noqa: E402
 from assay_engine import router  # noqa: E402
@@ -226,18 +227,18 @@ async def api_answer(request: Request):
                "source": "manager-dashboard", "overrode": body.get("overrode"),
                "ts": datetime.now(timezone.utc).isoformat()}
     p = lambda n, v, t=None: {"name": n, "value": None if v is None else str(v), "type": t}  # noqa: E731
-    _sql_retry(MERGE, [p("id", cid), p("key", key), p("candidate", cand), p("relation", rel), p("decision", decision),
+    await run_in_threadpool(_sql_retry, MERGE, [p("id", cid), p("key", key), p("candidate", cand), p("relation", rel), p("decision", decision),
                        p("user", user), p("reason", body.get("overrode") or ""), p("payload", json.dumps(payload)),
                        p("link_created", "true" if decision == "accept" else "false", "BOOLEAN")])
-    return {"ok": True, "id": cid, "state": state(fresh=True)}
+    return {"ok": True, "id": cid, "state": await run_in_threadpool(state, True)}
 
 
 @app.post("/api/undo")
 async def api_undo(request: Request):
     body = await request.json()
     cid = click_id(body.get("key", ""), body.get("candidate", ""), body.get("relation", ""))
-    _sql_retry(f"DELETE FROM {table('actions')} WHERE id = :id", [{"name": "id", "value": cid}])
-    return {"ok": True, "state": state(fresh=True)}
+    await run_in_threadpool(_sql_retry, f"DELETE FROM {table('actions')} WHERE id = :id", [{"name": "id", "value": cid}])
+    return {"ok": True, "state": await run_in_threadpool(state, True)}
 
 
 @app.post("/api/run")
@@ -249,7 +250,7 @@ async def api_run(request: Request):
         raise HTTPException(409, "A check is already running. Give it a few seconds.")
     try:
         n = max(1, min(int((await request.json()).get("n", 3)), 5))
-        return run_live(n)
+        return await run_in_threadpool(run_live, n)  # 10-40 s of model calls: keep the server responsive
     finally:
         _run_lock.release()
 

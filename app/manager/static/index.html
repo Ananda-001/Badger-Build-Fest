@@ -202,7 +202,7 @@ button:disabled{cursor:not-allowed;opacity:.55}
       <div class="stat"><div class="n" id="s-read">–</div><div class="l">tickets read by the agent</div></div>
       <div class="stat"><div class="n" id="s-sugg">–</div><div class="l">tidy-ups suggested</div></div>
       <div class="stat"><div class="n" id="s-auto">–</div><div class="l">handled without asking you</div></div>
-      <div class="stat"><div class="n" id="s-ans">–</div><div class="l">answered by you here</div></div>
+      <div class="stat"><div class="n" id="s-ans">–</div><div class="l">answered by reviewers here</div></div>
     </section>
 
     <div class="cols">
@@ -502,7 +502,7 @@ $("run").onclick = async () => {
 // ---------- guided tour (with one hands-on step) ----------
 const TOUR = [
   ["hello", "What this is", "Your assistant reads new tickets and suggests tidy-ups. It never changes anything unless you've said yes, or your past answers have proven it right."],
-  ["summary", "At a glance", "How many tickets the agent read, what it suggested, what it handled without asking, and how many you've answered here. All counted live from Databricks."],
+  ["summary", "At a glance", "How many tickets the agent read, what it suggested, what it handled without asking, and how many answers reviewers have given here. All counted live from Databricks."],
   ["inbox", "Your to-do list", "Suggestions waiting for a yes or no. This is the only place you need to act."],
   ["card", "One suggestion", "What it thinks, the two tickets (click a code to open it in Jira), the agent's own reason, and what reviewers said about cases like this before."],
   ["buttons", "Your turn: try it", "Answer this one now. Yes applies it, No keeps them separate. Your answer is saved to a Databricks table, and you can undo it.", "try"],

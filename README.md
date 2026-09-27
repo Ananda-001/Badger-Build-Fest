@@ -15,10 +15,19 @@ Agents keep being given more freedom: act without asking, run on cheaper models,
 whether it's a duplicate, part of an umbrella, related, or new, and it's checked against 13,687 real maintainer links.
 It runs on Databricks.
 
+## See it
+- **Manager dashboard (Databricks App):** https://assay-manager-7474649367590010.aws.databricksapps.com
+  (Databricks login; add `#tour` for the guided tour). Plain-words inbox, trust bars, what was held back, which
+  model answered, and a button that runs the agent live. Every Yes/No is saved to a Delta table.
+- **Full report:** [`docs/ASSAY_REPORT.md`](docs/ASSAY_REPORT.md) ([PDF](docs/ASSAY_REPORT.pdf)): every result,
+  method, limit and number, with its source.
+- **Submission kit:** [`docs/SUBMISSION_KIT.md`](docs/SUBMISSION_KIT.md): Devpost answers, video script, Break Card.
+
 ## Layout
 - `assay_triage/`: the demo agent (Jira ingest, time-honest retrieval, LLM judge)
 - `assay_engine/`: the statistics behind the verdicts (precision bands, auto threshold, model compare, learning gate)
-- `app/`: the review app (Streamlit, deployable as a Databricks App)
+- `app/manager/`: the manager dashboard (FastAPI + one page, deployed with `scripts/deploy_manager.py`)
+- `app/`: the review workbench (Streamlit, deployable as a Databricks App)
 - `results/`: every number we quote, with the command that produced it
 - `docs/thinking/`: how our thinking evolved during the event, step by step
 - `CLAUDE.md`: our rules and build plan
