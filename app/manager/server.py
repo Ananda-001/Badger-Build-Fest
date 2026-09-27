@@ -143,6 +143,8 @@ def build_state(raw: dict) -> dict:
         d["answered_name"] = router.name(d.get("answered_by"))
         d["first_name"] = router.name(d.get("first_choice"))
         d["steps"] = json.loads(d["steps"]) if isinstance(d.get("steps"), str) else d.get("steps") or []
+    main = [d for d in routing if d.get("answered_by") and d["answered_by"] == d.get("first_choice")]
+    main_ms = sorted(sum(s.get("ms") or 0 for s in d["steps"]) for d in main)
     summary = verdicts.get("summary", {})
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -155,7 +157,8 @@ def build_state(raw: dict) -> dict:
             "model_requests": summary.get("model_requests", 0) + len(routing),
             "wrong_prevented": summary.get("wrong_prevented", 0),
             "switches": sum(1 for d in routing if d.get("switched")),
-            "live_runs": len(routing),
+            "live_runs": len(routing), "main_answers": len(main),
+            "typical_ms": main_ms[len(main_ms) // 2] if main_ms else None,
         },
         "inbox": open_items,
         "handled": handled,
@@ -164,6 +167,7 @@ def build_state(raw: dict) -> dict:
         "held": {k: verdicts.get(k, {}) for k in ("cheap-model", "bad-rule", "new-instructions")},
         "policy": verdicts.get("routing-policy", {}),
         "routing": routing[:12],
+        "last_switch": next((d for d in routing if d.get("switched")), None),  # the whole log: it can be older than 12
         "recent_clicks": [{"key": c["key"], "candidate": c["candidate"], "relation": c["relation"],
                            "decision": c["decision"], "user": c.get("user"), "ts": c.get("ts")}
                           for c in list(clicked.values())[:8]],

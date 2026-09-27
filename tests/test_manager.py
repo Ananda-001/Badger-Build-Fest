@@ -1,6 +1,7 @@
 """Manager dashboard state: built from table rows, no Databricks needed."""
 import importlib.util
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -48,3 +49,29 @@ def test_click_on_other_kind_never_auto_handles():
         r["key_summary"], r["cand_summary"] = "Fix a bug", "Improve docs"
     s = server.build_state(raw)
     assert not s["handled"] and not s["learning"]
+
+
+def test_last_switch_is_found_even_when_older_than_the_log_shown():
+    def route(i, switched):
+        return {"ts": f"2026-09-27T01:{59 - i:02d}:00Z", "ticket": f"SPARK-{i}", "first_choice": "a",
+                "answered_by": "b" if switched else "a", "switched": switched, "needs_review": switched,
+                "steps": json.dumps([{"model": "a", "outcome": "busy" if switched else "ok", "ms": 3000}])}
+    raw = _raw(clicks=0)
+    raw["routing"] = [route(i, i == 13) for i in range(15)]  # newest first; the only switch is 14th
+    s = server.build_state(raw)
+    assert not any(d["switched"] for d in s["routing"])  # the page's log no longer reaches it...
+    assert s["last_switch"]["ticket"] == "SPARK-13"      # ...but it stays pinned
+    assert (s["counts"]["switches"], s["counts"]["main_answers"], s["counts"]["typical_ms"]) == (1, 14, 3000)
+    raw["routing"] = [route(i, False) for i in range(3)]
+    assert server.build_state(raw)["last_switch"] is None
+
+
+def test_page_wires_every_tour_step_and_element():
+    html = (Path(server.__file__).parent / "static" / "index.html").read_text(encoding="utf-8")
+    steps = re.findall(r'^\s*\["(\w+)"', re.search(r"const TOUR = \[(.*?)\n\];", html, re.S).group(1), re.M)
+    assert len(steps) == 12 and steps[4] == "buttons"  # the docs link #tour=5 to the hands-on step
+    for key in steps:
+        assert f'data-tour="{key}"' in html, key
+    for el in set(re.findall(r'\$\("([\w-]+)"\)', html)):
+        assert f'id="{el}"' in html, el
+    assert not re.search("[\U0001F300-\U0001FAFF☀-➿]", html)  # SVG icons, never emoji
