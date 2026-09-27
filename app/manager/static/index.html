@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Assay Agent Manager</title>
-<meta name="description" content="Manager view of an AI triage agent checked by Assay, running on Databricks.">
+<meta name="description" content="Assay: evidence-based oversight for AI agents, running on Databricks.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
@@ -12,7 +12,7 @@
   --ground:#F3F5F1; --panel:#FFFFFF; --panel-2:#EBEFE8; --ink:#17262B; --ink-2:#4A5A5E; --line:#D5DCD3;
   --accent:#3A5BA0; --accent-ink:#FFFFFF; --accent-soft:#E3E9F6;
   --go:#1F7A52; --go-soft:#DDF1E6; --ask:#8A5A00; --ask-soft:#FBEFD2; --stop:#B23A27; --stop-soft:#F8E0DB;
-  --shade:rgba(10,20,24,.62); --shadow:0 1px 2px rgba(20,30,30,.06),0 10px 28px rgba(20,30,30,.08);
+  --shade:rgba(10,20,24,.62); --shadow:0 1px 2px rgba(20,30,30,.06),0 10px 28px rgba(20,30,30,.10);
   --display:"Bricolage Grotesque","Public Sans",system-ui,sans-serif; --body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
 }
@@ -27,16 +27,15 @@
 *{box-sizing:border-box}
 [hidden]{display:none !important}
 [data-tour]{scroll-margin-top:90px}
-html{-webkit-text-size-adjust:100%}
 body{background:var(--ground);color:var(--ink);font:15px/1.55 var(--body);margin:0}
 h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.2}
-h1{font-size:clamp(24px,3.4vw,32px);font-weight:700;letter-spacing:-.01em}
+h1{font-size:clamp(26px,3.6vw,36px);font-weight:700;letter-spacing:-.015em}
 h2{font-size:19px;font-weight:700}
 h3{font-size:15.5px;font-weight:600}
 p{margin:0}
+a{color:inherit}
 .muted{color:var(--ink-2)}
 .small{font-size:13.5px}
-.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
 svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px}
 button{font:inherit;cursor:pointer;color:inherit}
 button:disabled{cursor:not-allowed;opacity:.55}
@@ -44,132 +43,179 @@ button:disabled{cursor:not-allowed;opacity:.55}
 .btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:9px 14px;font-weight:600;min-height:40px}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .btn.yes{background:var(--go);color:#fff;border-color:var(--go)}
-:root[data-theme="dark"] .btn.yes{color:#0B1F15}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.yes{color:#0B1F15}}
 .btn.no{background:var(--panel);color:var(--stop);border-color:var(--stop)}
 .btn.ghost{background:transparent}
 .btn:hover:not(:disabled){filter:brightness(.95)}
-.linkbtn{background:none;border:0;padding:0;color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:3px}
-/* top bar */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.yes{color:#0B1F15}}
+:root[data-theme="dark"] .btn.yes{color:#0B1F15}
+/* header */
 .top{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line)}
-.top-in{max-width:1200px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:18px}
+.top-in{max-width:1240px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:19px}
 .logo i{width:30px;height:30px;border-radius:8px;background:var(--accent);display:inline-grid;place-items:center;color:var(--accent-ink)}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;align-items:center}
-.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--ink-2)}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--go)}
-.dot.off{background:var(--stop)}
+.top .spacer{flex:1}
 /* page */
-.page{max-width:1200px;margin:0 auto;padding:24px 20px 60px;display:grid;gap:20px}
-.hello{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:14px}
-.hello p{margin-top:6px;max-width:66ch}
-.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.page{max-width:1240px;margin:0 auto;padding:26px 20px 64px;display:grid;gap:20px}
+.hero{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:16px}
+.hero p{margin-top:6px;font-size:16px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.kpis .stat{padding:20px 22px;border-radius:14px}
+.kpis .stat .n{font-size:clamp(34px,4vw,46px);letter-spacing:-.02em}
+.kpis .stat .l{font-size:15px;font-weight:600;color:var(--ink);margin-top:4px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative}
 .stat .n{font-family:var(--display);font-size:30px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
-.stat .l{font-size:13.5px;color:var(--ink-2)}
-.cols{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;align-items:start}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.stat .l{font-size:13.5px;color:var(--ink-2);display:flex;align-items:center;gap:6px}
+.stat.warn .n{color:var(--stop)}
+.stat.good .n{color:var(--go)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;position:relative}
 .panel-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .panel-h h2{display:flex;align-items:center;gap:8px}
-.count{background:var(--ask-soft);color:var(--ask);font-weight:700;border-radius:999px;padding:2px 10px;font-size:13px}
-.stack{display:grid;gap:20px}
-/* inbox */
-.inbox{display:grid;gap:12px}
-.sugg{border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:10px;transition:opacity .28s,transform .28s}
+.panel-h .meta{font-size:13px;color:var(--ink-2)}
+.cols2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.tag.ask{background:var(--ask-soft);color:var(--ask)} .tag.stop{background:var(--stop-soft);color:var(--stop)} .tag.go{background:var(--go-soft);color:var(--go)} .tag.info{background:var(--accent-soft);color:var(--accent)}
+.num{font-variant-numeric:tabular-nums;font-weight:600}
+.num small{display:block;font-weight:400;color:var(--ink-2);font-size:12px}
+/* info tips: hover 1 s, tap or focus; expanded inline during the tour */
+.tip{width:20px;height:20px;border-radius:50%;border:1px solid var(--line);background:var(--panel-2);color:var(--ink-2);font-size:12px;font-weight:700;line-height:1;display:inline-grid;place-items:center;padding:0;flex:none}
+.tip:hover{border-color:var(--accent);color:var(--accent)}
+.info{display:none}
+.explain .info{display:block;margin:4px 0 12px;padding:10px 12px;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0;font-size:13.5px;color:var(--ink)}
+.explain .detail{display:block}
+#pop{position:fixed;z-index:80;max-width:360px;background:var(--ink);color:var(--ground);border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.5;box-shadow:var(--shadow)}
+#pop b{color:inherit}
+.detail{display:none}
+/* model table */
+.mrow{display:grid;grid-template-columns:minmax(150px,1.25fr) minmax(110px,.85fr) minmax(190px,1.5fr) repeat(4,minmax(78px,.7fr));gap:12px;align-items:center;padding:11px 4px;border-top:1px solid var(--line);font-size:14px}
+.mrow.head{border-top:0;font-size:13px;color:var(--ink);font-weight:700;padding-top:0}
+.mrow.head span{display:flex;align-items:center;gap:6px}
+.mrow .nm b{display:block;font-size:15px}
+.mrow .nm small{color:var(--ink-2);font-size:12.5px}
+.mrow .detail{grid-column:1/-1;font-size:13px;color:var(--ink-2);margin-top:-4px}
+.pbar{height:10px;background:var(--panel-2);border-radius:5px;overflow:hidden;position:relative;margin-bottom:3px}
+.pbar span{position:absolute;top:0;bottom:0;left:0;border-radius:5px}
+.pbar i{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink)}
+.policy-line{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+/* collapsible panels */
+.fold-h{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;cursor:pointer;flex-wrap:wrap}
+.fold-h:focus-visible{outline:3px solid var(--accent);outline-offset:4px;border-radius:8px}
+.fold-h h2{display:flex;align-items:center;gap:8px}
+.fold-h .sum{font-size:13.5px;color:var(--ink-2)}
+.fold-h .chev{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--accent)}
+.fold-h .chev svg{transition:transform .2s}
+.fold-h[aria-expanded="true"] .chev svg{transform:rotate(90deg)}
+.fold-lead{font-size:14px;color:var(--ink-2);margin-top:6px;max-width:80ch}
+.fold-b{margin-top:16px;display:grid;gap:20px}
+.subpanel{border-top:1px solid var(--line);padding-top:16px}
+.subpanel:first-child{border-top:0;padding-top:0}
+.subpanel h3{font-size:16.5px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+/* false positive causes */
+.fpgrid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px;align-items:start}
+.fprow{all:unset;box-sizing:border-box;display:grid;grid-template-columns:minmax(150px,1fr) 1.2fr 64px;gap:12px;align-items:center;width:100%;padding:9px 10px;border-radius:9px;cursor:pointer;font-size:14px}
+.fprow:hover{background:var(--panel-2)}
+.fprow[aria-pressed="true"]{background:var(--stop-soft)}
+.fprow:focus-visible{outline:3px solid var(--accent)}
+.fprow .bar{height:10px;background:var(--panel-2);border-radius:5px;overflow:hidden}
+.fprow .bar span{display:block;height:100%;background:var(--stop);border-radius:5px}
+.fpex{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px;font-size:13.5px}
+.fpex .conf{font-family:var(--display);font-size:28px;font-weight:700;color:var(--stop);line-height:1}
+/* routing flow */
+.flow{display:flex;height:34px;border-radius:9px;overflow:hidden;background:var(--panel-2)}
+.flow span{display:flex;align-items:center;justify-content:center;color:#fff;font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden}
+.flowkey{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px}
+.flowkey div{font-size:13px;color:var(--ink-2)}
+.flowkey b{display:block;font-size:20px;font-family:var(--display);color:var(--ink);font-variant-numeric:tabular-nums}
+.flowkey i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.rstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px}
+.rstats .stat{background:var(--panel-2);border:0}
+.rstats .stat .n{font-size:26px}
+/* cause rows */
+.fprow2{display:grid;grid-template-columns:minmax(220px,1.5fr) minmax(140px,1fr) 70px minmax(150px,1fr) 80px;gap:14px;align-items:center;padding:12px 4px;border-top:1px solid var(--line);font-size:14px}
+.fprow2:first-child{border-top:0}
+.fprow2 .t b{display:block;font-size:14.5px}
+.fprow2 .t small{color:var(--ink-2);font-size:13px}
+.fprow2 .bar{height:10px;background:var(--panel-2);border-radius:5px;overflow:hidden}
+.fprow2 .bar span{display:block;height:100%;background:var(--stop);border-radius:5px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip2{font-size:11.5px;background:var(--panel-2);color:var(--ink-2);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.exlink{font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;white-space:nowrap}
+.exlink:hover{text-decoration:underline}
+/* suggestion anatomy */
+.anat{margin:8px 0 0;padding-left:0;list-style:none;counter-reset:a;display:grid;gap:6px}
+.anat li{counter-increment:a;display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;align-items:start}
+.anat li::before{content:counter(a);width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:11.5px;font-weight:700;display:grid;place-items:center}
+.mark{display:none;width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:11.5px;font-weight:700;place-items:center;flex:none}
+.explain .mark{display:inline-grid}
+.sby{font-size:13px;color:var(--ink-2);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sby b{color:var(--ink)}
+.conf{font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink)}
+/* calibration */
+.crow{display:grid;grid-template-columns:130px 1fr;gap:10px;align-items:center;padding:6px 0;font-size:13.5px}
+.track{position:relative;height:24px}
+.track .ln{position:absolute;left:0;right:0;top:11px;height:2px;background:var(--panel-2)}
+.track .gap{position:absolute;top:10px;height:4px;background:var(--stop-soft)}
+.track .said{position:absolute;top:5px;width:13px;height:13px;background:var(--ink-2);transform:translateX(-6px) rotate(45deg)}
+.track .real{position:absolute;top:4px;width:15px;height:15px;border-radius:50%;transform:translateX(-7px);border:2px solid var(--panel)}
+.track .lbl{position:absolute;top:-3px;font-size:12px;color:var(--ink-2);white-space:nowrap}
+.axis{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-2);margin-left:140px}
+.key{display:flex;gap:14px;font-size:12.5px;color:var(--ink-2);margin-top:8px}
+.key i{display:inline-block;width:10px;height:10px;margin-right:5px;vertical-align:0}
+/* ambiguity */
+.drow{display:grid;grid-template-columns:130px 1fr 48px;gap:10px;align-items:center;padding:5px 0;font-size:13.5px}
+.sbar{display:flex;height:20px;border-radius:5px;overflow:hidden;background:var(--panel-2)}
+.sbar span{height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-2);margin-top:10px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+/* false positives */
+.exgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.ex{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:8px;font-size:13.5px}
+.ex .hd{display:flex;justify-content:space-between;gap:8px;font-weight:700}
+.ex .rec{border-left:3px solid var(--stop);padding-left:10px;color:var(--ink-2)}
+.tk{background:var(--panel-2);border-radius:8px;padding:8px 10px;font-size:13.5px;min-width:0;overflow-wrap:anywhere}
+.tk small{display:block;font-family:var(--mono);font-size:11.5px;color:var(--ink-2);margin-top:2px}
+.pair{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.arrow{color:var(--ink-2)}
+/* coverage */
+.cov{display:grid;grid-template-columns:minmax(0,1fr) 100px 150px 120px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.cov.head{border-top:0;font-size:13px;color:var(--ink);font-weight:700}
+.ci{position:relative;height:10px;background:var(--panel-2);border-radius:5px}
+.ci span{position:absolute;top:0;bottom:0;background:var(--accent);border-radius:5px;opacity:.75}
+.ci i{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+/* review queue */
+.queue{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.sugg{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px;transition:opacity .28s,transform .28s;align-content:start}
 .sugg.gone{opacity:0;transform:translateX(24px)}
 .sugg.fresh{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .kind{display:flex;align-items:center;gap:8px;font-weight:700;flex-wrap:wrap}
-.kind .ico{width:28px;height:28px;border-radius:7px;display:inline-grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
-.badge{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 8px;letter-spacing:.02em}
+.kind .ico{width:26px;height:26px;border-radius:7px;display:inline-grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.badge{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 8px}
 .badge.new{background:var(--accent);color:var(--accent-ink)}
 .badge.by{background:var(--panel-2);color:var(--ink-2);font-weight:600}
-.pair{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
-.tk{background:var(--panel-2);border-radius:9px;padding:9px 11px;font-size:14px;min-width:0;overflow-wrap:anywhere}
-.tk small{display:block;font-family:var(--mono);font-size:11.5px;color:var(--ink-2);margin-top:2px}
-.tk a{color:inherit}
-.arrow{color:var(--ink-2)}
-.why{font-size:14px;color:var(--ink-2)}
-.why q{color:var(--ink)}
-.past{font-size:13.5px;border-left:3px solid var(--accent);padding-left:10px;color:var(--ink-2)}
-.past b{color:var(--ink)}
+.why{font-size:13.5px;color:var(--ink-2)}
+.hist-wrap{display:flex;gap:6px;align-items:start}
+.pair .mark{position:absolute;left:-10px;top:-10px;z-index:1}
+.pair{position:relative}
+.hist{font-size:13px;color:var(--ink-2)}
+.hist b{color:var(--ink)}
 .acts{display:flex;gap:8px;flex-wrap:wrap}
-.more{display:flex;justify-content:center;margin-top:4px}
-.empty{text-align:center;padding:26px 10px;color:var(--ink-2)}
-.empty b{display:block;font-family:var(--display);font-size:19px;color:var(--ink);margin-bottom:4px}
-/* trust */
-.goal{display:grid;gap:6px;padding-block:11px;border-top:1px solid var(--line)}
-.goal:first-child{border-top:0;padding-top:0}
-.goal .row{display:flex;justify-content:space-between;gap:10px;font-size:14px;font-weight:600;align-items:start}
-.meter{height:10px;background:var(--panel-2);border-radius:5px;overflow:hidden}
-.meter span{display:block;height:100%;background:var(--go);border-radius:5px;transition:width .5s}
-.goal p{font-size:13px;color:var(--ink-2)}
-.tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px;white-space:nowrap}
-.tag.ask{background:var(--ask-soft);color:var(--ask)} .tag.stop{background:var(--stop-soft);color:var(--stop)} .tag.go{background:var(--go-soft);color:var(--go)}
-.sub{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
-.sub h3{margin-bottom:6px}
-.sub li{font-size:13.5px;color:var(--ink-2);margin:4px 0}
-.sub ul{margin:0;padding-left:18px}
-/* held + handled */
-.held{display:grid;gap:10px}
-.hold{border-left:4px solid var(--stop);background:var(--stop-soft);border-radius:0 10px 10px 0;padding:10px 12px;font-size:14px}
-.hold.hold-ask{border-left-color:var(--ask);background:var(--ask-soft)}
-.hold b{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:2px}
-.hold .ex{font-size:12.5px;color:var(--ink-2);margin-top:6px}
-.hand{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;display:grid;gap:6px}
-/* models */
-.policy{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.more{display:flex;justify-content:center;margin-top:12px}
+.empty{text-align:center;padding:26px 10px;color:var(--ink-2);grid-column:1/-1}
+/* routing */
+.rgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .pm{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13.5px}
-.pm b{display:block;font-size:14.5px}
-.log{display:grid;gap:8px}
-.lg{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13.5px;padding:9px 0;border-top:1px solid var(--line)}
-.lg:first-child{border-top:0}
+.pm b{display:block;font-size:14.5px;margin:4px 0 2px}
+.loads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+.lg{display:grid;grid-template-columns:110px 1fr;gap:4px 12px;font-size:13.5px;padding:8px 0;border-top:1px solid var(--line)}
 .lg .k{font-family:var(--mono);font-size:12.5px;color:var(--ink-2)}
-.lg .r{grid-column:1/-1;color:var(--ink-2)}
-/* savings */
-.save{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.save .stat{background:var(--panel-2);border:0}
-.save .stat .n{font-size:26px}
+/* cost */
+.cost{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.cost .stat .n{font-size:32px}
+.cost .stat{background:var(--panel-2);border:0}
+.ctable{display:grid;margin-top:14px}
+.crow2{display:grid;grid-template-columns:minmax(140px,1.4fr) repeat(4,minmax(80px,1fr));gap:10px;padding:7px 4px;border-top:1px solid var(--line);font-size:13.5px;align-items:center}
+.crow2.head{border-top:0;font-size:13px;color:var(--ink);font-weight:700}
 .est{font-size:12.5px;color:var(--ink-2);margin-top:10px}
-/* evaluation */
-.stat.warn .n{color:var(--stop)}
-.cols2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
-.mtable{display:grid;gap:0}
-.mrow{display:grid;grid-template-columns:minmax(150px,1.2fr) minmax(120px,.9fr) minmax(200px,1.6fr) repeat(4,minmax(80px,.7fr));gap:12px;align-items:center;padding:11px 4px;border-top:1px solid var(--line);font-size:14px}
-.mrow.head{border-top:0;font-size:12px;color:var(--ink-2);font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding-top:0}
-.mrow .nm b{display:block;font-size:15px}
-.mrow .nm small{color:var(--ink-2);font-size:12.5px}
-.num{font-variant-numeric:tabular-nums;font-weight:600}
-.num small{display:block;font-weight:400;color:var(--ink-2);font-size:12px}
-.pbar{height:12px;background:var(--panel-2);border-radius:6px;overflow:hidden;position:relative}
-.pbar span{position:absolute;top:0;bottom:0;left:0;background:var(--go);border-radius:6px}
-.pbar i{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
-.why2{grid-column:1/-1;font-size:13px;color:var(--ink-2);margin-top:-4px}
-.crow{display:grid;grid-template-columns:130px 1fr;gap:10px;align-items:center;padding:7px 0;font-size:13.5px}
-.track{position:relative;height:26px}
-.track .ln{position:absolute;left:0;right:0;top:12px;height:2px;background:var(--panel-2)}
-.track .gap{position:absolute;top:11px;height:4px;background:var(--stop-soft)}
-.track .said{position:absolute;top:6px;width:14px;height:14px;background:var(--ink-2);transform:translateX(-7px) rotate(45deg)}
-.track .real{position:absolute;top:5px;width:16px;height:16px;border-radius:50%;transform:translateX(-8px);border:2px solid var(--panel)}
-.track .lbl{position:absolute;top:-2px;font-size:12px;color:var(--ink-2);white-space:nowrap}
-.axis{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-2);margin-left:140px}
-.sbar{display:flex;height:22px;border-radius:6px;overflow:hidden;background:var(--panel-2)}
-.sbar span{height:100%}
-.drow{display:grid;grid-template-columns:130px 1fr 44px;gap:10px;align-items:center;padding:5px 0;font-size:13.5px}
-.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-2);margin-top:10px}
-.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
-.exgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.ex{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:8px;font-size:14px}
-.ex .said2{font-weight:700}
-.ex .rec{border-left:3px solid var(--stop);padding-left:10px;color:var(--ink-2);font-size:13.5px}
-.ex .rec b{color:var(--stop)}
-.cov{display:grid;grid-template-columns:minmax(0,1fr) 90px 150px 150px;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
-.cov.head{border-top:0;font-size:12px;color:var(--ink-2);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
-.ci{position:relative;height:10px;background:var(--panel-2);border-radius:5px}
-.ci span{position:absolute;top:0;bottom:0;background:var(--accent);border-radius:5px;opacity:.75}
-.ci i{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
-@media (max-width:1000px){.cols2{grid-template-columns:1fr}.exgrid{grid-template-columns:1fr}
-  .mrow{grid-template-columns:1fr 1fr;row-gap:6px}.mrow.head{display:none}.cov{grid-template-columns:1fr 1fr}.cov.head{display:none}}
-/* banners, toast, loading */
+/* misc */
 .banner{border:1px solid var(--stop);background:var(--stop-soft);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .loading{padding:40px 10px;text-align:center;color:var(--ink-2)}
 .spin{width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;display:inline-block;animation:spin 1s linear infinite;vertical-align:middle}
@@ -178,9 +224,9 @@ button:disabled{cursor:not-allowed;opacity:.55}
 #toast button{background:none;border:0;color:var(--ground);text-decoration:underline;font-weight:700}
 .foot{font-size:12.5px;color:var(--ink-2);border-top:1px solid var(--line);padding-top:14px}
 .foot code{font-family:var(--mono);font-size:12px}
-/* welcome + tour */
 #welcome{position:fixed;inset:0;z-index:70;background:var(--shade);display:grid;place-items:center;padding:16px}
 #welcome .box{background:var(--panel);border-radius:16px;padding:24px;max-width:480px;box-shadow:var(--shadow);display:grid;gap:12px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
 #tour-ring{position:fixed;border-radius:14px;box-shadow:0 0 0 4px var(--accent),0 0 0 9999px var(--shade);transition:all .25s ease;z-index:41;pointer-events:none}
 #tour-tip{position:fixed;z-index:42;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
 #tour-tip .step{font-size:12px;color:var(--ink-2);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
@@ -188,9 +234,10 @@ button:disabled{cursor:not-allowed;opacity:.55}
 #tour-tip p{margin:6px 0 12px;font-size:14.5px}
 #tour-tip .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .tour-live [data-tour-active]{position:relative;z-index:43}
-@media (max-width:1000px){.cols{grid-template-columns:1fr}.summary,.save{grid-template-columns:repeat(2,minmax(0,1fr))}.policy{grid-template-columns:1fr}}
-@media (max-width:520px){.pair{grid-template-columns:1fr}.arrow{transform:rotate(90deg);justify-self:center}.chips{margin-left:0}.top-in{padding:10px 16px}.page{padding:18px 16px 60px}.stat .n{font-size:26px}}
-@media (prefers-reduced-motion:reduce){#tour-ring,.sugg,.meter span{transition:none}.spin{animation:none}}
+@media (max-width:1000px){.flowkey,.rstats{grid-template-columns:repeat(2,minmax(0,1fr))}.fprow2{grid-template-columns:1fr 1fr}.cols2{grid-template-columns:1fr}.kpis,.cost{grid-template-columns:repeat(2,minmax(0,1fr))}.exgrid,.queue,.fpgrid{grid-template-columns:1fr}.rgrid,.loads{grid-template-columns:1fr}
+  .mrow{grid-template-columns:1fr 1fr;row-gap:6px}.mrow.head,.cov.head,.crow2.head{display:none}.cov{grid-template-columns:1fr 1fr}.crow2{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.pair{grid-template-columns:1fr}.arrow{transform:rotate(90deg);justify-self:center}.page{padding:18px 16px 60px}.top-in{padding:10px 16px}.stat .n{font-size:26px}}
+@media (prefers-reduced-motion:reduce){#tour-ring,.sugg{transition:none}.spin{animation:none}}
 </style>
 </head>
 <body>
@@ -200,14 +247,10 @@ button:disabled{cursor:not-allowed;opacity:.55}
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
   <symbol id="i-folder" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.8 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
-  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 3l14 9-14 9z"/></symbol>
   <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
   <symbol id="i-switch" viewBox="0 0 24 24"><path d="m16 3 4 4-4 4M20 7H4M8 21l-4-4 4-4M4 17h16"/></symbol>
-  <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></symbol>
-  <symbol id="i-trend" viewBox="0 0 24 24"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"/><path d="M16 7h6v6"/></symbol>
-  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></symbol>
 </svg>
 
@@ -215,119 +258,122 @@ button:disabled{cursor:not-allowed;opacity:.55}
   <div class="top-in">
     <span class="logo"><i><svg class="i"><use href="#i-check"/></svg></i>Assay</span>
     <span class="muted small">AI agent manager</span>
-    <span class="chip">Example agent: Apache Jira triage</span>
-    <div class="chips">
-      <span class="chip" id="live-chip"><span class="dot" id="live-dot"></span><span id="live-text">Connecting to Databricks…</span></span>
-            <button class="btn" id="help" data-tour="help"><svg class="i"><use href="#i-help"/></svg>Show me around</button>
-    </div>
+    <span class="spacer"></span>
+    <button class="btn" id="help" data-tour="help"><svg class="i"><use href="#i-help"/></svg>Show me around</button>
   </div>
 </header>
 
 <main class="page" id="page">
-  <section class="hello" data-tour="hello">
+  <section class="hero" data-tour="hello">
     <div>
-      <h1 id="greet">Your AI agents, checked with evidence.</h1>
-      <p class="muted">Assay tests every model and every change against real outcomes, lets an agent act on its own only where
-        the record proves it, and shows you why. The example agent here tidies up the public Apache Jira; the checks work for any agent.</p>
+      <h1>AI agents, verified.</h1>
+      <p class="muted" style="display:flex;align-items:center;gap:8px">Model choice, autonomy and corrections, decided on evidence. <button class="tip" data-info="i-hero" aria-label="About Assay">?</button></p>
+      <div class="info" id="i-hero">Assay sits between AI agents and the people who review their work. It evaluates every model and every change against real outcomes, lets an agent act without review only where the record proves it, and routes each request to the cheapest proven model. The example agent triages the public Apache Jira (Spark, Kafka, Flink, Hive); everything runs on Databricks.</div>
     </div>
-    <button class="btn primary" id="run" data-tour="run"><svg class="i"><use href="#i-play"/></svg>Check new tickets now</button>
+    <button class="btn primary" id="run" data-tour="run"><svg class="i"><use href="#i-play"/></svg>Run agent on new tickets</button>
   </section>
 
   <div id="err" hidden></div>
-  <div id="loading" class="loading"><span class="spin"></span>&nbsp; Loading your data from Databricks… (the first load can take up to a minute while the warehouse wakes up)</div>
+  <div id="loading" class="loading"><span class="spin"></span>&nbsp; Loading from Databricks. The first load can take up to a minute while the SQL warehouse starts.</div>
 
   <div id="content" hidden style="display:grid;gap:20px">
-    <section class="summary" data-tour="summary" aria-label="Summary">
-      <div class="stat"><div class="n" id="k1">–</div><div class="l" id="k1l">real tickets tested</div></div>
-      <div class="stat"><div class="n" id="k2">–</div><div class="l" id="k2l">answers checked</div></div>
-      <div class="stat warn"><div class="n" id="k3">–</div><div class="l" id="k3l">"95%+ sure" answers that were wrong</div></div>
-      <div class="stat"><div class="n" id="k4">–</div><div class="l" id="k4l">claims decided by the evidence</div></div>
+    <section class="kpis" data-tour="kpis" aria-label="Key figures">
+      <div class="stat"><div class="n" id="k1">–</div><div class="l">Tickets evaluated <button class="tip" data-info="i-k1" aria-label="About this figure">?</button></div><div class="info" id="i-k1"></div></div>
+      <div class="stat"><div class="n" id="k2">–</div><div class="l">Answers verified <button class="tip" data-info="i-k2" aria-label="About this figure">?</button></div><div class="info" id="i-k2"></div></div>
+      <div class="stat warn"><div class="n" id="k3">–</div><div class="l">High-confidence false positives <button class="tip" data-info="i-k3" aria-label="About this figure">?</button></div><div class="info" id="i-k3"></div></div>
+      <div class="stat"><div class="n" id="k4">–</div><div class="l">Claims decided <button class="tip" data-info="i-k4" aria-label="About this figure">?</button></div><div class="info" id="i-k4"></div></div>
     </section>
 
-    <section class="panel" data-tour="trust-models" aria-label="Which AI models can you trust" id="sec-models" hidden>
-      <div class="panel-h"><h2><svg class="i"><use href="#i-shield"/></svg>Which AI models can you trust?</h2><span class="muted small" id="models-note"></span></div>
-      <p class="muted small" style="margin-bottom:12px">Every model answered the same real tickets. Each answer was checked against what the Apache maintainers actually did (duplicate links, parent tickets, how the ticket was closed): no AI or human labels.</p>
-      <div class="mtable" id="mtable" role="table"></div>
-      <p class="est" id="cost-note"></p>
+    <section class="panel" data-tour="models" aria-label="Model evaluation" id="sec-models">
+      <div class="panel-h"><h2>Model evaluation <button class="tip" data-info="i-models" aria-label="About the model evaluation">?</button></h2><span class="meta" id="models-meta"></span></div>
+      <div class="info" id="i-models">Every model answered the same tickets. Answers are graded against what the Apache maintainers actually did: duplicate links, parent tickets and how each ticket was closed. No human or AI labels. Hover a role for the reason.</div>
+      <div id="mtable" role="table"></div>
+      <div class="policy-line" id="policy-line"></div>
+      <div class="info" id="i-rule"></div>
     </section>
 
-    <div class="cols2" id="sec-eval2" hidden>
-      <section class="panel" data-tour="confidence" aria-label="Confidence versus reality">
-        <div class="panel-h"><h2><svg class="i"><use href="#i-trend"/></svg>Confidence vs reality</h2></div>
-        <p class="muted small" style="margin-bottom:12px">When a model said it was <b>95% sure or more</b>, how often was it right? Grey diamond: what it claimed. Coloured dot: what the record shows.</p>
-        <div id="calib"></div>
-      </section>
-      <section class="panel" data-tour="unclear" aria-label="Where the rules are unclear">
-        <div class="panel-h"><h2><svg class="i"><use href="#i-help"/></svg>Where even the rules are unclear</h2></div>
-        <p class="muted small" id="dup-intro" style="margin-bottom:10px"></p>
-        <div id="dupbars"></div>
-        <div class="legend" id="duplegend"></div>
-      </section>
-    </div>
-
-    <section class="panel" data-tour="examples" aria-label="Confident and wrong" id="sec-examples" hidden>
-      <div class="panel-h"><h2><svg class="i"><use href="#i-x"/></svg>Confident and wrong: real examples</h2><span class="muted small">why a model's confidence is never enough</span></div>
-      <div class="exgrid" id="examples"></div>
-    </section>
-
-    <section class="panel" data-tour="coverage" aria-label="Is there enough data" id="sec-coverage" hidden>
-      <div class="panel-h"><h2><svg class="i"><use href="#i-check"/></svg>Is there enough data?</h2><span class="muted small" id="cov-sub"></span></div>
-      <p class="muted small" style="margin-bottom:12px">Every claim needs enough cases to be <b>proven</b> (at least 90% right, with a margin for luck) or <b>ruled out</b>. Anything short of that says how much more it needs, instead of guessing.</p>
-      <div id="coverage"></div>
-    </section>
-
-    <div class="cols">
-      <section class="panel" data-tour="inbox" aria-label="Needs your OK">
-        <div class="panel-h"><h2>Needs your OK</h2><span class="count" id="left-count"></span></div>
-        <div class="inbox" id="inbox"></div>
-        <div class="more" id="more-wrap" hidden><button class="btn ghost" id="more">Show more</button></div>
-      </section>
-
-      <div class="stack">
-        <section class="panel" data-tour="learning" aria-label="Earning your trust">
-          <div class="panel-h"><h2><svg class="i"><use href="#i-trend"/></svg>Earning your trust</h2></div>
-          <p class="muted small" style="margin-bottom:12px">Your answers are remembered by <b>kind of case</b>. When answers on one kind are consistent enough to prove a pattern (90% sure, with a margin for luck), the assistant handles that kind for you, and you can always overrule it.</p>
-          <div id="learning"></div>
-          <div class="sub" id="alone"></div>
-        </section>
-
-        <section class="panel" data-tour="handled" aria-label="Handled for you">
-          <div class="panel-h"><h2><svg class="i"><use href="#i-spark"/></svg>Handled for you</h2><span class="count" id="handled-count" style="background:var(--go-soft);color:var(--go)"></span></div>
-          <div class="held" id="handled"></div>
-        </section>
-
-        <section class="panel" data-tour="held" aria-label="Held back for your safety">
-          <div class="panel-h"><h2><svg class="i"><use href="#i-shield"/></svg>Held back for your safety</h2></div>
-          <div class="held" id="held"></div>
-        </section>
+    <section class="panel fold" data-tour="stats" aria-label="Detailed statistics" id="fold-stats">
+      <button class="fold-h" aria-expanded="false" aria-controls="stats-body">
+        <h2>Detailed statistics</h2><span class="sum" id="stats-meta">Calibration · Definition ambiguity · Evidence coverage</span><span class="chev"><span class="chev-t">Open</span><svg class="i"><use href="#i-arrow"/></svg></span>
+      </button>
+      <div class="fold-b" id="stats-body" hidden>
+        <div class="cols2" id="sec-eval2">
+          <div class="subpanel" data-tour="calibration">
+            <h3>Calibration <button class="tip" data-info="i-cal" aria-label="About calibration">?</button></h3>
+            <div class="info" id="i-cal">For each model, the confidence it stated (diamond) against the precision it achieved (dot) on answers rated 95% or higher. The red gap is overconfidence: the reason model confidence never decides on its own.</div>
+            <div id="calib"></div>
+            <div class="key"><span><i style="background:var(--ink-2);transform:rotate(45deg)"></i>Stated</span><span><i style="background:var(--stop);border-radius:50%"></i>Actual</span></div>
+          </div>
+          <div class="subpanel" data-tour="ambiguity" style="border-top:0;padding-top:0">
+            <h3>Definition ambiguity <button class="tip" data-info="i-amb" aria-label="About definition ambiguity">?</button> <span class="muted small" id="amb-meta" style="font-weight:400"></span></h3>
+            <div class="info" id="i-amb">Tickets the maintainers closed as duplicates of an earlier ticket the agent was shown, and how each model labeled them. When models split this way the definition itself is ambiguous, so these cases stay with a reviewer.</div>
+            <div id="dupbars"></div>
+            <div class="legend" id="duplegend"></div>
+          </div>
+        </div>
+        <div class="subpanel" data-tour="coverage" id="sec-coverage">
+          <h3>Evidence coverage <button class="tip" data-info="i-cov" aria-label="About evidence coverage">?</button> <span class="muted small" id="cov-meta" style="font-weight:400"></span></h3>
+          <div class="info" id="i-cov">Each claim is <b>proven</b> (95% interval entirely above the 90% bar), <b>ruled out</b> (entirely below), or reports how many more cases it needs. Kinds of case defined by the parent field are excluded, because the grader uses that field.</div>
+          <div id="coverage"></div>
+        </div>
       </div>
-    </div>
-
-    <section class="panel" data-tour="models" aria-label="Which AI answered">
-      <div class="panel-h"><h2><svg class="i"><use href="#i-cpu"/></svg>Which AI answered</h2><span class="muted small" id="models-sub"></span></div>
-      <div class="policy" id="policy"></div>
-      <h3 style="margin-bottom:4px">Latest requests</h3>
-      <div class="log" id="log"></div>
     </section>
 
-    <section class="panel" data-tour="savings" aria-label="What it saved you">
-      <div class="panel-h"><h2>What it saved you</h2><span class="muted small">so far</span></div>
-      <div class="save" id="save"></div>
-      <p class="est" id="est"></p>
+    <section class="panel" data-tour="cost" aria-label="Cost and savings">
+      <div class="panel-h"><h2>Cost &amp; savings <button class="tip" data-info="i-cost" aria-label="About cost and savings">?</button></h2><span class="meta">estimates at list price · actual spend $0</span></div>
+      <div class="info" id="i-cost"></div>
+      <div class="cost" id="cost"></div>
+      <div class="ctable" id="ctable"></div>
+    </section>
+
+    <section class="panel" data-tour="routing" aria-label="Model routing">
+      <div class="panel-h"><h2>Model routing <button class="tip" data-info="i-route" aria-label="About model routing">?</button></h2><span class="meta" id="route-meta"></span></div>
+      <div class="info" id="i-route">Every request goes to the primary model first. If it is rate-limited or returns unusable output, the router switches to the next backup immediately. Backup answers are delivered but held for review; if every model is unavailable, the request is escalated to a person. Figures are from a 300-request load test on Databricks Free Edition, where rate limits are low.</div>
+      <div id="route-flow"></div>
+      <div class="rstats" id="route-stats"></div>
+      <div class="rgrid" id="policy" style="margin-top:14px"></div>
+      <p class="est" id="route-note"></p>
+    </section>
+
+    <section class="panel fold" data-tour="queue" aria-label="Review queue" id="fold-queue">
+      <button class="fold-h" aria-expanded="false" aria-controls="queue-body">
+        <h2>Review queue</h2><span class="sum" id="queue-meta"></span><span class="chev"><span class="chev-t">Open</span><svg class="i"><use href="#i-arrow"/></svg></span>
+      </button>
+      <p class="fold-lead">Suggestions the maintainer record cannot settle, so a person decides. Each decision is saved to Databricks and counts toward automating that kind of case: once a kind is proven, matching suggestions resolve on their own. <button class="tip" data-info="i-queue" aria-label="How to read a suggestion">?</button></p>
+      <div class="info" id="i-queue"><b>How to read a suggestion</b>
+        <ol class="anat">
+          <li><span><b>Type</b>: what the model proposes: a duplicate, part of a larger effort, or a related ticket.</span></li>
+          <li><span><b>Suggested by</b>: the model, and its self-reported confidence. Confidence is the model's own estimate, not evidence.</span></li>
+          <li><span><b>Tickets</b>: the new ticket and the earlier ticket it points to. IDs open in Jira.</span></li>
+          <li><span><b>Model's reason</b>: in the model's own words.</span></li>
+          <li><span><b>Similar past cases</b>: how reviewers and maintainers decided this kind of case before, and how many more consistent decisions would let Assay resolve it automatically.</span></li>
+          <li><span><b>Your decision</b>: Accept applies the link, Reject keeps the tickets separate, Skip moves it to the end. Saved to the Delta table <code>actions</code>; undo within six seconds.</span></li>
+        </ol></div>
+      <div class="fold-b" id="queue-body" hidden>
+        <div class="queue" id="queue"></div>
+        <div class="more" id="more-wrap" hidden><button class="btn ghost" id="more">Show more</button></div>
+      </div>
+    </section>
+
+    <section class="panel" data-tour="falsepos" aria-label="Why confident answers fail" id="sec-examples">
+      <div class="panel-h"><h2>Why confident answers fail <button class="tip" data-info="i-fp" aria-label="About this section">?</button></h2><span class="meta" id="fp-meta"></span></div>
+      <div class="info" id="i-fp">Answers a model rated at least 95% confident that the maintainer record contradicts, grouped by what went wrong. This is why Assay never lets a model's confidence decide on its own.</div>
+      <div id="fpcauses"></div>
     </section>
 
     <p class="foot" id="foot"></p>
   </div>
 </main>
 
+<div id="pop" hidden role="tooltip"></div>
 <div id="toast" hidden role="status"><span id="toast-text"></span><button id="toast-undo" hidden>Undo</button></div>
 
 <div id="welcome" hidden role="dialog" aria-modal="true" aria-labelledby="w-title">
   <div class="box">
     <p class="eyebrow">Welcome</p>
-    <h2 id="w-title">Your AI agents earn their freedom, with evidence.</h2>
-    <p class="muted">Assay tests every model against what really happened, shows you which ones you can trust, and lets an agent act alone only where the record proves it. Everything else waits for your yes or no, saved on Databricks. The tour takes about two minutes, and you'll try one answer yourself.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="w-start">Show me around</button><button class="btn" id="w-skip">I'll explore myself</button></div>
+    <h2 id="w-title">AI agents, verified.</h2>
+    <p class="muted">A two-minute tour of how Assay evaluates models, decides what an agent may do without review, and routes to the cheapest proven model. You will review one real suggestion yourself.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="w-start">Start the tour</button><button class="btn" id="w-skip">Skip</button></div>
   </div>
 </div>
 
@@ -339,29 +385,29 @@ button:disabled{cursor:not-allowed;opacity:.55}
 const $ = id => document.getElementById(id);
 const RM = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const icon = (id, extra = "") => `<svg class="i" ${extra}><use href="#i-${id}"/></svg>`;
+const icon = id => `<svg class="i"><use href="#i-${id}"/></svg>`;
 const jira = k => `https://issues.apache.org/jira/browse/${encodeURIComponent(k)}`;
 const fmt = n => (n ?? 0).toLocaleString();
+const pct = x => `${Math.round(100 * x)}%`;
+const usd = x => x >= 100 ? `$${Math.round(x).toLocaleString()}` : `$${x.toFixed(2)}`;
+const COLOR = r => r >= 0.9 ? "var(--go)" : r >= 0.5 ? "var(--ask)" : "var(--stop)";
+const MIN_PER_REVIEW = 1.5;   // assumption for effort estimates, stated on the page
+const MONTHLY_TICKETS = 1e6;  // projection volume, stated on the page
 
 const REL = {
-  duplicate: { ico: "copy", title: "Same problem reported twice", yes: "Yes, merge them", no: "No, they're different",
-               done: "Merged: the newer ticket now points to the older one.", plain: "the same problem" },
-  part_of:   { ico: "folder", title: "Part of a bigger project", yes: "Yes, file it under", no: "No, it's separate",
-               done: "Filed under the bigger project.", plain: "part of a bigger project" },
-  related:   { ico: "link", title: "These look connected", yes: "Yes, link them", no: "No, not connected",
-               done: "Linked with a \"see also\".", plain: "connected" }
+  duplicate: { ico: "copy", title: "Duplicate", yes: "Accept: merge", no: "Reject", done: "Accepted: marked as duplicate.", plain: "duplicate" },
+  part_of:   { ico: "folder", title: "Part of a larger effort", yes: "Accept: file under", no: "Reject", done: "Accepted: filed under the larger effort.", plain: "part of" },
+  related:   { ico: "link", title: "Related", yes: "Accept: link", no: "Reject", done: "Accepted: linked as related.", plain: "related" }
 };
 const KIND = {
-  "bump-same-lib-diff-version": "version upgrades of the same library, to different versions",
-  "bump-same-lib-same-version": "two upgrades of the same library to the same version",
-  "same-title": "two tickets with the exact same title",
-  "candidate-is-parent": "a ticket and the project it already sits under",
-  "siblings": "two pieces of the same bigger project",
-  "both-test-failures": "two failing-test reports",
-  "other": "no recognised pattern"
+  "bump-same-lib-diff-version": "version upgrades, same library, different versions",
+  "bump-same-lib-same-version": "version upgrades, same library and version",
+  "same-title": "identical titles", "candidate-is-parent": "existing parent ticket",
+  "siblings": "sub-tasks of the same parent", "both-test-failures": "test-failure reports", "other": "no recognised pattern"
 };
+const ROLE = { "main": ["go", "Primary"], "backup": ["ask", "Backup"], "not used": ["stop", "Excluded"] };
 
-let S = null, shown = 6, last = null, busy = false, freshIds = new Set();
+let S = null, shown = 6, last = null, busy = false, freshIds = new Set(), skipped = new Set();
 
 async function api(path, body) {
   const r = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
@@ -369,330 +415,334 @@ async function api(path, body) {
   if (!r.ok) throw new Error(j.detail || j.error || `HTTP ${r.status}`);
   return j;
 }
-
 async function load(fresh) {
-  try {
-    const s = await api("/api/state" + (fresh ? "?fresh=1" : ""));
-    S = s; $("err").hidden = true; render();
-  } catch (e) {
-    $("loading").hidden = true;
-    $("err").hidden = false;
-    $("err").innerHTML = `<div class="banner" role="alert">${icon("x")}<span><b>Can't reach the data on Databricks right now.</b> ${esc(e.message)}</span><button class="btn" id="retry">${icon("refresh")}Try again</button></div>`;
+  try { S = await api("/api/state" + (fresh ? "?fresh=1" : "")); $("err").hidden = true; render(); }
+  catch (e) {
+    $("loading").hidden = true; $("err").hidden = false;
+    $("err").innerHTML = `<div class="banner" role="alert">${icon("x")}<span><b>Databricks is not reachable right now.</b> ${esc(e.message)}</span><button class="btn" id="retry">${icon("refresh")}Retry</button></div>`;
     $("retry").onclick = () => { $("loading").hidden = false; $("err").hidden = true; load(true); };
-    $("live-dot").className = "dot off"; $("live-text").textContent = "Not connected";
   }
 }
 
-function greet() {
-  const h = new Date().getHours();
-  return (h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening") + ". Here's what your assistant did.";
-}
-
-function pastLine(it) {
-  const p = it.precedent;
-  if (!p) return "";
-  const said = p.answer === "accept" ? "Yes" : "No";
-  const kind = KIND[it.kind] || it.kind_text;
-  let tail;
-  if (p.agree === p.n && p.needs_more) tail = ` About <b>${p.needs_more} more</b> answers like that and it will handle this kind for you.`;
-  else if (p.agree !== p.n) tail = ` Answers are mixed, so this kind stays with you.`;
-  else tail = "";
-  return `<p class="past">Seen before: for <b>${esc(kind)}</b>, reviewers said <b>${said}</b> ${p.agree === p.n ? (p.n === 1 ? "the one time" : `all ${p.n} times`) : `${p.agree} of ${p.n} times`}.${tail}</p>`;
-}
-
-function card(it, i) {
-  const k = REL[it.relation];
-  const conf = it.confidence != null ? ` · ${Math.round(it.confidence * 100)}% sure` : "";
-  return `<article class="sugg${freshIds.has(it.id) ? " fresh" : ""}" id="c${i}" ${i === 0 ? 'data-tour="card"' : ""}>
-    <div class="kind"><span class="ico" aria-hidden="true">${icon(k.ico)}</span>${k.title}
-      ${it.new ? '<span class="badge new">New</span>' : ""}<span class="badge by">${esc(it.model || "agent")}${conf}</span></div>
-    <div class="pair">
-      <div class="tk">${esc(it.a.title)}<small><a href="${jira(it.a.key)}" target="_blank" rel="noopener">${esc(it.a.key)}</a> · new · ${esc(it.a.date)}</small></div>
-      <span class="arrow" aria-hidden="true">${icon("arrow")}</span>
-      <div class="tk">${esc(it.b.title)}<small><a href="${jira(it.b.key)}" target="_blank" rel="noopener">${esc(it.b.key)}</a> · earlier · ${esc(it.b.date)}</small></div>
-    </div>
-    ${it.reason ? `<p class="why">The agent's reason: <q>${esc(it.reason)}</q></p>` : ""}
-    ${pastLine(it)}
-    <div class="acts" ${i === 0 ? 'data-tour="buttons"' : ""}>
-      <button class="btn yes" data-i="${i}" data-a="accept">${icon("check")}${k.yes}</button>
-      <button class="btn no" data-i="${i}" data-a="reject">${icon("x")}${k.no}</button>
-      <button class="btn ghost" data-i="${i}" data-a="skip">Not sure, skip</button>
-    </div></article>`;
-}
-
-let skipped = new Set();
-function inboxItems() { return S.inbox.filter(it => !skipped.has(it.id)).concat(S.inbox.filter(it => skipped.has(it.id))); }
-
+// ---------- rendering ----------
 function render() {
   $("loading").hidden = true; $("content").hidden = false;
-  $("live-dot").className = "dot"; $("live-text").textContent = `Live · ${S.catalog}`;
-  const c = S.counts;
-  renderEval();
   $("run").hidden = !S.can_run;
-
-  const items = inboxItems();
-  window._items = items;
-  $("inbox").innerHTML = items.slice(0, shown).map(card).join("") ||
-    `<div class="empty"><b>You're all caught up.</b>Press "Check new tickets now" to have the agent read a few more.</div>`;
-  $("left-count").textContent = items.length ? `${items.length} waiting` : "all done";
-  $("more-wrap").hidden = items.length <= shown;
-  $("more").textContent = `Show ${Math.min(6, items.length - shown)} more (${items.length - shown} left)`;
-
-  // learning from answers
-  const L = S.learning.filter(m => m.n >= 2).slice(0, 5);
-  $("learning").innerHTML = L.map(m => {
-    const said = m.answer === "accept" ? "Yes" : "No";
-    const title = `"${REL[m.relation].plain}" for ${KIND[m.kind] || m.kind_text}`;
-    if (m.enabled) return `<div class="goal"><div class="row"><span>${esc(title)}</span><span class="tag go">${icon("check")}Handled for you</span></div>
-      <div class="meter"><span style="width:100%"></span></div><p>Reviewers said ${said} ${m.agree} of ${m.n} times. Proven, so matching suggestions are answered "${said}" automatically.</p></div>`;
-    if (m.agree === m.n && m.needs_more) {
-      const w = Math.max(4, Math.round(100 * m.agree / (m.agree + m.needs_more)));
-      return `<div class="goal" ${m.kind === "bump-same-lib-diff-version" ? 'data-tour="meter"' : ""}><div class="row"><span>${esc(title)}</span><span class="tag ask">Learning</span></div>
-        <div class="meter" role="img" aria-label="${m.agree} of about ${m.agree + m.needs_more} answers"><span style="width:${w}%"></span></div>
-        <p>Reviewers said <b>${said}</b> every time (${m.agree} of ${m.n}). About <b>${m.needs_more} more</b> answers like that and it takes over this kind.${m.open ? ` ${m.open} ${m.open === 1 ? "is" : "are"} in your list.` : ""}</p></div>`;
-    }
-    return `<div class="goal"><div class="row"><span>${esc(title)}</span><span class="tag stop">Stays with you</span></div>
-      <p>Answers are mixed (${m.agree} ${said}, ${m.n - m.agree} the other way), so there's no pattern to reuse.</p></div>`;
-  }).join("") || `<p class="muted small">No answers yet.</p>`;
-
-  const pr = S.permission || {};
-  const al = [];
-  if (pr.part_of) al.push(`<li><b>Filing under a bigger project:</b> ${pr.part_of.right} of ${pr.part_of.n} checked high-confidence answers right; needs about ${pr.part_of.needs_more ?? "?"} more checks.</li>`);
-  if (pr.duplicate) al.push(`<li><b>Merging the same problem:</b> ${pr.duplicate.right} of ${pr.duplicate.n} checked right. Not enough proof.</li>`);
-  if (pr.related) al.push(`<li><b>"See also" links:</b> people disagree too often on these, so they always stay with you.</li>`);
-  $("alone").innerHTML = `<h3>May the agent act alone?</h3><p class="muted small" style="margin-bottom:4px">Separately, the agent's own confidence is tested against checked answers. Not yet, for any kind of tidy-up:</p><ul>${al.join("")}</ul>`;
-
-  // handled for you
-  $("handled-count").textContent = S.handled.length ? `${S.handled.length}` : "none yet";
-  $("handled").innerHTML = S.handled.slice(0, 5).map((h, i) => `<div class="hand">
-      <div><b>${h.mode === "auto-reject" ? "Kept separate" : "Applied"}:</b> ${esc(h.a.title)} <span class="muted">→</span> ${esc(h.b.title)}</div>
-      <p class="muted small">${esc(h.precedent_reason)}</p>
-      <div><button class="linkbtn" data-over="${i}">That's wrong, overrule it</button></div></div>`).join("") ||
-    `<p class="muted small">Nothing yet. Once your answers prove a pattern (see "Earning your trust"), matching suggestions are answered here for you, with the reason, and you can overrule any of them.</p>`;
-
-  // held back
-  const H = S.held || {}, hc = H["cheap-model"], hb = H["bad-rule"], hv = H["new-instructions"];
-  const ex = e => {
-    if (!e || !e.length) return "";
-    const x = e[0], other = x.key.split("-")[0] !== x.candidate.split("-")[0];
-    return `<p class="ex">For example, it wanted to merge "${esc(x.key_summary)}" (${esc(x.key)}) into "${esc(x.cand_summary)}" (${esc(x.candidate)}${other ? ", a different project" : ""}). A check found that wrong.</p>`;
-  };
-  const blocked = S.eval ? S.eval.models.filter(m => m.verdict === "not allowed") : [];
-  const worst = blocked.slice().sort((a, b) => b.hi_contradicted - a.hi_contradicted)[0];
-  $("held").innerHTML = [
-    blocked.length && `<div class="hold"><b><span>${blocked.length} of ${S.eval.models.length} AI models aren't allowed to act</span><span class="tag stop">Blocked</span></b>Tested on the same real tickets and checked against the maintainers' record. The worst: ${esc(worst.name)} said it was 95%+ sure ${fmt(worst.hi_contradicted + worst.hi_confirmed)} times on answers the record can check, and was wrong ${fmt(worst.hi_contradicted)} times.</div>`,
-    hc && `<div class="hold"><b><span>A cheaper AI model isn't allowed to act</span><span class="tag stop">Blocked</span></b>${esc(hc.model)} said it was ${Math.round(hc.cutoff * 100)}%+ sure about ${hc.said_sure} merges. Checks showed only ${hc.right} were right. ${hc.unusable} of its ${hc.tasks} answers couldn't even be read.${ex(hc.examples)}</div>`,
-    hb && `<div class="hold"><b><span>A bad rule was blocked before use</span><span class="tag stop">Blocked</span></b>Someone suggested: <q>${esc(hb.rule)}</q> Tested first on ${hb.n} tickets: it fixed ${hb.fixed} and broke ${hb.broke}, so it was switched off.${ex(hb.examples)}</div>`,
-    hv && `<div class="hold hold-ask"><b><span>New instructions are on hold</span><span class="tag ask">On hold</span></b>Rewritten instructions fixed ${hv.fixed} answers but broke ${hv.broke} on the same ${hv.n} tickets. No proof they're better, so the old ones stay.</div>`
-  ].filter(Boolean).join("");
-
-  // models
-  const p = S.policy || {};
-  const nm = { "databricks-meta-llama-3-3-70b-instruct": "Llama 70B", "databricks-meta-llama-3-1-8b-instruct": "Llama 8B",
-               "databricks-qwen3-next-80b-a3b-instruct": "Qwen 80B", "databricks-gpt-oss-120b": "gpt-oss 120B" };
-  const n = m => nm[m] || m;
-  $("policy").innerHTML = `
-    <div class="pm"><span class="tag go">${icon("check")}Main</span><b>${esc(n(p.primary))}</b>Trusted for this task. Answers first.</div>
-    <div class="pm"><span class="tag stop">${icon("x")}Not allowed</span><b>${esc(n(p.cheap))} (cheaper)</b>${esc(p.cheap_evidence || "")}. It would be used only if it earned approval.</div>
-    <div class="pm"><span class="tag ask">${icon("switch")}Backups</span><b>${(p.backups || []).map(n).map(esc).join(", then ")}</b>Used when the main model is busy. Their answers wait for your review.</div>`;
-  $("models-sub").textContent = `${fmt(c.live_runs)} live requests · ${fmt(c.switches)} switch${c.switches === 1 ? "" : "es"}`;
-  const RT = S.eval && S.eval.router ? S.eval.router : {};
-  const rtxt = (k, label) => RT[k] ? `<div class="pm"><b>${label}</b>${fmt(RT[k].requests)} tickets · ${fmt(RT[k].switches)} switches · ${fmt(RT[k].held_for_review)} held for review · ${fmt(RT[k].unanswered)} sent straight to a person because every model was busy</div>` : "";
-  $("policy").insertAdjacentHTML("beforeend", rtxt("normal", "Normal load") + rtxt("stress", "Stress test (44 calls at once)"));
-  $("log").innerHTML = (S.routing || []).slice(0, 6).map(d => {
-    const failed = (d.steps || []).filter(s => s.outcome !== "ok").map(s => `${n(s.model)} was ${s.outcome === "busy" ? "busy" : s.outcome === "bad_output" ? "unreadable" : "failing"}`);
-    const tag = d.switched ? `<span class="tag ask">${icon("switch")}Switched</span>` : d.answered_by ? `<span class="tag go">Normal</span>` : `<span class="tag stop">Sent to you</span>`;
-    const ms = (d.steps || []).reduce((a, s) => a + (s.ms || 0), 0);
-    return `<div class="lg"><span class="k"><a href="${jira(d.ticket)}" target="_blank" rel="noopener">${esc(d.ticket)}</a></span>
-      <span>${tag} Answered by <b>${esc(d.answered_name)}</b> in ${(ms / 1000).toFixed(1)} s${d.needs_review ? " · held for your review" : ""}</span>
-      <span class="r">${failed.length ? esc(failed.join("; ")) + ", so it switched to the next model." : "The main model answered."}</span></div>`;
-  }).join("") || `<p class="muted small">No live requests yet. Press "Check new tickets now".</p>`;
-
-  // savings
-  $("save").innerHTML = `
-    <div class="stat"><div class="n">$0</div><div class="l">AI bill for ${fmt(c.model_requests)} requests (Databricks Free Edition)</div></div>
-    <div class="stat"><div class="n">${fmt(c.wrong_prevented)}</div><div class="l">wrong changes prevented by blocking the cheap model and the bad rule</div></div>
-    <div class="stat"><div class="n">${fmt(c.auto_handled)}</div><div class="l">suggestions answered for you from proven past answers</div></div>
-    <div class="stat"><div class="n">${fmt(c.past_decisions)}</div><div class="l">past answers it learns from (incl. ${fmt(c.answered)} of yours)</div></div>`;
-  $("est").textContent = "Every number here is counted from the tables on Databricks, not estimated.";
-
-  $("foot").innerHTML = `Live data from Unity Catalog <code>${esc(S.catalog)}</code>: suggestions, past answers, your clicks (<code>actions</code>), model log (<code>routing_log</code>). Updated ${new Date(S.generated_at).toLocaleTimeString()}. Tickets are public Apache Jira issues; answers here create links only in a sandbox, never in the real Jira.`;
-
+  const E = S.eval;
+  ["sec-models", "sec-eval2", "sec-examples", "sec-coverage"].forEach(id => $(id).hidden = !E);
+  if (E) { renderKpis(E); renderModels(E); renderCalibration(E); renderAmbiguity(E); renderFalsePositives(E); renderCoverage(E); }
+  renderQueue(); renderRouting(); renderCost();
+  $("foot").innerHTML = `Source: Unity Catalog <code>${esc(S.catalog)}</code>. Updated ${new Date(S.generated_at).toLocaleTimeString()}. Tickets are public Apache Jira issues; accepted suggestions are written to a sandbox table, never to Jira.`;
 }
 
+function renderKpis(E) {
+  const M = E.meta, sl = M.slices || {};
+  $("k1").textContent = fmt(M.tickets);
+  $("i-k1").innerHTML = `${fmt(sl.stream)} from the live stream, ${fmt(sl.dups)} known duplicates, ${fmt(sl.bumps)} version upgrades, ${fmt(sl.flaky)} test-failure reports. ${M.models} models, ${fmt(M.calls)} calls on Databricks.`;
+  $("k2").textContent = fmt(M.graded);
+  $("i-k2").innerHTML = `Answers the maintainer record can settle, out of ${fmt(M.actions)} proposed links. Graded from duplicate links, parent tickets and resolutions.`;
+  $("k3").textContent = `${fmt(M.hi_wrong)} / ${fmt(M.hi_graded)}`;
+  $("i-k3").innerHTML = `Answers rated ≥95% confident that the maintainer record contradicts, across all ${M.models} models (${pct(M.hi_wrong / Math.max(1, M.hi_graded))}).`;
+  $("k4").textContent = fmt(M.claims.proven + M.claims.disproven);
+  $("i-k4").innerHTML = `${M.claims.proven} proven, ${M.claims.disproven} ruled out, ${M.claims.undecided} awaiting more data. See Evidence coverage.`;
+}
 
-// ---------- the evaluation: models, confidence vs reality, unclear cases, coverage ----------
-const VERDICT = { "main": ["go", "Main model"], "backup": ["ask", "Backup"], "not used": ["stop", "Not used"],
-                  "acts alone": ["go", "Acts alone"], "may suggest": ["ask", "May suggest"], "not allowed": ["stop", "Not allowed"] };
-const REAL_COLOR = r => r >= 0.9 ? "var(--go)" : r >= 0.5 ? "var(--ask)" : "var(--stop)";
-function renderEval() {
-  const E = S.eval, c = S.counts;
-  ["sec-models", "sec-eval2", "sec-examples", "sec-coverage"].forEach(id => $(id).hidden = !E);
-  if (!E) {  // no evaluation tables yet: fall back to the agent's own counts
-    $("k1").textContent = fmt(c.tickets_read); $("k1l").textContent = "tickets read by the agent";
-    $("k2").textContent = fmt(c.suggestions); $("k2l").textContent = "tidy-ups suggested";
-    $("k3").textContent = fmt(c.auto_handled); $("k3l").textContent = "handled without asking you";
-    $("k4").textContent = fmt(c.answered); $("k4l").textContent = "answered by reviewers here";
-    return;
-  }
-  const M = E.meta;
-  $("k1").textContent = fmt(M.tickets); $("k1l").textContent = `real tickets × ${M.models} models (${fmt(M.calls)} calls on Databricks)`;
-  $("k2").textContent = fmt(M.graded); $("k2l").textContent = "answers checked against what the maintainers actually did";
-  $("k3").textContent = `${fmt(M.hi_wrong)} of ${fmt(M.hi_graded)}`; $("k3l").textContent = `"95%+ sure" answers that were wrong (all models)`;
-  $("k4").textContent = `${M.claims.proven + M.claims.disproven}`; $("k4l").textContent = `claims decided by the evidence (${M.claims.proven} proven, ${M.claims.disproven} ruled out)`;
-
-  // models
-  const maxCost = Math.max(...E.models.map(m => m.usd_per_1k_tasks || 0));
-  $("models-note").textContent = `${M.models} models · ${fmt(M.tickets)} tickets`;
-  $("mtable").innerHTML = `<div class="mrow head" role="row"><span>Model</span><span>Assay's choice</span><span>Right when the record can check</span><span>"95%+ sure" but wrong</span><span>Unreadable answers</span><span>Cost per 1,000 tickets*</span><span>Typical time</span></div>` +
-    E.models.map(m => {
-      const dec = m.confirmed + m.contradicted, r = dec ? m.confirmed / dec : 0, v = VERDICT[m.role || m.verdict] || ["ask", m.role || m.verdict];
+function renderModels(E) {
+  const M = E.meta, PO = E.policy;
+  $("models-meta").textContent = `${M.models} models · ${fmt(M.tickets)} tickets`;
+  const H = [["Model", "Databricks-hosted model, and how many of the evaluation tickets it answered."],
+             ["Role", "Assigned by the selection rule: Primary answers first, Backups step in when it is unavailable, Excluded models are never used. Hover a role for the reason."],
+             ["Precision", "Share of answers confirmed by the maintainer record, among answers the record can settle. The marker is the 90% bar for acting without review; the lower bound is the 95% one-sided confidence limit."],
+             ["False positives", "High-confidence false positives: answers rated ≥95% confident that the record contradicts, out of all ≥95% answers the record can settle."],
+             ["Unreadable", "Responses that were not valid structured output and could not be used."],
+             ["Cost / 1k", "Estimated cost per 1,000 tickets at Databricks list price, from measured input and output tokens."],
+             ["Latency", "Median time per ticket, including retries after rate limits."]];
+  $("mtable").innerHTML = `<div class="mrow head" role="row">${H.map(([h, x]) => `<span role="columnheader">${h} <button class="tip" data-text="${esc(x)}" aria-label="About ${h}">?</button></span>`).join("")}</div>` +
+    E.models.map((m, i) => {
+      const dec = m.confirmed + m.contradicted, r = dec ? m.confirmed / dec : 0, ro = ROLE[m.role] || ["info", m.role || "–"];
+      const vs = m.vs_main && m.vs_main.p != null ? ` Against Llama 3.3 70B on the same tickets: better on ${m.vs_main.better}, worse on ${m.vs_main.worse}${m.vs_main.p < 0.05 ? " (significant)" : " (not significant)"}.` : "";
       return `<div class="mrow" role="row">
-        <span class="nm"><b>${esc(m.name)}</b><small>${fmt(m.answered)} of ${fmt(m.tasks)} tickets answered</small></span>
-        <span><span class="tag ${v[0]}">${v[0] === "go" ? icon("check") : v[0] === "stop" ? icon("x") : ""}${v[1]}</span></span>
-        <span><div class="pbar" role="img" aria-label="${Math.round(100 * r)}% right, at least ${Math.round(100 * m.decided_lower)}%"><span style="width:${100 * r}%;background:${REAL_COLOR(r)}"></span><i style="left:90%" title="90% bar"></i></div>
-          <span class="num small">${Math.round(100 * r)}% <small>${fmt(m.confirmed)} of ${fmt(dec)} right · at least ${Math.round(100 * m.decided_lower)}%</small></span></span>
-        <span class="num">${fmt(m.hi_contradicted)}<small>of ${fmt(m.hi_contradicted + m.hi_confirmed)} checkable</small></span>
+        <span class="nm"><b>${esc(m.name)}</b><small>${fmt(m.answered)} / ${fmt(m.tasks)} answered</small></span>
+        <span><button class="tag ${ro[0]} tip-host" data-text="${esc((m.role_reason || "") + "." + vs)}" style="border:0;cursor:help">${ro[1]}</button></span>
+        <span><div class="pbar" role="img" aria-label="precision ${pct(r)}"><span style="width:${100 * r}%;background:${COLOR(r)}"></span><i style="left:90%"></i></div>
+          <span class="num">${pct(r)} <small>${fmt(m.confirmed)} / ${fmt(dec)} · lower bound ${pct(m.decided_lower)}</small></span></span>
+        <span class="num">${fmt(m.hi_contradicted)}<small>of ${fmt(m.hi_contradicted + m.hi_confirmed)}</small></span>
         <span class="num">${fmt(m.unusable)}<small>of ${fmt(m.tasks)}</small></span>
-        <span class="num">$${(m.usd_per_1k_tasks ?? 0).toFixed(2)}<small>${fmt(m.tokens?.per_task)} tokens each</small></span>
+        <span class="num">$${(m.usd_per_1k_tasks ?? 0).toFixed(2)}<small>${fmt(m.tokens?.per_task)} tok/ticket</small></span>
         <span class="num">${((m.latency_ms?.p50 || 0) / 1000).toFixed(1)} s</span>
-        <span class="why2">${esc(m.role_reason || m.verdict_reason)}. Acts alone: ${m.verdict === "acts alone" ? "yes" : "no"}${m.vs_main && m.vs_main.p != null ? ` · vs Llama 3.3 70B on the same tickets: better on ${m.vs_main.better}, worse on ${m.vs_main.worse}${m.vs_main.p < 0.05 ? " (a real difference)" : " (no proven difference)"}` : ""}</span>
+        <span class="detail">${esc(m.role_reason || "")}.${esc(vs)}</span>
       </div>`;
     }).join("");
-  const PO = E.policy;
-  $("cost-note").innerHTML = (PO ? `<b>Assay's rule:</b> the cheapest model that is ${esc(PO.rule)} becomes the main model. Today: <b>${esc((E.models.find(m => m.model === PO.primary) || {}).name || PO.primary)}</b>${PO.primary !== PO.previous_primary ? ` (was ${esc((E.models.find(m => m.model === PO.previous_primary) || {}).name || PO.previous_primary)})` : ""}. What would change it: ${esc(PO.what_would_change_it)}.<br>` : "") + esc(`*List price: Databricks' published DBUs per million tokens × an assumed $${M.usd_per_dbu_assumed} per DBU. We paid $0 on Databricks Free Edition. The vertical line on each bar is the 90% bar a model must clear to act alone.`);
-
-  // confidence vs reality (the 95%+ bin)
-  const hiBins = E.calibration.filter(b => b.bin.startsWith("0.95") && b.n >= 3);
-  const rows = hiBins.map(b => ({ name: b.name, said: b.said, real: b.confirmed / b.n, n: b.n })).sort((a, b) => b.real - a.real);
-  $("calib").innerHTML = rows.map(r => `<div class="crow"><span>${esc(r.name)}<br><small class="muted">${r.n} checkable</small></span>
-      <div class="track" role="img" aria-label="${esc(r.name)}: claimed ${Math.round(100 * r.said)}%, right ${Math.round(100 * r.real)}%">
-        <span class="ln"></span><span class="gap" style="left:${100 * r.real}%;width:${Math.max(0, 100 * (r.said - r.real))}%"></span>
-        <span class="said" style="left:${100 * r.said}%"></span><span class="real" style="left:${100 * r.real}%;background:${REAL_COLOR(r.real)}"></span>
-        <span class="lbl" style="left:${Math.min(100 * r.real, 70)}%;transform:translateX(12px)">right ${Math.round(100 * r.real)}%</span></div></div>`).join("")
-    + `<div class="axis"><span>0%</span><span>50%</span><span>100%</span></div>`
-    || `<p class="muted small">Not enough 95%+ answers yet.</p>`;
-
-  // unclear: what the models called real duplicates
-  const D = E.models.filter(m => m.dup_recall && m.dup_recall.n);
-  const n0 = D.length ? Math.max(...D.map(m => m.dup_recall.n)) : 0;
-  $("dup-intro").innerHTML = `<b>${n0} tickets the maintainers closed as duplicates</b> of an earlier ticket the agent was shown. What did each model call them? Even the definition of "duplicate" splits the models.`;
-  const CATS = [["duplicate (right)", "var(--go)", "Named the duplicate"], ["called it part_of", "var(--accent)", 'Called it "part of"'],
-                ["called it related", "var(--ask)", 'Called it "connected"'], ["picked another ticket", "var(--stop)", "Picked another ticket"],
-                ["said nothing", "var(--line)", "Said nothing"]];
-  $("dupbars").innerHTML = D.sort((a, b) => b.dup_recall.hits / b.dup_recall.n - a.dup_recall.hits / a.dup_recall.n).map(m => {
-    const s = m.dup_recall.said, n = m.dup_recall.n;
-    return `<div class="drow"><span>${esc(m.name)}</span><div class="sbar" role="img" aria-label="${esc(m.name)}: ${m.dup_recall.hits} of ${n} named the duplicate">${CATS.map(([k, col]) => s[k] ? `<span style="width:${100 * s[k] / n}%;background:${col}" title="${k}: ${s[k]}"></span>` : "").join("")}</div><span class="num">${m.dup_recall.hits}/${n}</span></div>`;
-  }).join("");
-  $("duplegend").innerHTML = CATS.map(([, col, label]) => `<span><i style="background:${col}"></i>${label}</span>`).join("");
-
-  // confident and wrong
-  const EX = (E.examples || []).slice(0, 6);
-  $("examples").innerHTML = EX.map(x => `<div class="ex"><div class="said2">${esc(x.name)} said <span class="tag stop">${Math.round(100 * x.confidence)}% sure</span> it's ${REL[x.relation] ? REL[x.relation].plain : esc(x.relation)}</div>
-      <div class="pair"><div class="tk">${esc(x.key_summary)}<small><a href="${jira(x.key)}" target="_blank" rel="noopener">${esc(x.key)}</a></small></div><span class="arrow" aria-hidden="true">${icon("arrow")}</span>
-      <div class="tk">${esc(x.cand_summary)}<small><a href="${jira(x.candidate)}" target="_blank" rel="noopener">${esc(x.candidate)}</a></small></div></div>
-      <p class="rec"><b>The maintainers' record:</b> ${esc(x.why)}.</p></div>`).join("");
-
-  // coverage
-  const C = E.coverage || [];
-  $("cov-sub").textContent = `${M.claims.proven} proven · ${M.claims.disproven} ruled out · ${M.claims.undecided} still need data`;
-  const show = C.filter(x => x.n >= 10).sort((a, b) => (a.status === "proven" ? 0 : a.status === "disproven" ? 1 : 2) - (b.status === "proven" ? 0 : b.status === "disproven" ? 1 : 2) || b.n - a.n).slice(0, 12);
-  const ST = { proven: ["go", "Proven"], disproven: ["stop", "Ruled out"], undecided: ["ask", "Needs more"] };
-  $("coverage").innerHTML = `<div class="cov head"><span>Claim</span><span>Evidence</span><span>Likely range (95%)</span><span>Verdict</span></div>` +
-    show.map(x => `<div class="cov"><span>${esc(x.claim.replace(/_/g, " "))}</span><span class="num">${fmt(x.k)} of ${fmt(x.n)}</span>
-      <span><div class="ci" role="img" aria-label="between ${Math.round(100 * x.lower)}% and ${Math.round(100 * x.upper)}%"><span style="left:${100 * x.lower}%;width:${Math.max(1, 100 * (x.upper - x.lower))}%"></span><i style="left:90%"></i></div><small class="muted">${Math.round(100 * x.lower)}–${Math.round(100 * x.upper)}%</small></span>
-      <span><span class="tag ${ST[x.status][0]}">${ST[x.status][1]}${x.needs_more ? ` (~${x.needs_more} more)` : ""}</span></span></div>`).join("");
+  if (PO) {
+    const nm = id => (E.models.find(m => m.model === id) || {}).name || id;
+    $("policy-line").innerHTML = `<span><b>Primary:</b> ${esc(nm(PO.primary))}${PO.primary !== PO.previous_primary ? ` <span class="tag info">replaced ${esc(nm(PO.previous_primary))}</span>` : ""}</span>
+      <span><b>Backups:</b> ${PO.backups.map(nm).map(esc).join(", ")}</span>
+      <span><b>Autonomy:</b> none granted</span> <button class="tip" data-info="i-rule" aria-label="About the selection rule">?</button>`;
+    $("i-rule").innerHTML = `<b>Selection rule:</b> the cheapest model that is ${esc(PO.rule)} becomes primary. Re-evaluated whenever new evidence arrives. Next candidate: ${esc(PO.what_would_change_it)}.`;
+  }
 }
 
-$("more").onclick = () => { shown += 6; render(); };
+function renderCalibration(E) {
+  const rows = E.calibration.filter(b => b.bin.startsWith("0.95") && b.n >= 3)
+    .map(b => ({ name: b.name, said: b.said, real: b.confirmed / b.n, n: b.n })).sort((a, b) => b.real - a.real);
+  $("calib").innerHTML = rows.map(r => `<div class="crow"><span>${esc(r.name)}<br><small class="muted">n = ${r.n}</small></span>
+      <div class="track" role="img" aria-label="${esc(r.name)}: stated ${pct(r.said)}, actual ${pct(r.real)}">
+        <span class="ln"></span><span class="gap" style="left:${100 * r.real}%;width:${Math.max(0, 100 * (r.said - r.real))}%"></span>
+        <span class="said" style="left:${100 * r.said}%"></span><span class="real" style="left:${100 * r.real}%;background:${COLOR(r.real)}"></span>
+        <span class="lbl" style="left:${Math.min(100 * r.real, 72)}%;transform:translateX(12px)">${pct(r.real)}</span></div></div>`).join("")
+    + `<div class="axis"><span>0%</span><span>50%</span><span>100%</span></div>`;
+}
 
-// ---------- answers ----------
-$("inbox").addEventListener("click", async e => {
+function renderAmbiguity(E) {
+  const D = E.models.filter(m => m.dup_recall && m.dup_recall.n >= 50);
+  const n0 = D.length ? Math.max(...D.map(m => m.dup_recall.n)) : 0;
+  $("amb-meta").textContent = `${n0} known duplicates`;
+  const CATS = [["duplicate (right)", "var(--go)", "Duplicate (correct)"], ["called it part_of", "var(--accent)", "Part of"],
+                ["called it related", "var(--ask)", "Related"], ["picked another ticket", "var(--stop)", "Wrong ticket"], ["said nothing", "var(--line)", "No link"]];
+  $("dupbars").innerHTML = D.sort((a, b) => b.dup_recall.hits / b.dup_recall.n - a.dup_recall.hits / a.dup_recall.n).map(m => {
+    const s = m.dup_recall.said, n = m.dup_recall.n;
+    return `<div class="drow"><span>${esc(m.name)}</span><div class="sbar" role="img" aria-label="${esc(m.name)}: ${m.dup_recall.hits} of ${n} correct">${CATS.map(([k, col]) => s[k] ? `<span style="width:${100 * s[k] / n}%;background:${col}" title="${k}: ${s[k]}"></span>` : "").join("")}</div><span class="num">${pct(m.dup_recall.hits / n)}</span></div>`;
+  }).join("");
+  $("duplegend").innerHTML = CATS.map(([, col, label]) => `<span><i style="background:${col}"></i>${label}</span>`).join("");
+}
+
+const CAUSE = {
+  "Belongs to a different parent": ["Wrong parent project", "Filed under a project the ticket does not belong to; it already sits under another parent."],
+  "Resolved independently": ["Not actually a duplicate", "Called a duplicate, but the ticket was fixed on its own."],
+  "Sibling sub-tasks": ["Sibling tasks, not duplicates", "Two separate pieces of the same project were called duplicates."],
+  "Linked as another relation": ["Wrong kind of link", "The tickets are connected, but not in the way the model said."],
+  "Different project": ["Across projects", "Tickets from different Apache projects cannot be duplicates."],
+  "Duplicate of another ticket": ["Wrong original", "It is a duplicate, but of a different ticket."],
+  "Parent, not a duplicate": ["Parent mistaken for duplicate", "The earlier ticket is its parent project."]
+};
+function renderFalsePositives(E) {
+  const C = E.fp_causes || [], total = C.reduce((a, c) => a + c.n, 0);
+  $("fp-meta").textContent = `${fmt(total)} answers rated ≥95% confident, contradicted by the record`;
+  $("fpcauses").innerHTML = C.filter(c => c.n >= 5).map(c => {
+    const [title, desc] = CAUSE[c.cause] || [c.cause, ""], x = c.example || {};
+    return `<div class="fprow2"><span class="t"><b>${esc(title)}</b><small>${esc(desc)}</small></span>
+      <span class="bar" role="img" aria-label="${pct(c.share)}"><span style="width:${100 * c.n / Math.max(1, C[0].n)}%"></span></span>
+      <span class="num">${pct(c.share)}<small>${fmt(c.n)}</small></span>
+      <span class="chips">${Object.keys(c.models).slice(0, 2).map(m => `<span class="chip2">${esc(m)}</span>`).join("")}</span>
+      ${x.key ? `<a class="exlink" href="${jira(x.key)}" target="_blank" rel="noopener" title="${esc(x.key_summary)}">Example ↗</a>` : "<span></span>"}</div>`;
+  }).join("");
+}
+
+
+
+function renderCoverage(E) {
+  const M = E.meta, C = E.coverage || [];
+  $("cov-meta").textContent = `${M.claims.proven} proven · ${M.claims.disproven} ruled out · ${M.claims.undecided} pending`;
+  const rank = s => ({ proven: 0, disproven: 1, undecided: 2 })[s];
+  const show = C.filter(x => x.n >= 10).sort((a, b) => rank(a.status) - rank(b.status) || b.n - a.n).slice(0, 10);
+  const ST = { proven: ["go", "Proven"], disproven: ["stop", "Ruled out"], undecided: ["ask", "Pending"] };
+  $("coverage").innerHTML = `<div class="cov head"><span>Claim</span><span>Evidence</span><span>95% interval</span><span>Status</span></div>` +
+    show.map(x => `<div class="cov"><span>${esc(x.claim.replace(/"/g, ""))}</span><span class="num">${fmt(x.k)} / ${fmt(x.n)}</span>
+      <span><div class="ci" role="img" aria-label="${pct(x.lower)} to ${pct(x.upper)}"><span style="left:${100 * x.lower}%;width:${Math.max(1, 100 * (x.upper - x.lower))}%"></span><i style="left:90%"></i></div><small class="muted">${pct(x.lower)}–${pct(x.upper)}</small></span>
+      <span><span class="tag ${ST[x.status][0]}">${ST[x.status][1]}${x.needs_more ? ` · ${x.needs_more} more` : ""}</span></span></div>`).join("");
+}
+
+function hist(it) {
+  const p = it.precedent;
+  if (!p) return `<p class="hist">Similar past cases: none yet.</p>`;
+  const said = p.answer === "accept" ? "accepted" : "rejected";
+  const kind = KIND[it.kind] || it.kind_text;
+  const tail = p.enabled ? " · resolved automatically"
+    : it.kind === "other" ? " · no recognised pattern, so it always stays with a person"
+    : p.agree === p.n && p.needs_more ? ` · ${p.needs_more} more consistent decisions to automate`
+    : " · decisions differ, so this stays with a person";
+  return `<p class="hist">Similar past cases${it.kind === "other" ? "" : ` (${esc(kind)})`}: <b>${said} ${p.agree} of ${p.n}</b>${tail}</p>`;
+}
+function card(it, i) {
+  const k = REL[it.relation], mk = n => i === 0 ? `<span class="mark" aria-hidden="true">${n}</span>` : "";
+  const TYPE = { duplicate: "Possible duplicate", part_of: "Possibly part of a larger effort", related: "Possibly related" };
+  return `<article class="sugg${freshIds.has(it.id) ? " fresh" : ""}" id="c${i}" ${i === 0 ? 'data-tour="card"' : ""}>
+    <div class="kind">${mk(1)}<span class="ico" aria-hidden="true">${icon(k.ico)}</span>${TYPE[it.relation]}${it.new ? '<span class="badge new">New</span>' : ""}</div>
+    <div class="sby">${mk(2)}Suggested by <b>${esc(it.model || "the agent")}</b>${it.confidence != null ? ` · model confidence <span class="conf">${pct(it.confidence)}</span>` : ""}</div>
+    <div class="pair">${mk(3)}<div class="tk">${esc(it.a.title)}<small><a href="${jira(it.a.key)}" target="_blank" rel="noopener">${esc(it.a.key)} ↗</a> · new</small></div>
+      <span class="arrow" aria-hidden="true">${icon("arrow")}</span>
+      <div class="tk">${esc(it.b.title)}<small><a href="${jira(it.b.key)}" target="_blank" rel="noopener">${esc(it.b.key)} ↗</a> · earlier</small></div></div>
+    ${it.reason ? `<p class="why">${mk(4)} Model's reason: “${esc(it.reason)}”</p>` : ""}
+    <div class="hist-wrap">${mk(5)}${hist(it)}</div>
+    <div class="acts" ${i === 0 ? 'data-tour="buttons"' : ""}>${mk(6)}
+      <button class="btn yes" data-i="${i}" data-a="accept">${icon("check")}${k.yes}</button>
+      <button class="btn no" data-i="${i}" data-a="reject">${icon("x")}${k.no}</button>
+      <button class="btn ghost" data-i="${i}" data-a="skip">Skip</button>
+    </div></article>`;
+}
+function renderQueue() {
+  const items = S.inbox.filter(it => !skipped.has(it.id)).concat(S.inbox.filter(it => skipped.has(it.id)));
+  window._items = items;
+  $("queue").innerHTML = items.slice(0, shown).map(card).join("") || `<div class="empty"><b>Queue clear.</b> Run the agent on new tickets to add suggestions.</div>`;
+  $("queue-meta").textContent = `${fmt(items.length)} open · ${fmt(S.handled.length)} resolved automatically · ${fmt(S.counts.answered)} reviewed`;
+  if (S.eval) { const M = S.eval.meta; $("stats-meta").textContent = `Calibration · Definition ambiguity · Evidence coverage (${M.claims.proven} proven, ${M.claims.disproven} ruled out)`; }
+  $("more-wrap").hidden = items.length <= shown;
+  $("more").textContent = `Show more (${fmt(items.length - shown)})`;
+}
+
+function renderRouting() {
+  const P = S.eval && S.eval.policy ? S.eval.policy : S.policy || {}, c = S.counts;
+  const nm = id => ((S.eval && S.eval.models.find(m => m.model === id)) || {}).name || id;
+  const excluded = S.eval ? S.eval.models.filter(m => m.role === "not used") : [];
+  const RT = (S.eval && S.eval.router) || {}, N = RT.normal, ST = RT.stress;
+  $("route-meta").textContent = N ? `Load test · ${fmt(N.requests)} requests` : "";
+  if (N) {
+    const ab = N.answered_by || {}, prim = nm(P.primary), backs = (P.backups || []).map(nm);
+    const segs = [[prim, ab[prim] || 0, "var(--go)", "Primary"]]
+      .concat(backs.map((b, i) => [b, ab[b] || 0, i ? "#6E8FCB" : "var(--accent)", "Backup"]))
+      .concat([["Escalated to a person", N.unanswered, "var(--stop)", ""]]);
+    $("route-flow").innerHTML = `<p class="small muted" style="margin-bottom:8px">Where ${fmt(N.requests)} requests went</p>
+      <div class="flow" role="img" aria-label="${segs.map(s => `${s[0]}: ${s[1]}`).join(", ")}">${segs.map(s => s[1] ? `<span style="width:${100 * s[1] / N.requests}%;background:${s[2]}">${Math.round(100 * s[1] / N.requests)}%</span>` : "").join("")}</div>
+      <div class="flowkey">${segs.map(s => `<div><i style="background:${s[2]}"></i>${esc(s[3] ? `${s[3]}: ${s[0]}` : s[0])}<b>${fmt(s[1])}</b></div>`).join("")}</div>`;
+    const dec = p => p.confirmed + p.contradicted;
+    const pt = N.precision_trusted || {}, ph = N.precision_held || {};
+    $("route-stats").innerHTML = `
+      <div class="stat"><div class="n">${pct((N.requests - N.unanswered) / N.requests)}</div><div class="l">answered without a person (${fmt(N.requests - N.unanswered)} / ${fmt(N.requests)})</div></div>
+      <div class="stat"><div class="n">${fmt(N.switches)}</div><div class="l">live switches after ${fmt(N.busy_events)} rate-limit responses</div></div>
+      <div class="stat"><div class="n">${dec(ph) ? pct(ph.confirmed / dec(ph)) : "–"}</div><div class="l">precision of backup answers (primary: ${dec(pt) ? pct(pt.confirmed / dec(pt)) : "–"})</div></div>
+      <div class="stat"><div class="n">${(N.latency_ms_p50 / 1000).toFixed(1)} s</div><div class="l">median time per request, switches included</div></div>`;
+  }
+  $("policy").innerHTML = `
+    <div class="pm"><span class="tag go">${icon("check")}Primary</span><b>${esc(nm(P.primary))}</b>Answers first; trusted for this task.</div>
+    <div class="pm"><span class="tag ask">${icon("switch")}Backups, in order</span><b>${(P.backups || []).map(nm).map(esc).join(" → ")}</b>Step in when the primary is unavailable; answers held for review.</div>
+    <div class="pm"><span class="tag stop">${icon("x")}Excluded</span><b>${excluded.length} models</b>${esc(excluded.map(m => m.name).join(", "))}.</div>`;
+  $("route-note").textContent = ST ? `Stress test for comparison (44 concurrent calls, previous backup order): ${fmt(ST.requests - ST.unanswered)} / ${fmt(ST.requests)} answered, ${fmt(ST.unanswered)} escalated. Since launch: ${fmt(c.live_runs)} routed requests, ${fmt(c.switches)} switches.` : "";
+}
+
+function renderCost() {
+  const E = S.eval;
+  if (!E) { $("cost").innerHTML = `<div class="stat"><div class="n">$0</div><div class="l">spent on Databricks Free Edition</div></div>`; return; }
+  const M = E.meta, P = E.policy || {}, rate = M.usd_per_dbu_assumed;
+  const est = M.dbu * rate;
+  const byId = id => E.models.find(m => m.model === id) || {};
+  const prim = byId(P.primary), prev = byId(P.previous_primary);
+  const per1k = prim.usd_per_1k_tasks || 0, per1kPrev = prev.usd_per_1k_tasks || 0;
+  const saving = per1kPrev ? 1 - per1k / per1kPrev : 0;
+  const monthly = (per1kPrev - per1k) * MONTHLY_TICKETS / 1000;
+  const lo = (E.precedents || {}).leave_one_out || {};
+  const share = lo.decisions ? lo.auto_resolved / lo.decisions : 0;
+  const hours = share * 10000 * MIN_PER_REVIEW / 60;
+  $("cost").innerHTML = `
+    <div class="stat"><div class="n">${usd(est)}</div><div class="l">Estimated compute cost of this evaluation</div></div>
+    <div class="stat good"><div class="n">${pct(saving)}</div><div class="l">Lower cost per ticket: ${esc(prim.name || "–")} vs ${esc(prev.name || "–")}</div></div>
+    <div class="stat good"><div class="n">${usd(monthly)}</div><div class="l">Projected monthly saving at ${fmt(MONTHLY_TICKETS)} tickets</div></div>
+    <div class="stat good"><div class="n">${pct(share)}</div><div class="l">Reviews automated by proven patterns (≈${Math.round(hours)} h per 10k suggestions)</div></div>`;
+  $("ctable").innerHTML = `<div class="crow2 head"><span>Model</span><span>Tokens used</span><span>DBU</span><span>Estimated cost</span><span>Per 1,000 tickets</span></div>` +
+    E.models.slice().sort((a, b) => (b.dbu || 0) - (a.dbu || 0)).map(m => `<div class="crow2"><span>${esc(m.name)}</span>
+      <span class="num">${fmt((m.tokens?.in || 0) + (m.tokens?.out || 0))}</span><span class="num">${(m.dbu || 0).toFixed(2)}</span>
+      <span class="num">${usd((m.dbu || 0) * rate)}</span><span class="num">$${(m.usd_per_1k_tasks ?? 0).toFixed(2)}</span></div>`).join("") +
+    `<div class="crow2"><span><b>Total</b></span><span class="num">${fmt(M.tokens)}</span><span class="num">${M.dbu.toFixed(2)}</span><span class="num">${usd(est)}</span><span></span></div>`;
+  $("i-cost").innerHTML = `Token counts are measured on every call. Prices: Databricks' published pay-per-token rates (DBU per million input and output tokens), converted at an assumed $${rate} per DBU. Actual spend on Databricks Free Edition: $0. Projections assume ${fmt(MONTHLY_TICKETS)} tickets a month; review effort assumes ${MIN_PER_REVIEW} minutes per review and the automated share measured by leave-one-out (${fmt(lo.auto_resolved)} of ${fmt(lo.decisions)} past decisions, ${fmt(lo.right)} correct).`;
+}
+
+$("more").onclick = () => { shown += 6; renderQueue(); };
+
+// ---------- collapsible panels ----------
+function setFold(panel, open) {
+  const b = panel.querySelector(".fold-h"), body = $(b.getAttribute("aria-controls"));
+  b.setAttribute("aria-expanded", String(open)); body.hidden = !open;
+  panel.querySelector(".chev-t").textContent = open ? "Close" : "Open";
+}
+document.querySelectorAll(".fold").forEach(p => p.querySelector(".fold-h").addEventListener("click", e => {
+  if (e.target.closest(".tip")) return;
+  setFold(p, p.querySelector(".fold-h").getAttribute("aria-expanded") !== "true");
+}));
+
+// ---------- info tips: 1 s hover, tap, or keyboard focus ----------
+let popTimer = null, popFor = null;
+function showPop(btn, html) {
+  const pop = $("pop"); pop.innerHTML = html; pop.hidden = false; popFor = btn;
+  const r = btn.getBoundingClientRect(), w = Math.min(360, innerWidth - 32);
+  pop.style.maxWidth = w + "px";
+  const left = Math.max(16, Math.min(r.left - 12, innerWidth - pop.offsetWidth - 16));
+  let top = r.bottom + 8; if (top + pop.offsetHeight > innerHeight - 12) top = r.top - pop.offsetHeight - 8;
+  pop.style.left = left + "px"; pop.style.top = Math.max(12, top) + "px";
+}
+function hidePop() { clearTimeout(popTimer); $("pop").hidden = true; popFor = null; }
+const tipHtml = b => b.dataset.info ? ($(b.dataset.info) || {}).innerHTML || "" : esc(b.dataset.text || "");
+document.addEventListener("mouseover", e => {
+  const b = e.target.closest(".tip, .tip-host"); if (!b || b === popFor) return;
+  clearTimeout(popTimer); popTimer = setTimeout(() => showPop(b, tipHtml(b)), 1000);
+});
+document.addEventListener("mouseout", e => { const b = e.target.closest(".tip, .tip-host"); if (b && !b.contains(e.relatedTarget)) hidePop(); });
+document.addEventListener("focusin", e => { const b = e.target.closest(".tip, .tip-host"); if (b) showPop(b, tipHtml(b)); });
+document.addEventListener("focusout", e => { if (e.target.closest(".tip, .tip-host")) hidePop(); });
+document.addEventListener("click", e => {
+  const b = e.target.closest(".tip, .tip-host");
+  if (b) { e.preventDefault(); popFor === b ? hidePop() : showPop(b, tipHtml(b)); } else if (!e.target.closest("#pop")) hidePop();
+});
+addEventListener("scroll", hidePop, { passive: true });
+
+// ---------- review actions ----------
+$("queue").addEventListener("click", async e => {
   const b = e.target.closest("button[data-a]"); if (!b || busy) return;
   const it = window._items[+b.dataset.i], a = b.dataset.a, el = $("c" + b.dataset.i);
-  if (a === "skip") { skipped.add(it.id); el.classList.add("gone"); setTimeout(render, RM() ? 0 : 250); toast("Skipped. It moves to the end of your list."); return; }
-  busy = true; el.classList.add("gone");
-  el.querySelectorAll("button").forEach(x => x.disabled = true);
+  if (a === "skip") { skipped.add(it.id); el.classList.add("gone"); setTimeout(renderQueue, RM() ? 0 : 250); toast("Skipped; moved to the end of the queue."); return; }
+  busy = true; el.classList.add("gone"); el.querySelectorAll("button").forEach(x => x.disabled = true);
   try {
     const r = await api("/api/answer", { key: it.key, candidate: it.candidate, relation: it.relation, decision: a });
     S = r.state; last = it; render();
-    toast((a === "accept" ? REL[it.relation].done : "Got it: they stay separate.") + " Saved to Databricks.", true);
+    toast((a === "accept" ? REL[it.relation].done : "Rejected: tickets kept separate.") + " Saved to Delta.", true);
     tourAnswered();
-  } catch (err) { el.classList.remove("gone"); el.querySelectorAll("button").forEach(x => x.disabled = false); toast("Couldn't save: " + err.message); }
+  } catch (err) { el.classList.remove("gone"); el.querySelectorAll("button").forEach(x => x.disabled = false); toast("Not saved: " + err.message); }
   busy = false;
 });
-
-$("handled").addEventListener("click", async e => {
-  const b = e.target.closest("button[data-over]"); if (!b) return;
-  const h = S.handled[+b.dataset.over];
-  b.disabled = true;
-  try {
-    const r = await api("/api/answer", { key: h.key, candidate: h.candidate, relation: h.relation,
-      decision: h.mode === "auto-reject" ? "accept" : "reject", overrode: h.mode });
-    S = r.state; render(); toast("Overruled and saved. Your answer now counts against that pattern.");
-  } catch (err) { b.disabled = false; toast("Couldn't save: " + err.message); }
-});
-
 let tt = null;
-function toast(msg, undo) {
-  $("toast-text").textContent = msg; $("toast").hidden = false; $("toast-undo").hidden = !undo;
-  clearTimeout(tt); tt = setTimeout(() => $("toast").hidden = true, 6000);
-}
+function toast(msg, undo) { $("toast-text").textContent = msg; $("toast").hidden = false; $("toast-undo").hidden = !undo; clearTimeout(tt); tt = setTimeout(() => $("toast").hidden = true, 6000); }
 $("toast-undo").onclick = async () => {
   if (!last) return; const it = last; last = null; $("toast").hidden = true;
-  try { const r = await api("/api/undo", { key: it.key, candidate: it.candidate, relation: it.relation }); S = r.state; render(); toast("Undone. It's back in your list."); }
-  catch (err) { toast("Couldn't undo: " + err.message); }
+  try { const r = await api("/api/undo", { key: it.key, candidate: it.candidate, relation: it.relation }); S = r.state; render(); toast("Undone; back in the queue."); }
+  catch (err) { toast("Undo failed: " + err.message); }
 };
-
-// ---------- live agent run ----------
 $("run").onclick = async () => {
   const b = $("run"); b.disabled = true;
-  b.innerHTML = `<span class="spin" style="width:16px;height:16px;border-width:2px"></span>Reading 3 new tickets… (10–40 s)`;
+  b.innerHTML = `<span class="spin" style="width:16px;height:16px;border-width:2px"></span>Running on 3 tickets (10–40 s)`;
   try {
     const r = await api("/api/run", { n: 3 });
     freshIds = new Set(r.state.inbox.filter(i => i.new && r.tickets.includes(i.key)).map(i => i.id));
-    S = r.state; shown = Math.max(shown, 6); render();
+    S = r.state; render();
     const sw = r.decisions.filter(d => d.switched).length;
-    toast(`Read ${r.tickets.length} new tickets: ${r.suggestions} suggestion${r.suggestions === 1 ? "" : "s"} added${sw ? `, ${sw} live model switch${sw === 1 ? "" : "es"}` : ""}.`);
-  } catch (err) { toast("The check didn't finish: " + err.message); }
-  b.disabled = false; b.innerHTML = `${icon("play")}Check new tickets now`;
+    toast(`${r.tickets.length} tickets processed · ${r.suggestions} suggestion${r.suggestions === 1 ? "" : "s"} added${sw ? ` · ${sw} model switch${sw === 1 ? "" : "es"}` : ""}.`);
+  } catch (err) { toast("Run did not complete: " + err.message); }
+  b.disabled = false; b.innerHTML = `${icon("play")}Run agent on new tickets`;
 };
 
-// ---------- guided tour (with one hands-on step) ----------
+// ---------- guided tour: the highlighted section's explanations are expanded ----------
 const TOUR = [
-  ["hello", "What Assay is", "Assay sits between your AI agents and your people. It decides, with evidence, what an agent may do on its own. The agent here tidies up the public Apache Jira, as an example."],
-  ["summary", "The evidence at a glance", "How many real tickets and models were tested, how many answers were checked against what really happened, and how often \"95% sure\" was wrong."],
-  ["trust-models", "Which models you can trust", "Every model answered the same tickets. Assay's verdict says which may suggest, which may act alone, and which are not allowed, with the reason, cost and speed."],
-  ["confidence", "Confidence vs reality", "The diamond is how sure a model said it was; the dot is how often it was right. The red gap is why confidence alone is never allowed to decide."],
-  ["unclear", "Where the rules are unclear", "Real duplicates, and what each model called them. When models split like this, the definition itself is unclear, so those cases stay with a person."],
-  ["examples", "Confident and wrong", "Real answers given with 95%+ confidence that the maintainers' record contradicts."],
-  ["coverage", "Is there enough data?", "Each claim is proven, ruled out, or says how many more cases it needs. Nothing is guessed."],
-  ["inbox", "Your to-do list", "Suggestions the record can't settle. Only these need a person."],
-  ["buttons", "Your turn: try it", "Answer this one now. Yes applies it, No keeps them separate. Your answer is saved to a Databricks table, and you can undo it.", "try"],
-  ["learning", "How it earns freedom", "Answers are remembered by kind of case. When a kind is answered the same way often enough to prove it, Assay handles that kind for you, and you can overrule it."],
-  ["held", "What it's not allowed to do", "Models and rules that were tested and stopped before they could do harm."],
-  ["models", "Which AI answered", "The main model answers first; when it's busy, Assay switches to a backup on the spot and holds that answer for review."],
-  ["run", "See it work live", "Have the agent read a few brand-new tickets now, on Databricks."],
-  ["help", "Need a reminder?", "Click here any time to take this tour again."]
+  ["hello", "Assay", "Evidence-based oversight for AI agents: which model to use, what an agent may do without review, and whether a change helped. The example agent triages the public Apache Jira."],
+  ["kpis", "Key figures", "Scale of the evaluation, answers verified against the maintainer record, and how often high confidence was wrong."],
+  ["models", "Model evaluation", "Eight models on the same tickets: role, precision, false positives, reliability, cost and latency. The cheapest proven model is primary."],
+  ["stats", "Detailed statistics", "Calibration, definition ambiguity and evidence coverage: the analysis behind the model decisions."],
+  ["cost", "Cost & savings", "Estimated cost of every token used, and the savings from routing and automated reviews."],
+  ["routing", "Model routing", "Where requests went in the load test: the primary, each backup, or a person. Backup answers are held for review."],
+  ["queue", "Review queue", "Suggestions the record cannot settle. The numbers on the first card match the guide: type, model and confidence, tickets, reason, similar past cases, your decision."],
+  ["buttons", "Try it", "Accept or reject this suggestion. The decision is written to a Delta table and can be undone.", "try"],
+  ["falsepos", "Why confident answers fail", "The most common mistakes behind high-confidence false positives, and the models that make them."],
+  ["run", "Live run", "Process new tickets now, on Databricks."],
+  ["help", "Tour", "Restart the tour at any time. Hover ? for one second for details."]
 ];
 let ti = -1;
 function tourEl(key) { const el = document.querySelector(`[data-tour="${key}"]`); return el && el.offsetParent !== null ? el : null; }
 function place() {
-  const [key, , , mode] = TOUR[ti];
+  const [key, h, text, mode] = TOUR[ti];
+  const target = document.querySelector(`[data-tour="${key}"]`);
+  const fold = target && target.closest(".fold");
+  if (fold) setFold(fold, true);
   const el = tourEl(key);
   if (!el) { ti < TOUR.length - 1 ? (ti++, place()) : endTour(); return; }
   document.querySelectorAll("[data-tour-active]").forEach(x => x.removeAttribute("data-tour-active"));
+  document.querySelectorAll(".explain").forEach(x => x.classList.remove("explain"));
+  (el.closest(".panel, .kpis, .hero") || el).classList.add("explain");
   document.body.classList.toggle("tour-live", mode === "try");
   if (mode === "try") el.setAttribute("data-tour-active", "");
   el.scrollIntoView({ block: el.offsetHeight > innerHeight - 260 ? "start" : "center", behavior: "auto" });
-  const [, h, text] = TOUR[ti];
   $("tour-step").textContent = `Step ${ti + 1} of ${TOUR.length}`; $("tour-h").textContent = h; $("tour-text").textContent = text;
   $("tour-back").disabled = ti === 0;
   $("tour-next").textContent = mode === "try" ? "Skip this step" : ti === TOUR.length - 1 ? "Done" : "Next";
   position();
   if (mode !== "try") $("tour-next").focus({ preventScroll: true });
 }
-function position() {  // follows the element if the page shifts (fonts loading, data refresh, resize, scroll)
+function position() {
   if (ti < 0) return;
   const el = tourEl(TOUR[ti][0]); if (!el) return;
   const r = el.getBoundingClientRect(), ring = $("tour-ring"), tip = $("tour-tip");
@@ -705,29 +755,30 @@ function position() {  // follows the element if the page shifts (fonts loading,
 }
 new ResizeObserver(position).observe(document.body);
 addEventListener("scroll", position, { passive: true });
+addEventListener("resize", position);
 function tourAnswered() { if (ti >= 0 && TOUR[ti][3] === "try") { ti++; setTimeout(place, 400); } }
 function startTour() {
   $("welcome").hidden = true;
-  if (!S) { toast("Still loading the data. Try the tour again in a moment."); return; }
+  if (!S) { toast("Still loading; try again in a moment."); return; }
   ti = 0; $("tour-ring").hidden = false; $("tour-tip").hidden = false; place();
 }
 function endTour() {
   ti = -1; $("tour-ring").hidden = true; $("tour-tip").hidden = true; document.body.classList.remove("tour-live");
   document.querySelectorAll("[data-tour-active]").forEach(x => x.removeAttribute("data-tour-active"));
-  try { localStorage.setItem("ta-toured", "1"); } catch (e) {}
+  document.querySelectorAll(".explain").forEach(x => x.classList.remove("explain"));
+  try { localStorage.setItem("assay-toured", "1"); } catch (e) {}
 }
 $("tour-next").onclick = () => { ti >= TOUR.length - 1 ? endTour() : (ti++, place()); };
 $("tour-back").onclick = () => { if (ti > 0) { ti--; place(); } };
 $("tour-end").onclick = endTour;
 $("help").onclick = startTour;
 $("w-start").onclick = startTour;
-$("w-skip").onclick = () => { $("welcome").hidden = true; try { localStorage.setItem("ta-toured", "1"); } catch (e) {} };
-addEventListener("keydown", e => { if (e.key === "Escape") { endTour(); $("welcome").hidden = true; } });
-addEventListener("resize", position);
+$("w-skip").onclick = () => { $("welcome").hidden = true; try { localStorage.setItem("assay-toured", "1"); } catch (e) {} };
+addEventListener("keydown", e => { if (e.key === "Escape") { endTour(); hidePop(); $("welcome").hidden = true; } });
 
 load(false).then(() => {
-  let toured = false; try { toured = localStorage.getItem("ta-toured") === "1"; } catch (e) {}
-  const m = location.hash.match(/^#tour(?:=(\d+))?$/);  // link straight into the tour: #tour or #tour=5 (step 5)
+  let toured = false; try { toured = localStorage.getItem("assay-toured") === "1"; } catch (e) {}
+  const m = location.hash.match(/^#tour(?:=(\d+))?$/);  // #tour or #tour=5 opens the tour (at a step)
   if (m && S) { startTour(); if (m[1]) { ti = Math.min(TOUR.length, +m[1]) - 1; place(); } }
   else if (!toured && S) { $("welcome").hidden = false; $("w-start").focus(); }
 });
