@@ -18,11 +18,14 @@ and whether a change actually helped. Built on Databricks.**
 
 **Badger BuildFest 2026** · Applied AI & Automation · Databricks Real-World Workflows (Xorbix) · The Art of the Break
 
+[**Demo video**](https://www.youtube.com/watch?v=Xhl1AXFDvE8) ·
 [**Live dashboard**](https://assay-manager-7474654480147366.aws.databricksapps.com) ·
 [**Final handoff**](docs/FINAL_HANDOFF.md) ·
 [**Full report**](docs/ASSAY_REPORT.md) ·
 [**Break Card**](docs/META_ART_OF_BREAK_CARD.md) ·
 [**Submission kit**](docs/SUBMISSION_KIT.md)
+
+<a href="https://www.youtube.com/watch?v=Xhl1AXFDvE8"><img src="https://img.youtube.com/vi/Xhl1AXFDvE8/hqdefault.jpg" alt="Watch the Assay demo video on YouTube" width="480"></a>
 
 </div>
 
