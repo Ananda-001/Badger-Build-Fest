@@ -25,6 +25,9 @@ NAMES = {
     "databricks-qwen3-next-80b-a3b-instruct": "Qwen 80B",
     "databricks-gpt-oss-120b": "gpt-oss 120B",
     "databricks-gpt-oss-20b": "gpt-oss 20B",
+    "databricks-llama-4-maverick": "Llama 4 Maverick",
+    "databricks-gemma-3-12b": "Gemma 3 12B",
+    "databricks-qwen35-122b-a10b": "Qwen3.5 122B",
 }
 
 
@@ -38,6 +41,58 @@ def policy_from_evidence(primary: str, cheap: str, backups: list[str], *, cheap_
     return {"task": task, "primary": primary, "cheap": cheap, "backups": backups,
             "cheap_certified": cheap_verdict == "CERTIFY", "cheap_verdict": cheap_verdict or "NOT EVALUATED",
             "cheap_evidence": cheap_evidence, "trusted": [primary] + ([cheap] if cheap_verdict == "CERTIFY" else []),
+            "computed_at": datetime.now(timezone.utc).isoformat()}
+
+
+def policy_from_scorecard(scorecard: list[dict], current_primary: str, *, margin: float = 0.05,
+                          max_unusable: float = 0.05, min_answered: int = 100, task: str = "jira-triage") -> dict:
+    """The cheapest model proven good enough for this task, from graded outcomes (scripts/heavy_grade.py).
+
+    A model may replace the current main model when it (1) answered enough tickets, (2) returns unreadable output
+    at most `max_unusable` of the time, (3) is within `margin` of the main model's accuracy on checkable answers,
+    and (4) is not significantly worse on the same tickets. Among those, the cheapest wins. Backups: the rest with
+    at least 50% accuracy, best first; their answers are held for review. Re-run on new evidence: the policy adapts.
+    """
+    by = {b["model"]: b for b in scorecard}
+    acc = lambda b: (b["precision"]["confirmed"] / (b["precision"]["confirmed"] + b["precision"]["contradicted"])  # noqa: E731
+                     if b["precision"]["confirmed"] + b["precision"]["contradicted"] else 0.0)
+    cost = lambda b: b.get("usd_per_1k_tasks") or float("inf")  # noqa: E731
+    main = by[current_primary]
+    reasons, ok = {}, []
+    for b in scorecard:
+        unusable = b["unusable"] / b["tasks"] if b["tasks"] else 1.0
+        why = []
+        if b["answered"] < min_answered:
+            why.append(f"only {b['answered']} answers so far (needs {min_answered})")
+        if unusable > max_unusable:
+            why.append(f"{100 * unusable:.0f}% unreadable answers (limit {100 * max_unusable:.0f}%)")
+        if b["model"] != current_primary:
+            if acc(b) < acc(main) - margin:
+                why.append(f"{100 * acc(b):.0f}% right vs {100 * acc(main):.0f}% for {name(current_primary)}")
+            v = b.get("vs_main") or {}
+            if v.get("p") is not None and v["p"] < 0.05 and v["worse"] > v["better"]:
+                why.append(f"worse on the same tickets ({v['worse']} vs {v['better']})")
+        reasons[b["model"]] = why
+        if not why:
+            ok.append(b)
+    primary = min(ok, key=cost)["model"] if ok else current_primary
+    backups = [b["model"] for b in sorted(scorecard, key=lambda b: -acc(b))
+               if b["model"] != primary and acc(b) >= 0.5 and b["answered"] >= min_answered
+               and b["unusable"] / max(b["tasks"], 1) <= 2 * max_unusable]
+    cheapest = min(scorecard, key=cost)
+    closest = sorted((b for b in scorecard if cost(b) < cost(by[primary]) and b["model"] != primary),
+                     key=lambda b: len(reasons[b["model"]]) * 10 - acc(b))
+    to_change = (f"{name(closest[0]['model'])} would take over (${cost(closest[0]):.2f} vs ${cost(by[primary]):.2f} per 1,000 "
+                 f"tickets) once: {'; '.join(reasons[closest[0]['model']])} is fixed") if closest else "nothing cheaper exists"
+    return {"task": task, "primary": primary, "cheap": cheapest["model"], "backups": backups,
+            "cheap_certified": cheapest["model"] == primary, "cheap_verdict": "CERTIFY" if cheapest["model"] == primary else "REJECT",
+            "cheap_evidence": "; ".join(reasons[cheapest["model"]]) or "proven good enough",
+            "trusted": [primary], "basis": "graded outcomes (heavy evaluation), cheapest proven model wins",
+            "rule": f"within {100 * margin:.0f} points of the main model's accuracy, not worse on the same tickets, "
+                    f"at most {100 * max_unusable:.0f}% unreadable, at least {min_answered} answers",
+            "reasons": {name(m): (r or ["meets every rule"]) for m, r in reasons.items()},
+            "reasons_by_model": {m: r for m, r in reasons.items()},
+            "what_would_change_it": to_change, "previous_primary": current_primary,
             "computed_at": datetime.now(timezone.utc).isoformat()}
 
 

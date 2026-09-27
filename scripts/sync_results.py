@@ -28,6 +28,7 @@ RUNS = ROOT / "results" / "stage-2-3-runs"
 MAIN_RUNS = ["permission-v2", "gate-v1", "gate-v2", "stress-v1"]  # Llama 70B with the instructions in use
 HELD_RUNS = {"permission-v2-cheap": "cheap-model", "stress-bad": "bad-rule"}  # never reach the inbox
 STREAM_MIN_SCORE = 0.4575
+MAIN_MODEL = "databricks-meta-llama-3-3-70b-instruct"
 
 
 def load(p: Path) -> list[dict]:
@@ -131,6 +132,26 @@ def build(tickets: dict) -> dict:
               and r["key"] in tickets]
     for p in proposals.values():
         p["runs"] = ",".join(p["runs"])
+
+    # the heavy evaluation (scripts/heavy_grade.py): maintainer-graded answers become past decisions; the main
+    # model's answers the record cannot settle ("unlinked") go to the inbox, because they really need a person
+    heavy = ROOT / "results" / "heavy-eval" / "report.json"
+    if heavy.exists():
+        rep = json.loads(heavy.read_text(encoding="utf-8"))
+        have = {d["id"] for d in past} | {f"{d['key']}|{d['candidate']}|{d['relation']}" for d in past}
+        for d in rep["precedents"]["records"]:
+            if d["id"] not in have and d["key"] in tickets and d["candidate"] in tickets:
+                past.append({"id": d["id"], "key": d["key"], "candidate": d["candidate"], "relation": d["relation"],
+                             "correct": d["correct"], "source": d["source"], **pair(tickets, d["key"], d["candidate"])})
+                have.add(d["id"])
+        decided_ids = {f"{d['key']}|{d['candidate']}|{d['relation']}" for d in past}
+        for c in rep["cases"]:
+            k = (c["key"], c.get("candidate"), c["relation"])
+            if (c["model"] == MAIN_MODEL and c["grade"] == "unlinked" and c.get("candidate") in tickets
+                    and "|".join(k) not in decided_ids and k not in proposals):
+                proposals[k] = {"id": "|".join(k), "key": k[0], "candidate": k[1], "relation": k[2],
+                                "confidence": c["confidence"], "model": NAMES.get(MAIN_MODEL), "reason": c.get("reason"),
+                                "runs": f"heavy-eval:{c['slice']}", "origin": "heavy-eval", **pair(tickets, k[0], k[1])}
     return {"proposals": list(proposals.values()), "past_decisions": past, "verdicts": verdicts, "stream": stream}
 
 

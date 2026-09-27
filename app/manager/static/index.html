@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ticket Assistant</title>
+<title>Assay Agent Manager</title>
 <meta name="description" content="Manager view of an AI triage agent checked by Assay, running on Databricks.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -130,6 +130,45 @@ button:disabled{cursor:not-allowed;opacity:.55}
 .save .stat{background:var(--panel-2);border:0}
 .save .stat .n{font-size:26px}
 .est{font-size:12.5px;color:var(--ink-2);margin-top:10px}
+/* evaluation */
+.stat.warn .n{color:var(--stop)}
+.cols2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+.mtable{display:grid;gap:0}
+.mrow{display:grid;grid-template-columns:minmax(150px,1.2fr) minmax(120px,.9fr) minmax(200px,1.6fr) repeat(4,minmax(80px,.7fr));gap:12px;align-items:center;padding:11px 4px;border-top:1px solid var(--line);font-size:14px}
+.mrow.head{border-top:0;font-size:12px;color:var(--ink-2);font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding-top:0}
+.mrow .nm b{display:block;font-size:15px}
+.mrow .nm small{color:var(--ink-2);font-size:12.5px}
+.num{font-variant-numeric:tabular-nums;font-weight:600}
+.num small{display:block;font-weight:400;color:var(--ink-2);font-size:12px}
+.pbar{height:12px;background:var(--panel-2);border-radius:6px;overflow:hidden;position:relative}
+.pbar span{position:absolute;top:0;bottom:0;left:0;background:var(--go);border-radius:6px}
+.pbar i{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+.why2{grid-column:1/-1;font-size:13px;color:var(--ink-2);margin-top:-4px}
+.crow{display:grid;grid-template-columns:130px 1fr;gap:10px;align-items:center;padding:7px 0;font-size:13.5px}
+.track{position:relative;height:26px}
+.track .ln{position:absolute;left:0;right:0;top:12px;height:2px;background:var(--panel-2)}
+.track .gap{position:absolute;top:11px;height:4px;background:var(--stop-soft)}
+.track .said{position:absolute;top:6px;width:14px;height:14px;background:var(--ink-2);transform:translateX(-7px) rotate(45deg)}
+.track .real{position:absolute;top:5px;width:16px;height:16px;border-radius:50%;transform:translateX(-8px);border:2px solid var(--panel)}
+.track .lbl{position:absolute;top:-2px;font-size:12px;color:var(--ink-2);white-space:nowrap}
+.axis{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-2);margin-left:140px}
+.sbar{display:flex;height:22px;border-radius:6px;overflow:hidden;background:var(--panel-2)}
+.sbar span{height:100%}
+.drow{display:grid;grid-template-columns:130px 1fr 44px;gap:10px;align-items:center;padding:5px 0;font-size:13.5px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-2);margin-top:10px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.exgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ex{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:8px;font-size:14px}
+.ex .said2{font-weight:700}
+.ex .rec{border-left:3px solid var(--stop);padding-left:10px;color:var(--ink-2);font-size:13.5px}
+.ex .rec b{color:var(--stop)}
+.cov{display:grid;grid-template-columns:minmax(0,1fr) 90px 150px 150px;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.cov.head{border-top:0;font-size:12px;color:var(--ink-2);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.ci{position:relative;height:10px;background:var(--panel-2);border-radius:5px}
+.ci span{position:absolute;top:0;bottom:0;background:var(--accent);border-radius:5px;opacity:.75}
+.ci i{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+@media (max-width:1000px){.cols2{grid-template-columns:1fr}.exgrid{grid-template-columns:1fr}
+  .mrow{grid-template-columns:1fr 1fr;row-gap:6px}.mrow.head{display:none}.cov{grid-template-columns:1fr 1fr}.cov.head{display:none}}
 /* banners, toast, loading */
 .banner{border:1px solid var(--stop);background:var(--stop-soft);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .loading{padding:40px 10px;text-align:center;color:var(--ink-2)}
@@ -174,12 +213,12 @@ button:disabled{cursor:not-allowed;opacity:.55}
 
 <header class="top">
   <div class="top-in">
-    <span class="logo"><i><svg class="i"><use href="#i-check"/></svg></i>Ticket Assistant</span>
-    <span class="muted small">for the Apache Jira backlog</span>
+    <span class="logo"><i><svg class="i"><use href="#i-check"/></svg></i>Assay</span>
+    <span class="muted small">AI agent manager</span>
+    <span class="chip">Example agent: Apache Jira triage</span>
     <div class="chips">
       <span class="chip" id="live-chip"><span class="dot" id="live-dot"></span><span id="live-text">Connecting to Databricks…</span></span>
-      <span class="chip">Checked by Assay</span>
-      <button class="btn" id="help" data-tour="help"><svg class="i"><use href="#i-help"/></svg>Show me around</button>
+            <button class="btn" id="help" data-tour="help"><svg class="i"><use href="#i-help"/></svg>Show me around</button>
     </div>
   </div>
 </header>
@@ -187,9 +226,9 @@ button:disabled{cursor:not-allowed;opacity:.55}
 <main class="page" id="page">
   <section class="hello" data-tour="hello">
     <div>
-      <h1 id="greet">Here's what your assistant did.</h1>
-      <p class="muted">It reads new tickets and spots ones that are the same problem, part of a bigger project, or connected.
-        It only acts on its own where your past answers have proven it right. Everything else waits for your OK.</p>
+      <h1 id="greet">Your AI agents, checked with evidence.</h1>
+      <p class="muted">Assay tests every model and every change against real outcomes, lets an agent act on its own only where
+        the record proves it, and shows you why. The example agent here tidies up the public Apache Jira; the checks work for any agent.</p>
     </div>
     <button class="btn primary" id="run" data-tour="run"><svg class="i"><use href="#i-play"/></svg>Check new tickets now</button>
   </section>
@@ -199,10 +238,42 @@ button:disabled{cursor:not-allowed;opacity:.55}
 
   <div id="content" hidden style="display:grid;gap:20px">
     <section class="summary" data-tour="summary" aria-label="Summary">
-      <div class="stat"><div class="n" id="s-read">–</div><div class="l">tickets read by the agent</div></div>
-      <div class="stat"><div class="n" id="s-sugg">–</div><div class="l">tidy-ups suggested</div></div>
-      <div class="stat"><div class="n" id="s-auto">–</div><div class="l">handled without asking you</div></div>
-      <div class="stat"><div class="n" id="s-ans">–</div><div class="l">answered by reviewers here</div></div>
+      <div class="stat"><div class="n" id="k1">–</div><div class="l" id="k1l">real tickets tested</div></div>
+      <div class="stat"><div class="n" id="k2">–</div><div class="l" id="k2l">answers checked</div></div>
+      <div class="stat warn"><div class="n" id="k3">–</div><div class="l" id="k3l">"95%+ sure" answers that were wrong</div></div>
+      <div class="stat"><div class="n" id="k4">–</div><div class="l" id="k4l">claims decided by the evidence</div></div>
+    </section>
+
+    <section class="panel" data-tour="trust-models" aria-label="Which AI models can you trust" id="sec-models" hidden>
+      <div class="panel-h"><h2><svg class="i"><use href="#i-shield"/></svg>Which AI models can you trust?</h2><span class="muted small" id="models-note"></span></div>
+      <p class="muted small" style="margin-bottom:12px">Every model answered the same real tickets. Each answer was checked against what the Apache maintainers actually did (duplicate links, parent tickets, how the ticket was closed): no AI or human labels.</p>
+      <div class="mtable" id="mtable" role="table"></div>
+      <p class="est" id="cost-note"></p>
+    </section>
+
+    <div class="cols2" id="sec-eval2" hidden>
+      <section class="panel" data-tour="confidence" aria-label="Confidence versus reality">
+        <div class="panel-h"><h2><svg class="i"><use href="#i-trend"/></svg>Confidence vs reality</h2></div>
+        <p class="muted small" style="margin-bottom:12px">When a model said it was <b>95% sure or more</b>, how often was it right? Grey diamond: what it claimed. Coloured dot: what the record shows.</p>
+        <div id="calib"></div>
+      </section>
+      <section class="panel" data-tour="unclear" aria-label="Where the rules are unclear">
+        <div class="panel-h"><h2><svg class="i"><use href="#i-help"/></svg>Where even the rules are unclear</h2></div>
+        <p class="muted small" id="dup-intro" style="margin-bottom:10px"></p>
+        <div id="dupbars"></div>
+        <div class="legend" id="duplegend"></div>
+      </section>
+    </div>
+
+    <section class="panel" data-tour="examples" aria-label="Confident and wrong" id="sec-examples" hidden>
+      <div class="panel-h"><h2><svg class="i"><use href="#i-x"/></svg>Confident and wrong: real examples</h2><span class="muted small">why a model's confidence is never enough</span></div>
+      <div class="exgrid" id="examples"></div>
+    </section>
+
+    <section class="panel" data-tour="coverage" aria-label="Is there enough data" id="sec-coverage" hidden>
+      <div class="panel-h"><h2><svg class="i"><use href="#i-check"/></svg>Is there enough data?</h2><span class="muted small" id="cov-sub"></span></div>
+      <p class="muted small" style="margin-bottom:12px">Every claim needs enough cases to be <b>proven</b> (at least 90% right, with a margin for luck) or <b>ruled out</b>. Anything short of that says how much more it needs, instead of guessing.</p>
+      <div id="coverage"></div>
     </section>
 
     <div class="cols">
@@ -254,8 +325,8 @@ button:disabled{cursor:not-allowed;opacity:.55}
 <div id="welcome" hidden role="dialog" aria-modal="true" aria-labelledby="w-title">
   <div class="box">
     <p class="eyebrow">Welcome</p>
-    <h2 id="w-title">Your assistant tidies up tickets. You stay in charge.</h2>
-    <p class="muted">It suggests which tickets are the same problem or belong together. You answer yes or no, and every answer is saved on Databricks. The more your answers prove it right on a kind of case, the more it may do on its own. The tour takes about a minute, and you'll try one answer yourself.</p>
+    <h2 id="w-title">Your AI agents earn their freedom, with evidence.</h2>
+    <p class="muted">Assay tests every model against what really happened, shows you which ones you can trust, and lets an agent act alone only where the record proves it. Everything else waits for your yes or no, saved on Databricks. The tour takes about two minutes, and you'll try one answer yourself.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="w-start">Show me around</button><button class="btn" id="w-skip">I'll explore myself</button></div>
   </div>
 </div>
@@ -354,11 +425,9 @@ function inboxItems() { return S.inbox.filter(it => !skipped.has(it.id)).concat(
 
 function render() {
   $("loading").hidden = true; $("content").hidden = false;
-  $("greet").textContent = greet();
   $("live-dot").className = "dot"; $("live-text").textContent = `Live · ${S.catalog}`;
   const c = S.counts;
-  $("s-read").textContent = fmt(c.tickets_read); $("s-sugg").textContent = fmt(c.suggestions);
-  $("s-auto").textContent = fmt(c.auto_handled); $("s-ans").textContent = fmt(c.answered);
+  renderEval();
   $("run").hidden = !S.can_run;
 
   const items = inboxItems();
@@ -408,7 +477,10 @@ function render() {
     const x = e[0], other = x.key.split("-")[0] !== x.candidate.split("-")[0];
     return `<p class="ex">For example, it wanted to merge "${esc(x.key_summary)}" (${esc(x.key)}) into "${esc(x.cand_summary)}" (${esc(x.candidate)}${other ? ", a different project" : ""}). A check found that wrong.</p>`;
   };
+  const blocked = S.eval ? S.eval.models.filter(m => m.verdict === "not allowed") : [];
+  const worst = blocked.slice().sort((a, b) => b.hi_contradicted - a.hi_contradicted)[0];
   $("held").innerHTML = [
+    blocked.length && `<div class="hold"><b><span>${blocked.length} of ${S.eval.models.length} AI models aren't allowed to act</span><span class="tag stop">Blocked</span></b>Tested on the same real tickets and checked against the maintainers' record. The worst: ${esc(worst.name)} said it was 95%+ sure ${fmt(worst.hi_contradicted + worst.hi_confirmed)} times on answers the record can check, and was wrong ${fmt(worst.hi_contradicted)} times.</div>`,
     hc && `<div class="hold"><b><span>A cheaper AI model isn't allowed to act</span><span class="tag stop">Blocked</span></b>${esc(hc.model)} said it was ${Math.round(hc.cutoff * 100)}%+ sure about ${hc.said_sure} merges. Checks showed only ${hc.right} were right. ${hc.unusable} of its ${hc.tasks} answers couldn't even be read.${ex(hc.examples)}</div>`,
     hb && `<div class="hold"><b><span>A bad rule was blocked before use</span><span class="tag stop">Blocked</span></b>Someone suggested: <q>${esc(hb.rule)}</q> Tested first on ${hb.n} tickets: it fixed ${hb.fixed} and broke ${hb.broke}, so it was switched off.${ex(hb.examples)}</div>`,
     hv && `<div class="hold hold-ask"><b><span>New instructions are on hold</span><span class="tag ask">On hold</span></b>Rewritten instructions fixed ${hv.fixed} answers but broke ${hv.broke} on the same ${hv.n} tickets. No proof they're better, so the old ones stay.</div>`
@@ -424,6 +496,9 @@ function render() {
     <div class="pm"><span class="tag stop">${icon("x")}Not allowed</span><b>${esc(n(p.cheap))} (cheaper)</b>${esc(p.cheap_evidence || "")}. It would be used only if it earned approval.</div>
     <div class="pm"><span class="tag ask">${icon("switch")}Backups</span><b>${(p.backups || []).map(n).map(esc).join(", then ")}</b>Used when the main model is busy. Their answers wait for your review.</div>`;
   $("models-sub").textContent = `${fmt(c.live_runs)} live requests · ${fmt(c.switches)} switch${c.switches === 1 ? "" : "es"}`;
+  const RT = S.eval && S.eval.router ? S.eval.router : {};
+  const rtxt = (k, label) => RT[k] ? `<div class="pm"><b>${label}</b>${fmt(RT[k].requests)} tickets · ${fmt(RT[k].switches)} switches · ${fmt(RT[k].held_for_review)} held for review · ${fmt(RT[k].unanswered)} sent straight to a person because every model was busy</div>` : "";
+  $("policy").insertAdjacentHTML("beforeend", rtxt("normal", "Normal load") + rtxt("stress", "Stress test (44 calls at once)"));
   $("log").innerHTML = (S.routing || []).slice(0, 6).map(d => {
     const failed = (d.steps || []).filter(s => s.outcome !== "ok").map(s => `${n(s.model)} was ${s.outcome === "busy" ? "busy" : s.outcome === "bad_output" ? "unreadable" : "failing"}`);
     const tag = d.switched ? `<span class="tag ask">${icon("switch")}Switched</span>` : d.answered_by ? `<span class="tag go">Normal</span>` : `<span class="tag stop">Sent to you</span>`;
@@ -443,6 +518,90 @@ function render() {
 
   $("foot").innerHTML = `Live data from Unity Catalog <code>${esc(S.catalog)}</code>: suggestions, past answers, your clicks (<code>actions</code>), model log (<code>routing_log</code>). Updated ${new Date(S.generated_at).toLocaleTimeString()}. Tickets are public Apache Jira issues; answers here create links only in a sandbox, never in the real Jira.`;
 
+}
+
+
+// ---------- the evaluation: models, confidence vs reality, unclear cases, coverage ----------
+const VERDICT = { "main": ["go", "Main model"], "backup": ["ask", "Backup"], "not used": ["stop", "Not used"],
+                  "acts alone": ["go", "Acts alone"], "may suggest": ["ask", "May suggest"], "not allowed": ["stop", "Not allowed"] };
+const REAL_COLOR = r => r >= 0.9 ? "var(--go)" : r >= 0.5 ? "var(--ask)" : "var(--stop)";
+function renderEval() {
+  const E = S.eval, c = S.counts;
+  ["sec-models", "sec-eval2", "sec-examples", "sec-coverage"].forEach(id => $(id).hidden = !E);
+  if (!E) {  // no evaluation tables yet: fall back to the agent's own counts
+    $("k1").textContent = fmt(c.tickets_read); $("k1l").textContent = "tickets read by the agent";
+    $("k2").textContent = fmt(c.suggestions); $("k2l").textContent = "tidy-ups suggested";
+    $("k3").textContent = fmt(c.auto_handled); $("k3l").textContent = "handled without asking you";
+    $("k4").textContent = fmt(c.answered); $("k4l").textContent = "answered by reviewers here";
+    return;
+  }
+  const M = E.meta;
+  $("k1").textContent = fmt(M.tickets); $("k1l").textContent = `real tickets × ${M.models} models (${fmt(M.calls)} calls on Databricks)`;
+  $("k2").textContent = fmt(M.graded); $("k2l").textContent = "answers checked against what the maintainers actually did";
+  $("k3").textContent = `${fmt(M.hi_wrong)} of ${fmt(M.hi_graded)}`; $("k3l").textContent = `"95%+ sure" answers that were wrong (all models)`;
+  $("k4").textContent = `${M.claims.proven + M.claims.disproven}`; $("k4l").textContent = `claims decided by the evidence (${M.claims.proven} proven, ${M.claims.disproven} ruled out)`;
+
+  // models
+  const maxCost = Math.max(...E.models.map(m => m.usd_per_1k_tasks || 0));
+  $("models-note").textContent = `${M.models} models · ${fmt(M.tickets)} tickets`;
+  $("mtable").innerHTML = `<div class="mrow head" role="row"><span>Model</span><span>Assay's choice</span><span>Right when the record can check</span><span>"95%+ sure" but wrong</span><span>Unreadable answers</span><span>Cost per 1,000 tickets*</span><span>Typical time</span></div>` +
+    E.models.map(m => {
+      const dec = m.confirmed + m.contradicted, r = dec ? m.confirmed / dec : 0, v = VERDICT[m.role || m.verdict] || ["ask", m.role || m.verdict];
+      return `<div class="mrow" role="row">
+        <span class="nm"><b>${esc(m.name)}</b><small>${fmt(m.answered)} of ${fmt(m.tasks)} tickets answered</small></span>
+        <span><span class="tag ${v[0]}">${v[0] === "go" ? icon("check") : v[0] === "stop" ? icon("x") : ""}${v[1]}</span></span>
+        <span><div class="pbar" role="img" aria-label="${Math.round(100 * r)}% right, at least ${Math.round(100 * m.decided_lower)}%"><span style="width:${100 * r}%;background:${REAL_COLOR(r)}"></span><i style="left:90%" title="90% bar"></i></div>
+          <span class="num small">${Math.round(100 * r)}% <small>${fmt(m.confirmed)} of ${fmt(dec)} right · at least ${Math.round(100 * m.decided_lower)}%</small></span></span>
+        <span class="num">${fmt(m.hi_contradicted)}<small>of ${fmt(m.hi_contradicted + m.hi_confirmed)} checkable</small></span>
+        <span class="num">${fmt(m.unusable)}<small>of ${fmt(m.tasks)}</small></span>
+        <span class="num">$${(m.usd_per_1k_tasks ?? 0).toFixed(2)}<small>${fmt(m.tokens?.per_task)} tokens each</small></span>
+        <span class="num">${((m.latency_ms?.p50 || 0) / 1000).toFixed(1)} s</span>
+        <span class="why2">${esc(m.role_reason || m.verdict_reason)}. Acts alone: ${m.verdict === "acts alone" ? "yes" : "no"}${m.vs_main && m.vs_main.p != null ? ` · vs Llama 3.3 70B on the same tickets: better on ${m.vs_main.better}, worse on ${m.vs_main.worse}${m.vs_main.p < 0.05 ? " (a real difference)" : " (no proven difference)"}` : ""}</span>
+      </div>`;
+    }).join("");
+  const PO = E.policy;
+  $("cost-note").innerHTML = (PO ? `<b>Assay's rule:</b> the cheapest model that is ${esc(PO.rule)} becomes the main model. Today: <b>${esc((E.models.find(m => m.model === PO.primary) || {}).name || PO.primary)}</b>${PO.primary !== PO.previous_primary ? ` (was ${esc((E.models.find(m => m.model === PO.previous_primary) || {}).name || PO.previous_primary)})` : ""}. What would change it: ${esc(PO.what_would_change_it)}.<br>` : "") + esc(`*List price: Databricks' published DBUs per million tokens × an assumed $${M.usd_per_dbu_assumed} per DBU. We paid $0 on Databricks Free Edition. The vertical line on each bar is the 90% bar a model must clear to act alone.`);
+
+  // confidence vs reality (the 95%+ bin)
+  const hiBins = E.calibration.filter(b => b.bin.startsWith("0.95") && b.n >= 3);
+  const rows = hiBins.map(b => ({ name: b.name, said: b.said, real: b.confirmed / b.n, n: b.n })).sort((a, b) => b.real - a.real);
+  $("calib").innerHTML = rows.map(r => `<div class="crow"><span>${esc(r.name)}<br><small class="muted">${r.n} checkable</small></span>
+      <div class="track" role="img" aria-label="${esc(r.name)}: claimed ${Math.round(100 * r.said)}%, right ${Math.round(100 * r.real)}%">
+        <span class="ln"></span><span class="gap" style="left:${100 * r.real}%;width:${Math.max(0, 100 * (r.said - r.real))}%"></span>
+        <span class="said" style="left:${100 * r.said}%"></span><span class="real" style="left:${100 * r.real}%;background:${REAL_COLOR(r.real)}"></span>
+        <span class="lbl" style="left:${Math.min(100 * r.real, 70)}%;transform:translateX(12px)">right ${Math.round(100 * r.real)}%</span></div></div>`).join("")
+    + `<div class="axis"><span>0%</span><span>50%</span><span>100%</span></div>`
+    || `<p class="muted small">Not enough 95%+ answers yet.</p>`;
+
+  // unclear: what the models called real duplicates
+  const D = E.models.filter(m => m.dup_recall && m.dup_recall.n);
+  const n0 = D.length ? Math.max(...D.map(m => m.dup_recall.n)) : 0;
+  $("dup-intro").innerHTML = `<b>${n0} tickets the maintainers closed as duplicates</b> of an earlier ticket the agent was shown. What did each model call them? Even the definition of "duplicate" splits the models.`;
+  const CATS = [["duplicate (right)", "var(--go)", "Named the duplicate"], ["called it part_of", "var(--accent)", 'Called it "part of"'],
+                ["called it related", "var(--ask)", 'Called it "connected"'], ["picked another ticket", "var(--stop)", "Picked another ticket"],
+                ["said nothing", "var(--line)", "Said nothing"]];
+  $("dupbars").innerHTML = D.sort((a, b) => b.dup_recall.hits / b.dup_recall.n - a.dup_recall.hits / a.dup_recall.n).map(m => {
+    const s = m.dup_recall.said, n = m.dup_recall.n;
+    return `<div class="drow"><span>${esc(m.name)}</span><div class="sbar" role="img" aria-label="${esc(m.name)}: ${m.dup_recall.hits} of ${n} named the duplicate">${CATS.map(([k, col]) => s[k] ? `<span style="width:${100 * s[k] / n}%;background:${col}" title="${k}: ${s[k]}"></span>` : "").join("")}</div><span class="num">${m.dup_recall.hits}/${n}</span></div>`;
+  }).join("");
+  $("duplegend").innerHTML = CATS.map(([, col, label]) => `<span><i style="background:${col}"></i>${label}</span>`).join("");
+
+  // confident and wrong
+  const EX = (E.examples || []).slice(0, 6);
+  $("examples").innerHTML = EX.map(x => `<div class="ex"><div class="said2">${esc(x.name)} said <span class="tag stop">${Math.round(100 * x.confidence)}% sure</span> it's ${REL[x.relation] ? REL[x.relation].plain : esc(x.relation)}</div>
+      <div class="pair"><div class="tk">${esc(x.key_summary)}<small><a href="${jira(x.key)}" target="_blank" rel="noopener">${esc(x.key)}</a></small></div><span class="arrow" aria-hidden="true">${icon("arrow")}</span>
+      <div class="tk">${esc(x.cand_summary)}<small><a href="${jira(x.candidate)}" target="_blank" rel="noopener">${esc(x.candidate)}</a></small></div></div>
+      <p class="rec"><b>The maintainers' record:</b> ${esc(x.why)}.</p></div>`).join("");
+
+  // coverage
+  const C = E.coverage || [];
+  $("cov-sub").textContent = `${M.claims.proven} proven · ${M.claims.disproven} ruled out · ${M.claims.undecided} still need data`;
+  const show = C.filter(x => x.n >= 10).sort((a, b) => (a.status === "proven" ? 0 : a.status === "disproven" ? 1 : 2) - (b.status === "proven" ? 0 : b.status === "disproven" ? 1 : 2) || b.n - a.n).slice(0, 12);
+  const ST = { proven: ["go", "Proven"], disproven: ["stop", "Ruled out"], undecided: ["ask", "Needs more"] };
+  $("coverage").innerHTML = `<div class="cov head"><span>Claim</span><span>Evidence</span><span>Likely range (95%)</span><span>Verdict</span></div>` +
+    show.map(x => `<div class="cov"><span>${esc(x.claim.replace(/_/g, " "))}</span><span class="num">${fmt(x.k)} of ${fmt(x.n)}</span>
+      <span><div class="ci" role="img" aria-label="between ${Math.round(100 * x.lower)}% and ${Math.round(100 * x.upper)}%"><span style="left:${100 * x.lower}%;width:${Math.max(1, 100 * (x.upper - x.lower))}%"></span><i style="left:90%"></i></div><small class="muted">${Math.round(100 * x.lower)}–${Math.round(100 * x.upper)}%</small></span>
+      <span><span class="tag ${ST[x.status][0]}">${ST[x.status][1]}${x.needs_more ? ` (~${x.needs_more} more)` : ""}</span></span></div>`).join("");
 }
 
 $("more").onclick = () => { shown += 6; render(); };
@@ -501,17 +660,19 @@ $("run").onclick = async () => {
 
 // ---------- guided tour (with one hands-on step) ----------
 const TOUR = [
-  ["hello", "What this is", "Your assistant reads new tickets and suggests tidy-ups. It never changes anything unless you've said yes, or your past answers have proven it right."],
-  ["summary", "At a glance", "How many tickets the agent read, what it suggested, what it handled without asking, and how many answers reviewers have given here. All counted live from Databricks."],
-  ["inbox", "Your to-do list", "Suggestions waiting for a yes or no. This is the only place you need to act."],
-  ["card", "One suggestion", "What it thinks, the two tickets (click a code to open it in Jira), the agent's own reason, and what reviewers said about cases like this before."],
+  ["hello", "What Assay is", "Assay sits between your AI agents and your people. It decides, with evidence, what an agent may do on its own. The agent here tidies up the public Apache Jira, as an example."],
+  ["summary", "The evidence at a glance", "How many real tickets and models were tested, how many answers were checked against what really happened, and how often \"95% sure\" was wrong."],
+  ["trust-models", "Which models you can trust", "Every model answered the same tickets. Assay's verdict says which may suggest, which may act alone, and which are not allowed, with the reason, cost and speed."],
+  ["confidence", "Confidence vs reality", "The diamond is how sure a model said it was; the dot is how often it was right. The red gap is why confidence alone is never allowed to decide."],
+  ["unclear", "Where the rules are unclear", "Real duplicates, and what each model called them. When models split like this, the definition itself is unclear, so those cases stay with a person."],
+  ["examples", "Confident and wrong", "Real answers given with 95%+ confidence that the maintainers' record contradicts."],
+  ["coverage", "Is there enough data?", "Each claim is proven, ruled out, or says how many more cases it needs. Nothing is guessed."],
+  ["inbox", "Your to-do list", "Suggestions the record can't settle. Only these need a person."],
   ["buttons", "Your turn: try it", "Answer this one now. Yes applies it, No keeps them separate. Your answer is saved to a Databricks table, and you can undo it.", "try"],
-  ["learning", "How it earns freedom", "Your answer just joined the record. Answers are grouped by kind of case. When a kind is answered the same way often enough to prove it, the assistant takes over that kind."],
-  ["handled", "Handled for you", "Suggestions answered from proven past answers show up here, with the reason. One click overrules any of them."],
-  ["held", "What it's not allowed to do", "Things that were tested and stopped: a cheaper model that was over-confident, a bad rule, and new instructions without proof they're better."],
-  ["models", "Which AI answered", "The main model answers first. If it's busy, the assistant switches to a backup on the spot, and holds that answer for your review."],
-  ["run", "See it work live", "Press this to have the agent read a few brand-new tickets right now, on Databricks. New suggestions appear at the top of your list."],
-  ["savings", "What it saved you", "Cost, mistakes prevented, and work handled for you. Counted, not estimated."],
+  ["learning", "How it earns freedom", "Answers are remembered by kind of case. When a kind is answered the same way often enough to prove it, Assay handles that kind for you, and you can overrule it."],
+  ["held", "What it's not allowed to do", "Models and rules that were tested and stopped before they could do harm."],
+  ["models", "Which AI answered", "The main model answers first; when it's busy, Assay switches to a backup on the spot and holds that answer for review."],
+  ["run", "See it work live", "Have the agent read a few brand-new tickets now, on Databricks."],
   ["help", "Need a reminder?", "Click here any time to take this tour again."]
 ];
 let ti = -1;

@@ -67,9 +67,40 @@ def load_all() -> dict:
                    f"FROM {table('actions')} ORDER BY ts DESC",
         "routing": f"SELECT to_json(struct(*)) FROM {table('routing_log')} ORDER BY ts DESC",
     }
-    with ThreadPoolExecutor(len(q)) as ex:
-        futs = {k: ex.submit(rows, s) for k, s in q.items()}
+    optional = {  # the heavy evaluation (scripts/heavy_grade.py --delta); the page works without it
+        "heavy_score": f"SELECT to_json(struct(*)) FROM {table('heavy_scorecard')}",
+        "heavy_summary": f"SELECT to_json(struct(*)) FROM {table('heavy_summary')}",
+    }
+
+    def maybe(sql):
+        try:
+            return rows(sql)
+        except RuntimeError:
+            return []
+    with ThreadPoolExecutor(len(q) + len(optional)) as ex:
+        futs = {k: ex.submit(rows, s) for k, s in q.items()} | {k: ex.submit(maybe, s) for k, s in optional.items()}
         return {k: f.result() for k, f in futs.items()}
+
+
+def eval_state(raw: dict) -> dict | None:
+    """The heavy evaluation in the shape the page draws: models, confidence vs reality, unclear cases, costs."""
+    if not raw.get("heavy_score"):
+        return None
+    summ = {r["name"]: json.loads(r["data"]) for r in raw.get("heavy_summary", [])}
+    models = []
+    for r in raw["heavy_score"]:
+        b = json.loads(r["data"])
+        p, h = b["precision"], b["high_confidence"]
+        models.append({k: b.get(k) for k in ("model", "name", "tasks", "answered", "unusable", "verdict", "verdict_reason", "role", "role_reason",
+                                             "decided_lower", "overconfident_wrong", "latency_ms", "tokens", "dbu",
+                                             "usd_per_1k_tasks", "vs_main", "dup_recall", "acts_alone")}
+                      | {"confirmed": p["confirmed"], "contradicted": p["contradicted"], "unlinked": p["unlinked"],
+                         "actions": p["n"], "hi_n": h["n"], "hi_confirmed": h["confirmed"], "hi_contradicted": h["contradicted"]})
+    models.sort(key=lambda m: -(m["decided_lower"] or 0))
+    return {"meta": summ.get("meta", {}), "models": models, "calibration": summ.get("calibration", []),
+            "edge": summ.get("edge_cases", []), "disputed": summ.get("disputed", [])[:8], "router": summ.get("router", {}),
+            "coverage": summ.get("coverage", []), "examples": summ.get("examples", []),
+            "precedents": summ.get("precedents", {}), "policy": summ.get("policy")}
 
 
 def click_id(key: str, cand: str, relation: str) -> str:
@@ -168,6 +199,7 @@ def build_state(raw: dict) -> dict:
                            "decision": c["decision"], "user": c.get("user"), "ts": c.get("ts")}
                           for c in list(clicked.values())[:8]],
         "can_run": os.environ.get("ASSAY_ALLOW_MODEL_CALLS") == "1",
+        "eval": eval_state(raw),
     }
 
 

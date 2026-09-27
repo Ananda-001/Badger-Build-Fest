@@ -1,6 +1,7 @@
 """Live model switching demo on Databricks Free Edition.
 
     python scripts/live_route.py --write-policy          # routing policy from Assay's verdicts (no model calls)
+    python scripts/live_route.py --policy-from-eval      # cheapest proven model from the heavy evaluation (no model calls)
     python scripts/live_route.py --n 12 --workers 6      # route 12 fresh stream tickets; several at once -> real 429s
     python scripts/live_route.py --n 12 --delta          # also append the decisions to workspace.assay_triage.routing_log
 
@@ -48,12 +49,20 @@ def write_policy() -> dict:
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--write-policy", action="store_true")
+    ap.add_argument("--policy-from-eval", action="store_true",
+                    help="cheapest proven model from results/heavy-eval/report.json (no model calls)")
     ap.add_argument("--n", type=int, default=12)
     ap.add_argument("--workers", type=int, default=6)
     ap.add_argument("--seed", type=int, default=99)
     ap.add_argument("--prompt", default="v2")
     ap.add_argument("--delta", action="store_true")
     a = ap.parse_args()
+    if a.policy_from_eval:
+        rep = json.loads((ROOT / "results" / "heavy-eval" / "report.json").read_text(encoding="utf-8"))
+        policy = router.policy_from_scorecard(rep["scorecard"], PRIMARY)
+        router.POLICY_PATH.write_text(json.dumps(policy, indent=2), encoding="utf-8")
+        print(json.dumps(policy, indent=2))
+        return
     if a.write_policy:
         print(json.dumps(write_policy(), indent=2))
         return

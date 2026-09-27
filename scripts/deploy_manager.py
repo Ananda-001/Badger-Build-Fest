@@ -26,7 +26,8 @@ CODE = {"app/manager/server.py": "server.py", "app/manager/static/index.html": "
         "assay_triage/identity.py": None} | {f"assay_engine/{p.name}": None for p in (ROOT / "assay_engine").glob("*.py")}
 ENDPOINTS = ["databricks-meta-llama-3-3-70b-instruct", "databricks-meta-llama-3-1-8b-instruct",
              "databricks-qwen3-next-80b-a3b-instruct", "databricks-gpt-oss-120b"]
-READ = ["proposals", "live_proposals", "past_decisions", "verdicts", "stream", "tickets", "routing_log", "actions"]
+READ = ["proposals", "live_proposals", "past_decisions", "verdicts", "stream", "tickets", "routing_log", "actions",
+        "heavy_scorecard", "heavy_summary", "heavy_cases"]
 WRITE = ["actions", "live_proposals", "routing_log"]
 APP_YAML = f"""command: ['uvicorn', 'server:app', '--host', '0.0.0.0', '--port', '8000']
 env:
