@@ -18,6 +18,7 @@ and whether a change actually helped. Built on Databricks.**
 
 **Badger BuildFest 2026** · Applied AI & Automation · Databricks Real-World Workflows (Xorbix) · The Art of the Break
 
+[**Devpost**](https://devpost.com/software/undecided-dsevk2) ·
 [**Demo video**](https://www.youtube.com/watch?v=Xhl1AXFDvE8) ·
 [**Live dashboard**](https://assay-manager-7474654480147366.aws.databricksapps.com) ·
 [**Final handoff**](docs/FINAL_HANDOFF.md) ·
