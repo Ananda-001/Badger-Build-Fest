@@ -15,12 +15,32 @@ else:
 from assay_triage.identity import legacy_config
 
 
+RUN_FILES = ('permission-v2.jsonl', 'permission-v2-cheap.jsonl', 'gate-v1.jsonl', 'gate-v2.jsonl',
+             'stress-v1.jsonl', 'stress-bad.jsonl')
+
+
+def receipt_for(root, config):
+    """Newest valid-looking permission receipt for this configuration (receipts are configuration-scoped)."""
+    found = []
+    for p in Path(root).glob('**/permission-*.json'):
+        try:
+            r = json.loads(p.read_text(encoding='utf-8'))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if r.get('config_id') == config:
+            found.append((p.stat().st_mtime_ns, r))
+    return max(found, key=lambda x: x[0])[1] if found else None
+
+
 @st.cache_data
 def load_data(folder, stamp):
     def read(name):
         p = Path(folder) / name
         return [json.loads(line) for line in p.read_text(encoding='utf-8').splitlines() if line.strip()] if p.exists() else []
-    return read('tickets.jsonl'), read('judgments.jsonl')
+    runs = ROOT / 'results' / 'stage-2-3-runs'  # Databricks Stage 2/3 runs (one config per file)
+    extra = [json.loads(line) for name in RUN_FILES if (runs / name).exists()
+             for line in (runs / name).read_text(encoding='utf-8').splitlines() if line.strip()]
+    return read('tickets.jsonl'), read('judgments.jsonl') + extra
 
 
 def latest_json(root, pattern):
@@ -129,10 +149,17 @@ def main():
             st.dataframe(scoped,hide_index=True)
             st.download_button('Download review receipts',json.dumps(scoped,indent=2),file_name='assay-reviews.json',mime='application/json')
     elif page == 'Trust':
-        receipt = latest_json(result_dir, '**/permission-latest.json')
-        if receipt and receipt.get('config_id') == config:
+        receipt = receipt_for(result_dir, config)
+        if receipt:
             st.success(f"Permission receipt {receipt['receipt_id'][:12]} · valid until {receipt['valid_until']}")
-            st.dataframe(receipt['decisions'], hide_index=True)
+            st.dataframe([{k: d.get(k) for k in ('relation', 'mode', 'n', 'k', 'precision', 'lower', 'target', 'needs_more')}
+                          for d in receipt['decisions']], hide_index=True)
+            st.caption('n/k = labelled actions at the AUTO cutoff and how many were right; lower = one-sided lower bound on '
+                       'precision (family-adjusted). AUTO needs lower >= target. needs_more = extra labelled actions if precision holds.')
+            verdicts = Path(result_dir) / 'VERDICTS.md'
+            if verdicts.exists():
+                with st.expander('How these labels were made and audited (VERDICTS.md)'):
+                    st.markdown(verdicts.read_text(encoding='utf-8'))
         else:
             st.info(permission_status(config)['reason'])
             st.dataframe([{'relation':r,'mode':'SUGGEST','permission':'Not validated','configuration':config} for r in ['duplicate','part_of','related']],hide_index=True)

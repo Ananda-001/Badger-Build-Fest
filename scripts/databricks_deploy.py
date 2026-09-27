@@ -49,6 +49,12 @@ def stage() -> Path:
         dst = STAGE / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / rel, dst)
+    runs = ROOT / "results" / "stage-2-3-runs"  # run rows, receipts and VERDICTS.md for the Trust / Model check pages
+    for f in runs.rglob("*"):
+        if f.is_file() and f.suffix in (".jsonl", ".json", ".md") and "first-pass" not in f.parts:
+            dst = STAGE / f.relative_to(ROOT)
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(f, dst)
     (STAGE / "app.yaml").write_text(APP_YAML)
     (STAGE / "requirements.txt").write_text(REQUIREMENTS)
     return STAGE
