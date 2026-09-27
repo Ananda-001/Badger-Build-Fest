@@ -209,3 +209,25 @@ def test_router_switches_live_and_holds_untrusted_answers():
         raise RuntimeError("Incomplete or invalid model JSON for candidates: X")
     _, d3 = route({'key': 'T-3'}, [], pol, judge_fn=broken)
     assert d3['answered_by'] is None and d3['needs_review'] and 'sent to a human' in d3['reason']
+
+
+def test_precedent_reuse_only_when_proven_and_leave_one_out():
+    from assay_engine.precedent import build_memory, case_kind, leave_one_out, resolve
+    t = {}
+    decisions = []
+    for i in range(40):  # 40 same-library upgrade pairs to different versions, all rejected as duplicates
+        a, b = f"N-{i}", f"E-{i}"
+        t[a] = {"key": a, "summary": f"Upgrade jackson to 2.{i + 1}.0"}
+        t[b] = {"key": b, "summary": f"Upgrade jackson to 2.{i}.0"}
+        decisions.append({"id": a, "key": a, "candidate": b, "relation": "duplicate", "correct": False, "source": "ai"})
+    assert case_kind(t["N-0"], t["E-0"]) == "bump-same-lib-diff-version"
+    few = build_memory(decisions[:21], t, target=0.9)["duplicate/bump-same-lib-diff-version"]
+    assert not few["enabled"] and few["needs_more"] == 8  # 21/21 is not yet proof at 90%
+    mem = build_memory(decisions, t, target=0.9)
+    r = resolve({"key": "X", "summary": "Upgrade jackson to 3.0.0"}, {"key": "Y", "summary": "Upgrade jackson to 2.9.0"},
+                "duplicate", mem)
+    assert r["mode"] == "auto-reject" and "40 of 40" in r["reason"]
+    other = resolve({"key": "X", "summary": "Fix a crash"}, {"key": "Y", "summary": "Improve docs"}, "duplicate", mem)
+    assert other["mode"] == "ask"
+    loo = leave_one_out(decisions, t, target=0.9)
+    assert loo["auto_resolved"] == 40 and loo["right"] == 40
