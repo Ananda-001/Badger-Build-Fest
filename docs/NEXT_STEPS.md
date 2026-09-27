@@ -17,7 +17,7 @@ learning gate) is **done**; it is in the git history of this file. Results are i
 1. Access to the workspace: `docs/DATABRICKS_SETUP.md`, top section. krish adds the email and runs the grants,
    including `MANAGE` on the schema for anyone who will deploy (`CLAUDE.md` §6).
 2. Make your own Databricks token; put it in `.env` with `DATABRICKS_HOST` and `DATABRICKS_WAREHOUSE_ID`.
-3. `pip install -r requirements.txt`, `python scripts/fetch_data.py`, `python -m pytest -q` → **63 passed**.
+3. `pip install -r requirements.txt`, `python scripts/fetch_data.py`, `python -m pytest -q` → **65 passed**.
 4. **Done when** `SELECT COUNT(*) FROM workspace.assay_triage.tickets` returns 37,853 through `dbx.sql`.
 
 ## Track B: Test the dashboard like a manager would (30 min, everyone)
@@ -65,3 +65,9 @@ number without its source.
   Added to `CLAUDE.md` §6.
 - 23:30 Mohit's Claude: rewrote `CLAUDE.md` and this file to match the current state (report, submission kit,
   Databricks setup).
+- 00:40 Mohith's Claude: dashboard redesign on branch `mohith/dashboard-ui` (report §8.8 lists every change). It
+  names the page after Assay, adds a "What Assay decided" row (the four questions), filter chips, target bars,
+  evidence cards and a live-run summary. It also pins the one real model switch: before this it was drawn nowhere,
+  and two more live runs would have dropped it from the log the page receives. Plus accessibility and phone fixes.
+  Tested in a local practice copy (writes kept in memory, nothing sent to Databricks); 65 tests pass. **Needs krish's
+  review, then a deploy by the `CLAUDE.md` §6 protocol before the 08:30 recording.** Video script (kit §2) updated.

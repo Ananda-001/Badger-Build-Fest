@@ -102,7 +102,7 @@ scripts/               judge_eval · prepare_eval · prepare_stream · run_froze
                        · label_actions · ai_label · quick_label · spot_check · build_permissions
                        · evaluate_correction · live_route · precedents · databricks_setup · databricks_deploy
                        · sync_results (results → tables) · deploy_manager · fetch_data (data files ↔ volume)
-tests/                 test_engine · test_app · test_manager · test_stage_one · test_stage_two_three: 63 tests
+tests/                 test_engine · test_app · test_manager · test_stage_one · test_stage_two_three: 65 tests
 results/               every number we quote: hardness test, Stage 2/3 plans/runs/labels/receipts,
                        VERDICTS.md, routing policy + log, precedents
 docs/                  ASSAY_REPORT (.md + .pdf) · SUBMISSION_KIT · NEXT_STEPS · DATABRICKS_SETUP · SCHEMA
@@ -124,7 +124,7 @@ Jira with `ingest` + `retrieve --all`. **In git:** code, tests, docs, `data/samp
 
 ```bash
 pip install -r requirements.txt
-python -m pytest -q                                   # must print "63 passed" (or more) before any commit
+python -m pytest -q                                   # must print "65 passed" (or more) before any commit
 python scripts/fetch_data.py                          # data/*.jsonl from the volume (needs .env)
 
 # the manager dashboard (the demo)
@@ -250,7 +250,7 @@ fallback routing exists only for external models (our router does it in code).
 | Live switches observed | 1 (Llama 70B busy → Qwen 80B, held for review) |
 | Strongest precedent | 21 of 21 rejections (version-upgrade look-alikes); ≈8 reviews from proven at 90% |
 | First hardness test (Claude CLI, diagnostic only) | Haiku REJECTED: +90.5% cost from hidden thinking tokens |
-| Tests | 63 passing |
+| Tests | 65 passing |
 
 Verdicts in one page: `results/stage-2-3-runs/VERDICTS.md`. Pre-event exploration (label it as such if quoted):
 switching models mid-conversation cost 4.1×; parallel subagents each start cold.

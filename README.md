@@ -35,7 +35,7 @@ It runs on Databricks.
 ## Run
 ```bash
 pip install -r requirements.txt
-python -m pytest -q tests                                                # 63 passed
+python -m pytest -q tests                                                # 65 passed
 python -m assay_triage.ingest && python -m assay_triage.retrieve --k 10   # pulls public Jira data (~no login)
 python scripts/judge_eval.py --summary
 streamlit run app/app.py                                                 # first dashboard; has a sample-data toggle

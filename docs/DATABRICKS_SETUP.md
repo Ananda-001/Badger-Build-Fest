@@ -26,7 +26,7 @@ workspace, tables, data and both apps **already exist**; to work on them you onl
    DATABRICKS_TOKEN=<your own token>
    ENV
    python scripts/fetch_data.py        # data/*.jsonl from the volume (git-ignored, 60 MB)
-   python -m pytest -q                 # 63 passed
+   python -m pytest -q                 # 65 passed
    ```
 4. **What lives where** (Unity Catalog `workspace.assay_triage`):
 

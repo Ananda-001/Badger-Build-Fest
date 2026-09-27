@@ -45,7 +45,7 @@ to their original [ASSAY_REPORT §4].
 - **Statistics:** one-sided Clopper-Pearson lower bounds, exact sign tests on before/after pairs, Bonferroni across
   relations, frozen hash-checked samples drawn from an honest stream (defined before any judging).
 - **Labels:** maintainer links where they exist; an AI labeller (gpt-oss 120B) audited by a human spot check.
-- **Python**, about 6,000 lines written at the event, 63 tests.
+- **Python**, about 6,000 lines written at the event, 65 tests.
 
 ### Challenges we ran into
 - Our first sample was balanced and had answers inserted: it would have faked precision. A teammate's review caught
@@ -78,14 +78,18 @@ more human reviews so patterns can be proven; more agents than Jira triage.
 | Time | Screen | Voice |
 |---|---|---|
 | 0:00–0:15 | Title card, then Apache Jira | "AI agents want more freedom: to act alone, to run on cheaper models, to learn from corrections. Most teams decide on gut feel. Assay decides with evidence." |
-| 0:15–0:30 | Dashboard, top of page | "This is Assay on Databricks. Our demo agent tidies the public Apache Jira. It read [N] tickets and suggested [M] tidy-ups (read them off the screen; they grow with every live run). It did zero on its own, because it hasn't earned that yet." |
-| 0:30–0:55 | Needs your OK: answer one card; point at "Seen before" | "Every suggestion is in plain words, with the agent's reason and what reviewers said on similar cases. My answer is saved to a Delta table. Version-upgrade look-alikes: reviewers said No 21 of 21 times. About 8 more and Assay handles that kind for me." |
+| 0:15–0:30 | Dashboard, top of page: the numbers, then the "What Assay decided" row | "This is Assay on Databricks. Our demo agent tidies the public Apache Jira. It read [N] tickets and suggested [M] tidy-ups (read them off the screen; they grow with every live run). It did zero on its own, because it hasn't earned that yet." |
+| 0:30–0:55 | Earning your trust: under the version-upgrade bar, click "1 is in your list: show it"; point at "Seen before" on that card, answer No; the message says what moved (22 of 29) | "Every suggestion is in plain words, with the agent's reason and what reviewers said on similar cases. My answer is saved to a Delta table. Version-upgrade look-alikes: reviewers said No 21 of 21 times. About 8 more and Assay handles that kind for me." |
 | 0:55–1:20 | Held back for your safety | "Here is what it was stopped from doing. A cheaper model said it was 95% sure about 19 merges; only 4 were right. Someone proposed a rule; tested first, it broke 16 decisions and fixed none. Blocked before it touched anything." |
-| 1:20–1:40 | Press "Check new tickets now"; then Which AI answered | "Now live: the agent reads three new tickets on Databricks. The main model answers; when it's busy, Assay switches to a backup on the spot and holds that answer for review." |
+| 1:20–1:40 | Press "Check new tickets now" (a summary card appears); then Which AI answered: the pinned "Latest switch" | "Now live: the agent reads three new tickets on Databricks. The main model answers; when it's busy, Assay switches to a backup on the spot and holds that answer for review." |
 | 1:40–1:55 | What it saved you | "All at zero AI cost on Databricks Free Edition, 31 wrong changes prevented, and every number is counted, not estimated." |
 | 1:55–2:00 | Logo + repo link | "Assay: agents earn their freedom." |
 
 Tip: open the dashboard with `#tour` for a clean first frame; record in one take and trim.
+
+Before recording: only one version-upgrade case is open. If someone answers it before the take, "show it" disappears;
+then point at the bar ("22 so far · 29 prove it") instead. Don't answer cards at random while rehearsing: each
+answer is real evidence. The colour switch in the top bar picks light or dark for the recording.
 
 ---
 

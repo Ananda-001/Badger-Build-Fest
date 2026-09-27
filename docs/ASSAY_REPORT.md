@@ -359,34 +359,49 @@ blocked rule).
 ### 8.8 The manager dashboard on Databricks (live)
 
 **Who it is for:** a manager with no background in code or prompts. It answers three questions: *what did the
-agent do, what needs my OK, and what has it earned the right to do alone?* Built from designs B (inbox) and C (cost
-and savings) of our dashboard lab, following a published UI checklist (ui-ux-pro-max: SVG icons instead of emoji,
+agent do, what needs my OK, and what has it earned the right to do alone?* Near the top it also shows Assay's four
+decisions (the four questions of section 1), each with its evidence. Built from designs B (inbox) and C (cost and
+savings) of our dashboard lab, following a published UI checklist (ui-ux-pro-max: SVG icons instead of emoji,
 visible keyboard focus, 4.5:1 text contrast, badges that never rely on colour alone, works at phone width,
-respects "reduce motion").
+respects "reduce motion"). Redesigned on Sun 27 Sep, 00:10–00:40 CDT (branch `mohith/dashboard-ui`; it goes live
+with the next deploy): the page is named after Assay, the four decisions have their own row, the one real model
+switch is pinned, and each answer says which pattern it moved.
 
-**What is on the page, top to bottom** (all numbers read live from the tables; as of 21:39 CDT):
+**What is on the page, top to bottom** (all numbers read live from the tables; figures below as of Sun 27 Sep,
+00:13 CDT):
 
 | Panel | What it shows | Source table |
 |---|---|---|
-| At a glance | 186 tickets read · 191 tidy-ups suggested · 0 handled without asking · answers given here | `verdicts` (summary) + `live_proposals` + `actions` |
-| Needs your OK | 130+ open suggestions. Each card: what the agent thinks in words ("Same problem reported twice"), the two tickets with dates and Jira links, the agent's own reason, and "Seen before: reviewers said No all 21 times…". Buttons: Yes / No / Not sure. Undo for 6 s. Newest live suggestions first, then the ones whose answer teaches the most. | `proposals`, `live_proposals` → click writes `actions` |
-| Earning your trust | Past decisions grouped by kind of case, with a bar per pattern: "Learning" (consistent, N more answers to prove), "Stays with you" (answers mixed), "Handled for you" (proven). Plus "May the agent act alone?" from the permission receipts (not yet, for any kind). | `past_decisions` + `actions`, recomputed by `precedent.py` |
-| Handled for you | Suggestions answered from a proven pattern, with the reason and a one-click overrule (saved as a human answer against the pattern). Empty today: nothing is proven at 90% yet. | computed |
-| Held back for your safety | The blocked cheap model (said 95%+ sure on 19 merges, 4 right; 10 of 90 answers unreadable), the blocked bad rule (fixed 0, broke 16 on 30 tickets), the new instructions on hold (fixed 3, broke 3). Each with a real example a check marked wrong. | `verdicts` |
-| Which AI answered | Main model (Llama 70B, trusted), the cheaper model and why it isn't allowed, the backups (Qwen 80B, then gpt-oss 120B; their answers wait for review). The latest requests in words: "Llama 70B was busy, so it switched to the next model." | `verdicts` (routing policy), `routing_log` |
-| Check new tickets now | Reads 3 fresh tickets on Databricks through the live switcher (about 10–40 s); new suggestions appear at the top marked "New". | `stream`, `tickets` → writes `routing_log`, `live_proposals` |
+| Top bar | "Assay · AI agent manager", the agent it manages ("Agent: Jira ticket triage"), "Live on Databricks", a colour switch (device / light / dark), "Show me around". | none |
+| At a glance | 186 tickets read · 191 tidy-ups suggested · 0 handled without asking ("nothing has earned that yet") · answers given here, each with a one-line context. | `verdicts` (summary) + `live_proposals` + `actions` |
+| What Assay decided | The four questions of section 1, one tile each with verdict and evidence. *Act alone?* "Asks you first" (merging: 1 of 2 checks right; filing under: about 38 more checks needed). *Which AI?* Llama 70B (the cheaper 8B is blocked: right 4 of 19 at 95%+ sure; 1 live switch). *Did a correction help?* "Bad rule thrown out" (fixed 0, broke 16; new instructions on hold at 3 and 3). *Reuse past answers?* "Not yet" (closest: No 21 of 21, about 8 more to prove it). Each tile links to its details; on a phone only the four verdicts show. | `verdicts`, `past_decisions` + `actions` |
+| Needs your OK | 135 open suggestions, with filter chips and live counts (Same problem 15 · Part of a project 19 · Connected 101 · New 5). Each card: what the agent thinks in words, the two tickets with dates and Jira links, the agent's reason, its own confidence labelled "says 90% sure" (never used to decide), and "Seen before: reviewers said No all 21 times…". Buttons: Yes / No / Not sure. After an answer the message says what it moved ("Version-upgrade look-alikes: 22 of 29 answers, about 7 more to prove it") and that pattern's bar pulses; Undo stays in the message (8 s, held while hovered or focused). Newest live suggestions first, then the ones whose answer teaches the most. | `proposals`, `live_proposals` → click writes `actions` |
+| Earning your trust | Past decisions grouped by kind of case. Consistent patterns get a bar with a mark where the proof is reached ("21 so far · 29 prove it"); mixed ones get a split bar ("8 said Yes · 4 said No"). "1 is in your list: show it" narrows the to-do list to that kind. Plus "May the agent act alone?" from the permission receipts (not yet, for any kind). | `past_decisions` + `actions`, recomputed by `precedent.py` |
+| Handled for you | Suggestions answered from a proven pattern, with the reason and a one-click overrule (saved as a human answer against the pattern). Empty today, since nothing is proven at 90% yet, so it names the closest pattern and links to its open case. | computed |
+| Held back for your safety | Three evidence cards with one big number each: the blocked cheap model (4 of 19 right at 95%+ sure; 10 of 90 answers unreadable), the blocked bad rule (16 broken, 0 fixed on 30 tickets; p = 1.5×10⁻⁵ under "Show an example and the odds"), the new instructions on hold (3 fixed, 3 broken). A real example a check marked wrong is folded under each. | `verdicts` |
+| Which AI answered | The latest real switch pinned at the top, found in the whole log rather than only the newest rows (SPARK-51070: Llama 70B was busy, so Qwen 80B answered; held for review). Then the order the models answer in (Llama 70B, then Qwen 80B, then gpt-oss 120B; backups' answers wait for review), the cheaper Llama 8B marked "Not allowed" with its evidence, "41 of 42 answered by the main model, usually in about 3.0 s", and the 5 latest requests. | `verdicts` (routing policy), `routing_log` |
+| Check new tickets now | Reads 3 fresh tickets on Databricks through the live switcher (about 10–40 s, with a seconds counter). A summary card then lists which model answered each ticket, any switch or hold, and "Show them" for the new suggestions (marked "New"). | `stream`, `tickets` → writes `routing_log`, `live_proposals` |
 | What it saved you | $0 AI bill for 402 requests (Free Edition) · 31 wrong changes prevented · suggestions answered from proven answers · past answers it learns from. All counted, none estimated. | all of the above |
 
 **The guided tour ("Show me around")**: 12 steps with a highlight ring. It opens automatically on a first visit,
 can be reopened from the top bar, and can be linked directly (`…/#tour`, or `…/#tour=5` for a given step).
-Step 5 is hands-on: the manager answers a real suggestion, the answer is saved to Databricks, and the tour moves on
-to show the trust bar that answer fed.
+Step 2 covers the headline numbers and Assay's four decisions. Step 5 is hands-on: the manager answers a real
+suggestion, the answer is saved to Databricks, and the tour moves on to show the trust bar that answer fed.
 
 **Verified:** locally against the real tables (answer → the bar moved from 21/21 to 22/22 and "8 more" became "7";
 undo restored it; a live run read 3 tickets in 14 s and added 3 suggestions); screenshots at desktop and phone width;
 both deploys succeeded. **On the deployed app**, at 21:31–21:32 CDT a signed-in user answered one suggestion
 (saved to `actions`) and ran "Check new tickets now" (3 tickets answered by Llama 70B on Databricks, logged in
 `routing_log`), so the app's own identity can read and write the tables and call the models.
+
+**Redesign checks (Sun 27 Sep, before deploy):** run in a local practice copy: the real app code on a read-only
+snapshot of the tables, with every answer, undo and live run kept in memory (nothing written to Databricks, no model
+calls). Answering the version-upgrade case moved it to 22 of 29 with the message above. Filters, "show it", the
+live-run card and tour steps 2, 5 and 9 worked. With 8 simulated extra answers the pattern switched on, and its open
+case moved to "Handled for you" with its overrule link. Screenshots at 1440 px (light and dark) and a true 375 px
+phone width showed no script errors, and the colour pairs were measured in both themes (text at least 4.5:1, button
+outlines at least 3:1). 65 tests pass; the 2 new ones cover the pinned switch and check that every tour step and
+page element exists.
 
 **How a teammate uses it (5 minutes):**
 1. Open the dashboard link and sign in with the Databricks workspace account.
@@ -433,7 +448,7 @@ scripts/        judge_eval.py · prepare_eval.py · prepare_stream.py · run_fro
                 · deploy_manager.py (dashboard app)
 results/        hardness test · Stage 2/3 plans, runs, labels, receipts, VERDICTS.md · routing policy + log · precedents
 docs/           SCHEMA.md · DATABRICKS_SETUP.md · STAGE_ONE.md · STAGE_TWO_THREE.md · thinking/ (briefs v1-v3) · this report
-tests/          63 tests, all passing
+tests/          65 tests, all passing
 ```
 
 About 6,000 lines of Python plus the dashboard page (about 580 lines), all written at the event.
@@ -444,7 +459,7 @@ About 6,000 lines of Python plus the dashboard page (about 580 lines), all writt
 
 ```bash
 pip install -r requirements.txt
-python -m pytest -q                                   # 63 passed
+python -m pytest -q                                   # 65 passed
 # data (public Jira; cached)
 python -m assay_triage.ingest && python -m assay_triage.retrieve --all
 # Databricks (needs .env with DATABRICKS_HOST, DATABRICKS_TOKEN, DATABRICKS_WAREHOUSE_ID)
@@ -543,4 +558,4 @@ uvicorn app.manager.server:app --port 8000            # or run it locally agains
 | Live switches observed | 1 (Llama 70B busy → Qwen 80B, held for review) |
 | Manager dashboard | live on Databricks; 12-step tour; 130 open suggestions; every answer saved to Delta |
 | Strongest precedent | 21 of 21 rejections; ≈8 reviews from proven at 90% |
-| Tests | 63 passing |
+| Tests | 65 passing |
