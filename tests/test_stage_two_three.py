@@ -187,3 +187,25 @@ def test_gate_counts_same_action_as_tie_without_labels():
               for l in label_template(before, 'v1')[6:] + label_template(after, 'v2')[6:]]
     g = build_gate(before, after, labels, 'v1', 'v2')
     assert (g['n_same_action'], g['fixed'], g['broke'], g['excluded_unknown'], g['unchanged']) == (6, 4, 0, 0, 6)
+
+
+def test_router_switches_live_and_holds_untrusted_answers():
+    from assay_engine.router import policy_from_evidence, route
+    pol = policy_from_evidence('big', 'small', ['backup'], cheap_verdict='REJECT', cheap_evidence='right 4 of 19')
+    calls = []
+    def fake(ticket, cands, model, backend, prompt, retries=1):
+        calls.append(model)
+        if model == 'big':
+            raise RuntimeError("Error code: 429 - REQUEST_LIMIT_EXCEEDED")
+        return [{'model': model}]
+    rows, d = route({'key': 'T-1'}, [], pol, judge_fn=fake)
+    assert calls == ['big', 'backup'] and d['answered_by'] == 'backup' and d['switched'] and d['needs_review']
+    assert 'not certified' in d['reason'] and 'busy' in d['reason']
+    ok = policy_from_evidence('big', 'small', [], cheap_verdict='CERTIFY', cheap_evidence='certified')
+    calls.clear()
+    _, d2 = route({'key': 'T-2'}, [], ok, judge_fn=fake)
+    assert calls == ['small'] and d2['answered_by'] == 'small' and d2['trusted'] and not d2['switched']
+    def broken(ticket, cands, model, backend, prompt, retries=1):
+        raise RuntimeError("Incomplete or invalid model JSON for candidates: X")
+    _, d3 = route({'key': 'T-3'}, [], pol, judge_fn=broken)
+    assert d3['answered_by'] is None and d3['needs_review'] and 'sent to a human' in d3['reason']

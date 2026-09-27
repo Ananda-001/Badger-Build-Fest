@@ -98,8 +98,9 @@ def _parse(text: str) -> list[dict]:
         return []
 
 
-def call(prompt: str, model: str, backend: str = "cli", timeout: int = 180) -> tuple[str, float | None, dict]:
-    """Returns (text, cost_usd or None, usage)."""
+def call(prompt: str, model: str, backend: str = "cli", timeout: int = 180,
+         retries: int = 6) -> tuple[str, float | None, dict]:
+    """Returns (text, cost_usd or None, usage). `retries`: attempts on a Databricks 429 (1 = fail fast, for routing)."""
     if os.environ.get("ASSAY_ALLOW_MODEL_CALLS") != "1":
         raise RuntimeError("Model calls are disabled. Obtain explicit usage/budget approval before enabling them.")
     if backend == "cli":
@@ -128,13 +129,13 @@ def call(prompt: str, model: str, backend: str = "cli", timeout: int = 180) -> t
         from openai import OpenAI
         client = OpenAI(base_url=os.environ["DATABRICKS_HOST"].rstrip("/") + "/serving-endpoints",
                         api_key=os.environ["DATABRICKS_TOKEN"])
-        for attempt in range(6):  # Free Edition has a per-workspace QPS limit: back off on 429 instead of failing
+        for attempt in range(max(1, retries)):  # Free Edition has a per-workspace QPS limit: back off on 429
             try:
                 r = client.chat.completions.create(model=model, messages=[{"role": "system", "content": SYSTEM},
                                                                           {"role": "user", "content": prompt}])
                 break
             except Exception as e:  # noqa: BLE001
-                if "429" not in str(e) or attempt == 5:
+                if "429" not in str(e) or attempt >= retries - 1:
                     raise
                 time.sleep(2 ** attempt + random.random())
         content = r.choices[0].message.content or ""
@@ -145,9 +146,10 @@ def call(prompt: str, model: str, backend: str = "cli", timeout: int = 180) -> t
 
 
 def judge(ticket: dict, candidates: list[dict], model: str, backend: str = "cli", prompt="v1",
-          retrieval_k: int | None = None, retrieval_version: str = "snapshot-v1") -> list[dict]:
+          retrieval_k: int | None = None, retrieval_version: str = "snapshot-v1", retries: int = 6) -> list[dict]:
     """One call judges all candidates for a ticket. Returns schema rows (without truth fields)."""
-    text, cost, usage = call(build_prompt(ticket, candidates, prompt), model, backend)
+    extra = {"retries": retries} if retries != 6 else {}  # default path unchanged for existing callers
+    text, cost, usage = call(build_prompt(ticket, candidates, prompt), model, backend, **extra)
     config = configuration(model, backend, prompt, retrieval_k or len(candidates), retrieval_version)
     got = {j.get("candidate"): j for j in _parse(text)}
     invalid = []
