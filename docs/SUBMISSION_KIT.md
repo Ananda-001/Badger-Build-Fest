@@ -3,8 +3,8 @@
 Draft for Sun Sep 27 (Devpost closes 11:00 CDT). Every number comes from `results/` or the Unity Catalog tables;
 the source is in brackets. Edit the wording freely, but don't change a number without changing its source.
 
-Presentation update, September 27: the current local deck is `Assay_Presentation_v6.pptx` (seven slides).
-See `FINAL_HANDOFF.md` section 8 for its full path, external forecast sources and screenshot-versus-evaluation caveats.
+Presentation update, September 27: the current deck is `docs/Assay_Presentation_v7.pptx` (seven slides).
+See `FINAL_HANDOFF.md` section 8 for external forecast sources and screenshot-versus-evaluation caveats.
 The Devpost story below retains earlier-run figures; reconcile them against the final handoff before submitting.
 
 ---
@@ -79,7 +79,7 @@ more human reviews so patterns can be proven; more agents than Jira triage.
 
 ## 2. Final deck: two-minute pitch timing
 
-Use the speaker notes in `Assay_Presentation_v6.pptx` for the spoken script. This structure follows the supplied
+Use the speaker notes in `docs/Assay_Presentation_v7.pptx` for the spoken script. This structure follows the supplied
 *How to Make a Winning 2-Minute Pitch* guide: 25 seconds on the problem, 60 seconds demonstrating the solution,
 13 seconds on differentiation, 12 seconds on the team, and 10 seconds on next steps and the ask.
 

@@ -326,7 +326,7 @@ version upgrades" pattern is 57 of 61 (lower bound 86%, below the 90% bar); 28 m
 ## 7. Demo scripts
 
 For the final seven-slide presentation, use the timing in `SUBMISSION_KIT.md` section 2 and the speaker notes in
-`Assay_Presentation_v6.pptx`. The scripts below are alternative dashboard-led formats, not the final deck's timing.
+`docs/Assay_Presentation_v7.pptx`. The scripts below are alternative dashboard-led formats, not the final deck's timing.
 
 ### 7.1 Two-minute video
 
@@ -354,11 +354,8 @@ Proven rows in Evidence coverage.
 
 ## 8. Final seven-slide deck (updated September 27, 2026)
 
-The current local presentation is **Assay_Presentation_v6.pptx**, saved at:
-
-`C:/Users/mohit/OneDrive - UW-Madison/Desktop/Project/Badger-Build-Fest/Assay_Presentation_v6.pptx`
-
-It is outside the nested Git repository; it has not been committed or pushed. Versions v3–v5 are retained, but v6
+The current presentation is **`docs/Assay_Presentation_v7.pptx`**, in the repository. v7 is v6 with the Assay
+logo on the title slide; nothing else changed. Versions v3–v6 are kept locally, outside the repository, and v7
 supersedes them for this pitch. The earlier Slides artifact and `docs/Assay_Presentation.pptx` are not the final deck.
 
 1. **Assay:** the manager for your AI agents; agents earn their freedom with evidence.
@@ -512,7 +509,7 @@ links, decided up front) · more human reviews so more patterns can be proven ·
 
 - [ ] Run the assisted-review `--write` (section 4.9) if the team wants the "related" pattern proven.
 - [ ] Redeploy the dashboard (`python scripts/deploy_manager.py`) and open it once; test the three demo templates.
-- [x] Prepare the final seven-slide local deck: `Assay_Presentation_v6.pptx` (section 8).
+- [x] Prepare the final seven-slide deck: `docs/Assay_Presentation_v7.pptx` (section 8).
 - [ ] Rehearse the two-minute notes and check the deck's fades in PowerPoint before recording.
 - [ ] Record the video (section 7.1); keep a clip of the Netty demo as a fallback.
 - [ ] Devpost: paste from `docs/SUBMISSION_KIT.md` with numbers updated from this file; declare Xorbix + Art of the Break.
