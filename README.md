@@ -1,6 +1,9 @@
 <div align="center">
 
-# ✓ Assay
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/brand/assay-logo-dark.png">
+  <img src="docs/brand/assay-logo.png" alt="Assay" width="360">
+</picture>
 
 ### AI agents, verified.
 

@@ -23,7 +23,8 @@ ROOT = dbx.ROOT
 STAGE = ROOT / "app" / "manager" / "_bundle"
 CODE = {"app/manager/server.py": "server.py", "app/manager/static/index.html": "static/index.html",
         "assay_triage/__init__.py": None, "assay_triage/dbx.py": None, "assay_triage/judge.py": None,
-        "assay_triage/identity.py": None} | {f"assay_engine/{p.name}": None for p in (ROOT / "assay_engine").glob("*.py")}
+        "assay_triage/identity.py": None} | {f"assay_engine/{p.name}": None for p in (ROOT / "assay_engine").glob("*.py")} \
+    | {f"app/manager/static/brand/{p.name}": f"static/brand/{p.name}" for p in (ROOT / "app/manager/static/brand").glob("*.png")}
 ENDPOINTS = ["databricks-meta-llama-3-3-70b-instruct", "databricks-meta-llama-3-1-8b-instruct",  # every model the router
              "databricks-qwen3-next-80b-a3b-instruct", "databricks-gpt-oss-120b", "databricks-gpt-oss-20b",  # may pick
              "databricks-llama-4-maverick", "databricks-gemma-3-12b", "databricks-qwen35-122b-a10b"]

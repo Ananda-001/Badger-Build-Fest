@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Assay Agent Manager</title>
 <meta name="description" content="Assay: evidence-based oversight for AI agents, running on Databricks.">
+<link rel="icon" type="image/png" href="static/brand/favicon.png">
+<link rel="apple-touch-icon" href="static/brand/mark-128.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
@@ -55,7 +57,7 @@ button:disabled{cursor:not-allowed;opacity:.55}
 .top{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line)}
 .top-in{max-width:1480px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:12px}
 .logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:19px}
-.logo i{width:30px;height:30px;border-radius:8px;background:var(--accent);display:inline-grid;place-items:center;color:var(--accent-ink)}
+.logo i{width:30px;height:30px;display:inline-block;flex:none;background:var(--accent);-webkit-mask:url(static/brand/mark-128.png) center/contain no-repeat;mask:url(static/brand/mark-128.png) center/contain no-repeat}
 .top .spacer{flex:1}
 /* page */
 .page{max-width:1480px;margin:0 auto;padding:26px 20px 64px;display:grid;gap:20px}
@@ -317,7 +319,7 @@ button:disabled{cursor:not-allowed;opacity:.55}
 
 <header class="top">
   <div class="top-in">
-    <span class="logo"><i><svg class="i"><use href="#i-check"/></svg></i>Assay</span>
+    <span class="logo"><i role="img" aria-label="Assay logo"></i>Assay</span>
     <span class="muted small">AI agent manager</span>
     <span class="spacer"></span>
     <button class="btn" id="theme" aria-label="Switch theme"><svg class="i" id="theme-i"><use href="#i-moon"/></svg><span id="theme-t">Dark</span></button>
