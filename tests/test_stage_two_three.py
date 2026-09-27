@@ -73,9 +73,33 @@ def test_part_of_permission_deduplicates_umbrella():
     config = "cfg"
     judgments = rows(config, outcomes=[(f"T{i}", "SAME-UMBRELLA", "part_of", .99) for i in range(80)])
     labels = adjudicate(judgments, config, {f"T{i}": True for i in range(80)})
-    decision = build_receipt(judgments, labels, config)["decisions"][1]
+    receipt = build_receipt(judgments, labels, config, computed_at="2026-09-27T08:00:00+00:00")
+    decision = receipt["decisions"][1]
     assert decision["n"] == 1 and decision["mode"] != "auto"
     assert decision["excluded"]["dependent_sibling_action"] == 79
+    assert can_act(receipt, "part_of", .99, config, "2026-09-27T08:30:00+00:00")[0] == "suggest"
+
+
+def test_correlated_output_attack_fails_closed():
+    config = "break-1"
+    judgments = rows(config, outcomes=[("ONE-TASK", f"ACTION-{i}", "duplicate", .99) for i in range(50)])
+    labels = adjudicate(judgments, config, {"ONE-TASK": True})
+    receipt = build_receipt(judgments, labels, config, computed_at="2026-09-27T08:00:00+00:00")
+    duplicate = receipt["decisions"][0]
+    assert duplicate["n"] == duplicate["k"] == 1
+    assert duplicate["mode"] == "suggest" and duplicate["lower"] < .90
+    assert can_act(receipt, "duplicate", .99, config, "2026-09-27T08:30:00+00:00")[0] == "suggest"
+
+
+def test_independent_control_can_earn_permission():
+    config = "break-1"
+    judgments = rows(config, outcomes=[(f"TASK-{i}", f"ACTION-{i}", "duplicate", .99) for i in range(50)])
+    labels = adjudicate(judgments, config, {f"TASK-{i}": True for i in range(50)})
+    receipt = build_receipt(judgments, labels, config, computed_at="2026-09-27T08:00:00+00:00")
+    duplicate = receipt["decisions"][0]
+    assert duplicate["n"] == duplicate["k"] == 50
+    assert duplicate["mode"] == "auto" and duplicate["lower"] >= .90
+    assert can_act(receipt, "duplicate", .99, config, "2026-09-27T08:30:00+00:00")[0] == "auto"
 
 
 def test_exact_learning_gate_and_same_plan_requirement():
@@ -105,6 +129,15 @@ def test_stream_plan_is_outcome_blind_disjoint_and_hashed():
     assert "truth" not in first["jobs"][0] and validate(first) == first
     bad = copy.deepcopy(first); bad["min_top_score"] = .1
     with pytest.raises(ValueError): validate(bad)
+
+
+def test_outcome_selected_sample_attack_and_honest_control():
+    from scripts.break_2_manipulated_sample import build_break_result
+    result = build_break_result(seeds=100)
+    assert result["population"]["precision"] == .25
+    assert result["enriched_attack"]["decision"] == "auto"
+    assert result["outcome_blind_trials"]["false_auto"] == 0
+    assert result["passed"]
 
 
 def test_all_candidates_is_time_honest():

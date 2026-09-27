@@ -21,6 +21,9 @@ It runs on Databricks.
   model answered, and a button that runs the agent live. Every Yes/No is saved to a Delta table.
 - **Full report:** [`docs/ASSAY_REPORT.md`](docs/ASSAY_REPORT.md) ([PDF](docs/ASSAY_REPORT.pdf)): every result,
   method, limit and number, with its source.
+- **Art of the Break:** [`docs/META_ART_OF_BREAK_CARD.md`](docs/META_ART_OF_BREAK_CARD.md): a real indirect prompt
+  injection made our demo agent confidently call unrelated tickets duplicates. The card includes the exact model
+  responses, failure frequency, containment, supporting security breaks, and what we learned.
 - **Submission kit:** [`docs/SUBMISSION_KIT.md`](docs/SUBMISSION_KIT.md): Devpost answers, video script, Break Card.
 
 ## Layout

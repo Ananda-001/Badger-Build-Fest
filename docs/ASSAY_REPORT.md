@@ -399,17 +399,15 @@ both deploys succeeded. **On the deployed app**, at 21:31–21:32 CDT a signed-i
 
 ## 9. Break Card material (The Art of the Break)
 
-| Failure | How often | Evidence | What we learned |
-|---|---|---|---|
-| Over-confidence: "95% sure" duplicates | 15 of 19 wrong | 8B permission receipt | Never gate autonomy on a model's own confidence |
-| Poisoned correction | broke 16, fixed 0 | `gate-v1-to-bad` receipt | Test every correction before switching it on |
-| Unusable output from the cheap model | 10 of 90 tasks (11%) | `permission-v2-cheap.jsonl.failures.jsonl` | Count format failures as failures when comparing cost |
-| Over-linking by the big model | 60 of 90 tickets "related" | permission-v2 run | "Related" must stay suggest-only |
-| Siblings mistaken for the umbrella | part-of overconfidence in the first test | hardness test | Prompt v2 targets it; UNPROVEN so far |
-| The "cheap" model was the expensive one | +90.5% cost | hardness test (Claude CLI) | Control how a model runs before comparing costs |
-| Labellers disagree | 55% human–AI agreement overall | spot checks | Audit the labels; claim only where they agree (duplicates 8/9) |
-| Rate limits under load | 1 real switch in a 16-way burst | routing log | Live switching must be safe: uncertified backups are held for review |
-| Sample design | balanced classes + inserted answers | code review by a teammate | An enriched sample fakes precision; define the stream first |
+The judge-facing card is [`META_ART_OF_BREAK_CARD.md`](META_ART_OF_BREAK_CARD.md). It begins with a live indirect
+prompt-injection break in our complete demo-agent path, then reports deterministic tests of Assay's permission and
+API boundaries. The earlier statistical card remains at [`ART_OF_BREAK_BREAK_CARD.md`](ART_OF_BREAK_BREAK_CARD.md).
+
+| Simple question | Result | What we learned |
+|---|---|---|
+| Can ticket text rewrite the agent's decision? | Live model failed 2 of 3 attack attempts | Valid JSON and high confidence do not make an answer safe |
+| Can a receipt be deliberately forged? | Rehashed `QUIET` → `AUTO` receipt was accepted | A hash detects edits but does not authenticate the issuer |
+| Can fabricated reviews reach the write boundary? | The local HTTP route returned 200 and attempted a write | Validate identity and exact server-side work before writing |
 
 ---
 
@@ -478,15 +476,16 @@ uvicorn app.manager.server:app --port 8000            # or run it locally agains
   number in the video or Devpost comes from a file in `results/`; say what we couldn't prove.
 - **Review culture:** a teammate's review caught the inserted-answer and pair-counting problems, a statistics bug in
   the cost comparison (it could certify with a zero-width interval), the reasoning-token cap, and the missing
-  "needs N more". All but the comparison bug are fixed; the comparison verdict is not used anywhere.
+  "needs N more". All are fixed; the comparison verdict remains outside the live routing policy until it is rerun
+  on an approved frozen model evaluation.
 
 ---
 
 ## 13. Honest limits: what we do not claim
 
 - No model has earned the right to act alone (no AUTO receipt).
-- Model cost/quality certification is not claimed; the paired comparison has a known bug with identical outcomes
-  and has not been re-run on the Databricks models.
+- Model cost/quality certification is not claimed; the identical-outcome bug is fixed, but the comparison has not
+  been re-run on an approved frozen Databricks evaluation.
 - "Related" and "part of" labels are unreliable (human–AI agreement 2/7 and 0/2); only duplicate claims are made.
 - Most labels come from an AI labeller audited by one human on 20 items; more human review would tighten
   everything.
