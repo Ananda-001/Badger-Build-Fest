@@ -2,6 +2,8 @@
 
     python scripts/heavy_eval.py plan                       # freeze the plan (no model calls)
     python scripts/heavy_eval.py extend                     # add targeted edge-case slices (bumps, flaky, all dups)
+    python scripts/heavy_eval.py extend-stream --stream-n 500  # more of the honest stream (new seed, disjoint)
+    python scripts/heavy_eval.py boost                      # booster slices for kinds of case with undecided claims
     ASSAY_ALLOW_MODEL_CALLS=1 python scripts/heavy_eval.py run    [--models a,b] [--workers 4]
     ASSAY_ALLOW_MODEL_CALLS=1 python scripts/heavy_eval.py route  [--workers 16] [--delta] [--tag stress|normal]
 
@@ -122,6 +124,68 @@ def extend_plan() -> dict:
     return plan
 
 
+def extend_stream(n: int, seed: int = 91) -> dict:
+    """More of the honest stream (same rule as the first 300, new seed, disjoint from every earlier job)."""
+    plan = json.loads(PLAN.read_text(encoding="utf-8"))
+    tag = f"stream_extra_{seed}"
+    if plan.get(tag):
+        return plan
+    tickets = load(ROOT / "data" / "tickets.jsonl")
+    cands = load(ROOT / "data" / "candidates_all.jsonl")
+    used = {j["key"] for p in (ROOT / "results" / "stage-2-3-plans").glob("*.json")
+            for j in json.loads(p.read_text(encoding="utf-8"))["jobs"]}
+    used |= {r["ticket"] for r in load(ROOT / "results" / "routing-log.jsonl")} | {j["key"] for j in plan["jobs"]}
+    sl = freeze_stream(tickets, cands, n=n, seed=seed, min_score=0.4575, excluded=used)
+    extra = [{**j, "slice": "stream"} for j in sl["jobs"]]
+    plan["jobs"] += extra
+    plan[tag] = {"n": len(extra), "from_index": len(plan["jobs"]) - len(extra),
+                 "plan_id": hashlib.sha256(json.dumps(extra, sort_keys=True).encode()).hexdigest()}
+    PLAN.write_text(json.dumps(plan), encoding="utf-8")
+    return plan
+
+
+BOOSTERS = {  # kind of case -> tickets; picked from ticket text and shortlist only (never from the answer)
+    "bump-same-lib-same-version": 43, "same-title": 117, "both-test-failures": 100, "bump-same-lib-diff-version": 80}
+
+
+def extend_boosters(seed: int = 97) -> dict:
+    """Booster slices for kinds of case whose claims are still undecided. Enriched: never counted in precision."""
+    from assay_engine.precedent import case_kind  # noqa: PLC0415
+    plan = json.loads(PLAN.read_text(encoding="utf-8"))
+    if plan.get("boosters"):
+        return plan
+    tickets = {t["key"]: t for t in load(ROOT / "data" / "tickets.jsonl")}
+    cands = load(ROOT / "data" / "candidates_all.jsonl")
+    used = {j["key"] for p in (ROOT / "results" / "stage-2-3-plans").glob("*.json")
+            for j in json.loads(p.read_text(encoding="utf-8"))["jobs"]}
+    used |= {r["ticket"] for r in load(ROOT / "results" / "routing-log.jsonl")} | {j["key"] for j in plan["jobs"]}
+    by_kind = {k: [] for k in BOOSTERS}
+    for r in cands:
+        k, t = r["key"], tickets.get(r["key"])
+        if not t or t.get("created", "") < "2025-01-01" or k in used:
+            continue
+        top = [c["key"] for c in r["candidates"] if c["key"] in tickets and tickets[c["key"]].get("created", "") < t["created"]][:5]
+        kinds = {case_kind(t, tickets[c]) for c in top}
+        for kd in BOOSTERS:  # a ticket joins the rarest matching slice only
+            if kd in kinds:
+                by_kind[kd].append(k)
+                break
+    extra, rng, info = [], random.Random(seed), {}
+    for kd, n in BOOSTERS.items():
+        keys = sorted(set(by_kind[kd]) - used)
+        chosen = set(rng.sample(keys, min(n, len(keys))))
+        used |= chosen
+        sl = freeze_stream(list(tickets.values()), [r for r in cands if r["key"] in chosen], n=len(chosen), seed=seed, min_score=0.0)
+        extra += [{**j, "slice": f"boost:{kd}"} for j in sl["jobs"]]
+        info[kd] = {"eligible": len(keys), "chosen": len(chosen)}
+    plan["jobs"] += extra
+    plan["boosters"] = {"rule": "kind of case read from the ticket and its shortlist only; enriched, reported per slice",
+                        "seed": seed, "from_index": len(plan["jobs"]) - len(extra), "slices": info,
+                        "plan_id": hashlib.sha256(json.dumps(extra, sort_keys=True).encode()).hexdigest()}
+    PLAN.write_text(json.dumps(plan), encoding="utf-8")
+    return plan
+
+
 def _outcome(err: Exception) -> str:
     s = str(err)
     if "429" in s or "REQUEST_LIMIT_EXCEEDED" in s:
@@ -193,7 +257,7 @@ def route_all(jobs: list[dict], workers: int, delta: bool, tag: str) -> None:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("cmd", choices=["plan", "extend", "run", "route"])
+    ap.add_argument("cmd", choices=["plan", "extend", "extend-stream", "boost", "run", "route"])
     ap.add_argument("--stream-n", type=int, default=300)
     ap.add_argument("--dups-n", type=int, default=60)
     ap.add_argument("--models", default=",".join(MODELS))
@@ -206,6 +270,13 @@ def main():
         print(json.dumps({k: p[k] for k in ("plan_id", "eligible_dups")} |
                          {"stream": sum(j["slice"] == "stream" for j in p["jobs"]),
                           "dups": sum(j["slice"] == "dups" for j in p["jobs"])}))
+        return
+    if a.cmd == "boost":
+        print(json.dumps(extend_boosters()["boosters"]))
+        return
+    if a.cmd == "extend-stream":
+        p = extend_stream(a.stream_n, 91)
+        print(json.dumps(p["stream_extra_91"]))
         return
     if a.cmd == "extend":
         p = extend_plan()

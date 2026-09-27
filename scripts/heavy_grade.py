@@ -128,20 +128,37 @@ def prec(rows: list[dict]) -> dict:
             "decided": c / (c + x) if c + x else None, "optimistic": (n - x) / n if n else None}
 
 
-def grade_all() -> dict:
-    tickets = {t["key"]: t for t in load(ROOT / "data" / "tickets.jsonl")}
-    T = Truth(tickets, load(ROOT / "data" / "truth.jsonl"))
-    plan = json.loads((OUT / "plan.json").read_text(encoding="utf-8"))
+_INPUTS: dict = {}
+
+
+def inputs() -> tuple:
+    """Tickets, maintainer truth, plan and raw runs, loaded once (the replay grades many subsets)."""
+    if not _INPUTS:
+        tickets = {t["key"]: t for t in load(ROOT / "data" / "tickets.jsonl")}
+        _INPUTS.update(tickets=tickets, T=Truth(tickets, load(ROOT / "data" / "truth.jsonl")),
+                       plan=json.loads((OUT / "plan.json").read_text(encoding="utf-8")),
+                       raw={f.stem: load(f) for f in sorted((OUT / "runs").glob("*.jsonl"))})
+    return _INPUTS["tickets"], _INPUTS["T"], _INPUTS["plan"], _INPUTS["raw"]
+
+
+def grade_all(keys: set | None = None) -> dict:
+    """Grade every answer; `keys` limits grading to a subset of tickets (used by the replay)."""
+    tickets, T, plan, raw = inputs()
+    if keys is not None:
+        plan = {**plan, "jobs": [j for j in plan["jobs"] if j["key"] in keys]}
     jobs = {j["key"]: j for j in plan["jobs"]}
     shortlist = {k: [c["ticket"]["key"] for c in j["candidates"]] for k, j in jobs.items()}
 
     runs, first, cases = {}, {}, []
-    for f in sorted((OUT / "runs").glob("*.jsonl")):
+    for stem, rows in raw.items():
         latest, first_try = {}, {}
-        for r in load(f):  # a retried ticket: grade the last outcome, but count unusable output on the first try
+        for r in rows:  # a retried ticket: grade the last outcome, but count unusable output on the first try
+            if r["key"] not in jobs:
+                continue
             latest[r["key"]] = r
             first_try.setdefault(r["key"], r["status"])
-        runs[f.stem], first[f.stem] = list(latest.values()), Counter(first_try.values())
+        if latest:
+            runs[stem], first[stem] = list(latest.values()), Counter(first_try.values())
 
     board, calib, by_ticket, score = [], [], defaultdict(dict), defaultdict(dict)
     for stem, recs in runs.items():
@@ -234,7 +251,7 @@ def grade_all() -> dict:
 
     router = {}
     for tag in ("normal", "stress"):
-        routed = load(OUT / f"routed-{tag}.jsonl")
+        routed = [d for d in load(OUT / f"routed-{tag}.jsonl") if d["ticket"] in jobs]
         if not routed:
             continue
         gr = []
@@ -357,6 +374,26 @@ def grade_all() -> dict:
         what = P.KINDS.get(e["kind"], "tickets in different Apache projects").replace("no recognised pattern", "tickets with no special pattern")
         claim(f"\"{plain[e['relation']]}\" suggestions are right, for {what}", e["confirmed"],
               e["n"] if e["relation"] == "related" else e["confirmed"] + e["contradicted"])
+    # why confident answers fail: the maintainer record's reason, grouped
+    def cause(why: str) -> str:
+        for key, label in (("its parent is", "Belongs to a different parent"), ("resolved", "Resolved independently"),
+                           ("different Apache projects", "Different project"), ("linked them as", "Linked as another relation"),
+                           ("duplicate of", "Duplicate of another ticket"), ("same parent project", "Sibling sub-tasks"),
+                           ("is its parent project", "Parent, not a duplicate")):
+            if key in why:
+                return label
+        return "Other"
+    fps = [c for c in cases if (c.get("confidence") or 0) >= 0.95 and c["grade"] == "contradicted"]
+    groups = defaultdict(list)
+    for c in fps:
+        groups[cause(c["why"])].append(c)
+    fp_causes = [{"cause": k, "n": len(v), "share": len(v) / len(fps),
+                  "relations": dict(Counter(c["relation"] for c in v)),
+                  "models": dict(Counter(c["name"] for c in v).most_common(3)),
+                  "example": {x: max(v, key=lambda c: (c["confidence"], c["key"])).get(x)
+                              for x in ("name", "key", "candidate", "relation", "confidence", "why", "key_summary", "cand_summary")}}
+                 for k, v in sorted(groups.items(), key=lambda kv: -len(kv[1]))]
+
     examples, seen_models = [], Counter()
     for c in sorted((c for c in cases if (c.get("confidence") or 0) >= 0.95 and c["grade"] == "contradicted"),
                     key=lambda c: (c["model"], -c["confidence"], c["key"])):
@@ -366,7 +403,7 @@ def grade_all() -> dict:
                                                    "key_summary", "cand_summary", "kind")})
     return {"plan_id": plan["plan_id"], "extra_plan_id": plan.get("extra_plan_id"), "precedents": precedents,
             "policy": policy,
-            "examples": examples,
+            "examples": examples, "fp_causes": fp_causes,
             "coverage": coverage,
             "slices": dict(Counter(j["slice"] for j in plan["jobs"])), "stream_tickets": sum(j["slice"] == "stream" for j in plan["jobs"]),
             "dup_tickets": sum(j["slice"] == "dups" for j in plan["jobs"]), "usd_per_dbu_assumed": USD_PER_DBU,
@@ -447,17 +484,67 @@ def to_delta(rep: dict) -> None:
     S.write("heavy_scorecard", [{"model": b["model"], "name": b["name"], "data": b} for b in rep["scorecard"]])
     S.write("heavy_cases", rep["cases"])
     S.write("heavy_summary", [{"name": k, "data": rep[k]} for k in ("calibration", "edge_cases", "disputed", "router",
-                                                                    "coverage", "examples", "policy")] +
+                                                                    "coverage", "examples", "policy", "fp_causes", "replay")
+                             if k in rep] +
             [{"name": "precedents", "data": {k: v for k, v in rep["precedents"].items() if k != "records"}},
              {"name": "meta", "data": meta(rep)}])
     print("delta: heavy_scorecard, heavy_cases, heavy_summary")
 
 
+def replay(rep: dict, step: int = 50) -> dict:
+    """Snapshots every `step` tickets, in arrival order (ticket creation date): how the verdicts form over time."""
+    tickets, _, plan, _ = inputs()
+    order = sorted({j["key"] for j in plan["jobs"]}, key=lambda k: (tickets[k].get("created") or "", k))
+    marks = list(range(step, len(order), step)) + [len(order)]
+    snaps, prev = [], None
+    for n in marks:
+        r = grade_all(set(order[:n]))
+        m = meta(r)
+        models = []
+        for b in r["scorecard"]:
+            p, h = b["precision"], b["high_confidence"]
+            models.append({"model": b["model"], "name": b["name"], "confirmed": p["confirmed"], "contradicted": p["contradicted"],
+                           "hi_confirmed": h["confirmed"], "hi_contradicted": h["contradicted"], "unusable": b["unusable"],
+                           "tasks": b["tasks"], "answered": b["answered"], "decided_lower": b["decided_lower"],
+                           "role": b.get("role"), "usd_per_1k_tasks": b.get("usd_per_1k_tasks")})
+        proven = sorted(f"{x['relation']}/{x['kind']}" for x in r["precedents"]["memory"] if x["enabled"])
+        snap = {"tickets": n, "date": (tickets[order[n - 1]].get("created") or "")[:10], "meta": m, "models": models,
+                "primary": (r.get("policy") or {}).get("primary"), "proven": proven,
+                "loo": {k: r["precedents"]["leave_one_out"][k] for k in ("auto_resolved", "right", "decisions")},
+                "router": (r.get("router") or {}).get("normal")}
+        ev = []
+        if prev:
+            if snap["primary"] != prev["primary"]:
+                ev.append(f"Primary model changes to {NAMES.get(snap['primary'], snap['primary'])}")
+            roles_before = {x["model"]: x["role"] for x in prev["models"]}
+            label = {"main": "primary", "backup": "a backup", "not used": "excluded"}
+            for x in models:
+                before = roles_before.get(x["model"])
+                if before and before != x["role"] and x["role"] != "main":
+                    ev.append(f"{x['name']} is now {label.get(x['role'], x['role'])}")
+            plain = {"bump-same-lib-diff-version": "version upgrades", "bump-same-lib-same-version": "same-version upgrades",
+                     "same-title": "identical titles", "both-test-failures": "test-failure reports"}
+            for pkey in sorted(set(proven) - set(prev["proven"])):
+                rel, kind = pkey.split("/")
+                ev.append(f"Automated: {rel.replace('_', ' ')} on {plain.get(kind, kind)}")
+            for pkey in sorted(set(prev["proven"]) - set(proven)):
+                rel, kind = pkey.split("/")
+                ev.append(f"Revoked after a counterexample: {rel.replace('_', ' ')} on {plain.get(kind, kind)}")
+        snap["events"] = ev
+        snaps.append(snap)
+        prev = snap
+        print(f"replay {n}/{len(order)}: {len(ev)} events", flush=True)
+    return {"step": step, "order": "ticket creation date", "snapshots": snaps}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--delta", action="store_true")
+    ap.add_argument("--replay", type=int, default=0, help="also compute replay snapshots every N tickets (e.g. 50)")
     a = ap.parse_args()
     rep = grade_all()
+    if a.replay:
+        rep["replay"] = replay(rep, a.replay)
     (OUT / "report.json").write_text(json.dumps(rep, indent=1), encoding="utf-8")
     (OUT / "REPORT.md").write_text(markdown(rep), encoding="utf-8")
     print(markdown(rep))

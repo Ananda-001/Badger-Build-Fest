@@ -24,8 +24,9 @@ STAGE = ROOT / "app" / "manager" / "_bundle"
 CODE = {"app/manager/server.py": "server.py", "app/manager/static/index.html": "static/index.html",
         "assay_triage/__init__.py": None, "assay_triage/dbx.py": None, "assay_triage/judge.py": None,
         "assay_triage/identity.py": None} | {f"assay_engine/{p.name}": None for p in (ROOT / "assay_engine").glob("*.py")}
-ENDPOINTS = ["databricks-meta-llama-3-3-70b-instruct", "databricks-meta-llama-3-1-8b-instruct",
-             "databricks-qwen3-next-80b-a3b-instruct", "databricks-gpt-oss-120b"]
+ENDPOINTS = ["databricks-meta-llama-3-3-70b-instruct", "databricks-meta-llama-3-1-8b-instruct",  # every model the router
+             "databricks-qwen3-next-80b-a3b-instruct", "databricks-gpt-oss-120b", "databricks-gpt-oss-20b",  # may pick
+             "databricks-llama-4-maverick", "databricks-gemma-3-12b", "databricks-qwen35-122b-a10b"]
 READ = ["proposals", "live_proposals", "past_decisions", "verdicts", "stream", "tickets", "routing_log", "actions",
         "heavy_scorecard", "heavy_summary", "heavy_cases"]
 WRITE = ["actions", "live_proposals", "routing_log"]
@@ -59,7 +60,7 @@ def resources():
     res = [apps.AppResource(name="sql-warehouse", sql_warehouse=apps.AppResourceSqlWarehouse(
         id=os.environ["DATABRICKS_WAREHOUSE_ID"], permission=apps.AppResourceSqlWarehouseSqlWarehousePermission.CAN_USE))]
     for ep in ENDPOINTS:
-        res.append(apps.AppResource(name=ep.replace("databricks-", "")[:30], serving_endpoint=apps.AppResourceServingEndpoint(
+        res.append(apps.AppResource(name=ep.replace("databricks-", "").replace("meta-", "")[:30], serving_endpoint=apps.AppResourceServingEndpoint(
             name=ep, permission=apps.AppResourceServingEndpointServingEndpointPermission.CAN_QUERY)))
     return res
 

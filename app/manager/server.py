@@ -100,7 +100,8 @@ def eval_state(raw: dict) -> dict | None:
     return {"meta": summ.get("meta", {}), "models": models, "calibration": summ.get("calibration", []),
             "edge": summ.get("edge_cases", []), "disputed": summ.get("disputed", [])[:8], "router": summ.get("router", {}),
             "coverage": summ.get("coverage", []), "examples": summ.get("examples", []),
-            "precedents": summ.get("precedents", {}), "policy": summ.get("policy")}
+            "precedents": summ.get("precedents", {}), "policy": summ.get("policy"), "fp_causes": summ.get("fp_causes", []),
+            "replay": summ.get("replay")}
 
 
 def click_id(key: str, cand: str, relation: str) -> str:
@@ -138,7 +139,7 @@ def build_state(raw: dict) -> dict:
         seen.add(k)
         item = {"id": k, "key": r["key"], "candidate": r["candidate"], "relation": r["relation"],
                 "confidence": r.get("confidence"), "model": r.get("model"), "reason": r.get("reason"),
-                "new": r.get("origin") == "live", "ts": r.get("ts"),
+                "new": r.get("origin") in ("live", "demo"), "demo": r.get("origin") == "demo", "ts": r.get("ts"),
                 "a": {"key": r["key"], "title": r.get("key_summary"), "date": r.get("key_created")},
                 "b": {"key": r["candidate"], "title": r.get("cand_summary"), "date": r.get("cand_created")}}
         if k in clicked:
@@ -199,6 +200,7 @@ def build_state(raw: dict) -> dict:
                            "decision": c["decision"], "user": c.get("user"), "ts": c.get("ts")}
                           for c in list(clicked.values())[:8]],
         "can_run": os.environ.get("ASSAY_ALLOW_MODEL_CALLS") == "1",
+        "memory": memory,
         "eval": eval_state(raw),
     }
 
@@ -338,3 +340,125 @@ def run_live(n: int) -> dict:
             "decisions": [{"ticket": d["ticket"], "answered_by": router.name(d["answered_by"]), "switched": d["switched"],
                            "needs_review": d["needs_review"], "reason": d["reason"]} for d in decisions],
             "state": state(fresh=True)}
+
+
+# ---------------------------------------------------------------- live demo: a ticket you write, end to end
+STOP = set("the a an and or of to in for on with from by is are be as at this that into when not no new add use via its".split())
+
+
+def _words(s: str) -> set:
+    import re
+    return {w for w in re.findall(r"[a-z0-9_.\-]+", (s or "").lower()) if len(w) > 2 and w not in STOP}
+
+
+def find_candidates(ticket: dict, k: int = 5) -> list[dict]:
+    """Earlier tickets that look alike: keyword search in the Unity Catalog tickets table, ranked by word overlap."""
+    words = sorted(_words(ticket["summary"]), key=len, reverse=True)[:5]
+    if not words:
+        return []
+    where = " OR ".join(f"lower(summary) LIKE :w{i}" for i in range(len(words)))
+    hits = " + ".join(f"CASE WHEN lower(summary) LIKE :w{i} THEN {len(w)} ELSE 0 END" for i, w in enumerate(words))
+    params = [{"name": f"w{i}", "value": f"%{w}%"} for i, w in enumerate(words)]
+    rows_ = rows(f"SELECT to_json(struct(key, summary, description, created, parent, project, resolution, issuetype)) "
+                 f"FROM {table('tickets')} WHERE {where} ORDER BY ({hits}) DESC, created DESC LIMIT 200", params)
+    tw = _words(ticket["summary"])
+    score = lambda r: len(tw & _words(r.get("summary"))) / max(1, len(tw | _words(r.get("summary"))))  # noqa: E731
+    return sorted(rows_, key=score, reverse=True)[:k]
+
+
+def known_wrong(E: dict | None, relation: str, kind: str, cross_project: bool) -> tuple[bool, str]:
+    """A kind of suggestion the evidence has shown to be (almost) always wrong."""
+    if not E:
+        return False, ""
+    edge = {(e["relation"], e["kind"]): e for e in E.get("edge", [])}
+    if cross_project and relation in ("duplicate", "part_of"):
+        e = edge.get(("any", "cross-project"), {})
+        return True, (f"links across Apache projects were right {e.get('confirmed', 0)} of "
+                      f"{e.get('confirmed', 0) + e.get('contradicted', 0)} times in the evaluation")
+    e = edge.get((relation, kind))
+    if e and kind not in ("other", "siblings", "candidate-is-parent"):
+        dec = e["confirmed"] + e["contradicted"]
+        if dec >= 30 and e["confirmed"] / dec <= 0.1:
+            return True, f"this kind of suggestion was right only {e['confirmed']} of {dec} times in the evaluation"
+    return False, ""
+
+
+@app.post("/api/demo")
+async def api_demo(request: Request):
+    if os.environ.get("ASSAY_ALLOW_MODEL_CALLS") != "1":
+        raise HTTPException(403, "Live runs are switched off for this app (ASSAY_ALLOW_MODEL_CALLS).")
+    body = await request.json()
+    title, project = (body.get("title") or "").strip(), (body.get("project") or "SPARK").strip().upper()
+    if len(title) < 5:
+        raise HTTPException(400, "A title of at least 5 characters is required.")
+    if not _run_lock.acquire(blocking=False):
+        raise HTTPException(409, "A run is already in progress. Give it a few seconds.")
+    try:
+        return await run_in_threadpool(run_demo, title, (body.get("description") or "").strip(), project,
+                                       (body.get("model") or "").strip() or None)
+    finally:
+        _run_lock.release()
+
+
+def run_demo(title: str, description: str, project: str, model: str | None = None) -> dict:
+    st = state()
+    E = st.get("eval")
+    now = datetime.now(timezone.utc)
+    ticket = {"key": f"DEMO-{now.strftime('%H%M%S')}", "project": project, "summary": title, "description": description,
+              "created": now.isoformat(), "issuetype": "Task", "parent": None, "resolution": None}
+    t0 = time.time()
+    cands = find_candidates(ticket)
+    trace = {"ticket": ticket, "candidates": [{k: c.get(k) for k in ("key", "summary", "project", "created")} for c in cands],
+             "retrieval_ms": round(1000 * (time.time() - t0))}
+    if not cands:
+        trace["outcome"] = {"path": "none", "headline": "No earlier look-alike found", "why": "Nothing in the ticket history resembles this title, so the agent has nothing to link."}
+        return trace
+    policy = (E or {}).get("policy") or st.get("policy") or router.load_policy()
+    forced = model and model.startswith("databricks-")
+    if forced:  # "what if you used this model?": that model answers; Assay's checks still apply
+        policy = {**policy, "primary": model, "cheap": model, "cheap_certified": False, "backups": [], "trusted": [model]}
+    judged, d = router.route(ticket, cands, policy, prompt="v2", retries=4 if forced else 1)
+    trace["routing"] = {"answered_by": router.name(d["answered_by"]), "switched": d["switched"], "trusted": d["trusted"],
+                        "forced": bool(forced),
+                        "steps": [{"model": router.name(s["model"]), "outcome": s["outcome"], "ms": s["ms"]} for s in d["steps"]]}
+    router.log_delta([d])
+    if not judged:
+        trace["outcome"] = {"path": "review", "headline": "Sent to you", "why": "Every model was busy, so a person decides."}
+        return trace
+    best = sorted([j for j in judged if j["relation"] in RELATIONS], key=lambda j: -float(j["confidence"]))
+    if not best:
+        trace["model"] = {"relation": "none"}
+        trace["outcome"] = {"path": "none", "headline": "No link proposed", "why": "The model found no earlier ticket worth linking; nothing to review."}
+        return trace
+    a = best[0]
+    cand = next(c for c in cands if c["key"] == a["candidate"])
+    kind = P.case_kind(ticket, cand)
+    trace["model"] = {"relation": a["relation"], "confidence": a["confidence"], "reason": a.get("reason"),
+                      "candidate": {k: cand.get(k) for k in ("key", "summary", "project")}, "kind": kind, "kind_text": P.KINDS[kind]}
+    tickets = {ticket["key"]: ticket, cand["key"]: cand}
+    res = P.resolve(ticket, cand, a["relation"], st.get("memory") or {})
+    wrong, why_wrong = known_wrong(E, a["relation"], kind, cand.get("project") != project)
+    if res["mode"].startswith("auto-"):
+        said = "accepted" if res["mode"] == "auto-accept" else "rejected"
+        trace["outcome"] = {"path": "auto", "headline": f"Handled automatically: {said}",
+                            "why": res["reason"], "evidence": res.get("precedent") and {x: res["precedent"][x] for x in ("agree", "n")}}
+    elif wrong:
+        trace["outcome"] = {"path": "interrupt", "headline": "Interrupted: known to be wrong",
+                            "why": f"Assay blocked the suggestion: {why_wrong}."}
+    else:
+        why = ("No recognised pattern for this kind of case, so a person decides." if kind == "other"
+               else res["reason"]) + " The model's confidence alone is never enough."
+        trace["outcome"] = {"path": "review", "headline": "Sent to you for review", "why": why}
+        row = {"id": f"{ticket['key']}|{cand['key']}|{a['relation']}", "key": ticket["key"], "candidate": cand["key"],
+               "relation": a["relation"], "confidence": float(a["confidence"]), "model": router.name(d["answered_by"]),
+               "reason": a.get("reason"), "runs": "demo", "origin": "demo", "key_summary": title, "key_created": now.date().isoformat(),
+               "key_parent": None, "cand_summary": cand.get("summary"), "cand_created": (cand.get("created") or "")[:10],
+               "cand_parent": cand.get("parent"), "kind": kind, "ts": d["ts"], "answered_by": d["answered_by"],
+               "switched": d["switched"], "trusted": d["trusted"], "route_reason": d["reason"]}
+        cols = list(row)
+        types = {"confidence": "DOUBLE", "ts": "TIMESTAMP", "switched": "BOOLEAN", "trusted": "BOOLEAN"}
+        params = [{"name": c, "value": None if row[c] is None else (str(row[c]).lower() if isinstance(row[c], bool) else str(row[c])),
+                   "type": types.get(c)} for c in cols]
+        _sql_retry(f"INSERT INTO {table('live_proposals')} ({', '.join(cols)}) VALUES ({', '.join(':' + c for c in cols)})", params)
+    trace["state"] = state(fresh=True)
+    return trace

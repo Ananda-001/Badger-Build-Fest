@@ -15,15 +15,18 @@
   --shade:rgba(10,20,24,.62); --shadow:0 1px 2px rgba(20,30,30,.06),0 10px 28px rgba(20,30,30,.10);
   --display:"Bricolage Grotesque","Public Sans",system-ui,sans-serif; --body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --gold:#9A6B12; --gold-soft:#FFF4DA; --gold-line:#D9A93F;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   color-scheme:dark;--ground:#121A1C;--panel:#1A2427;--panel-2:#223034;--ink:#E7EDEA;--ink-2:#A9B7B6;--line:#2E3D41;
   --accent:#8EA8E6;--accent-ink:#0F1A2E;--accent-soft:#223050;--go:#57C28F;--go-soft:#173A2A;--ask:#E3B04B;--ask-soft:#3A2E12;
-  --stop:#EE7D69;--stop-soft:#3F1E18;--shade:rgba(0,0,0,.7);--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35)}}
+  --stop:#EE7D69;--stop-soft:#3F1E18;--shade:rgba(0,0,0,.7);--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35);
+  --gold:#E8C26A;--gold-soft:#3A2E12;--gold-line:#B88A2E}}
 :root[data-theme="dark"]{
   color-scheme:dark;--ground:#121A1C;--panel:#1A2427;--panel-2:#223034;--ink:#E7EDEA;--ink-2:#A9B7B6;--line:#2E3D41;
   --accent:#8EA8E6;--accent-ink:#0F1A2E;--accent-soft:#223050;--go:#57C28F;--go-soft:#173A2A;--ask:#E3B04B;--ask-soft:#3A2E12;
-  --stop:#EE7D69;--stop-soft:#3F1E18;--shade:rgba(0,0,0,.7);--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35)}
+  --stop:#EE7D69;--stop-soft:#3F1E18;--shade:rgba(0,0,0,.7);--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35);
+  --gold:#E8C26A;--gold-soft:#3A2E12;--gold-line:#B88A2E}
 *{box-sizing:border-box}
 [hidden]{display:none !important}
 [data-tour]{scroll-margin-top:90px}
@@ -50,18 +53,19 @@ button:disabled{cursor:not-allowed;opacity:.55}
 :root[data-theme="dark"] .btn.yes{color:#0B1F15}
 /* header */
 .top{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line)}
-.top-in{max-width:1240px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:12px}
+.top-in{max-width:1480px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:12px}
 .logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:19px}
 .logo i{width:30px;height:30px;border-radius:8px;background:var(--accent);display:inline-grid;place-items:center;color:var(--accent-ink)}
 .top .spacer{flex:1}
 /* page */
-.page{max-width:1240px;margin:0 auto;padding:26px 20px 64px;display:grid;gap:20px}
+.page{max-width:1480px;margin:0 auto;padding:26px 20px 64px;display:grid;gap:20px}
 .hero{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:16px}
 .hero p{margin-top:6px;font-size:16px}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
 .kpis .stat{padding:20px 22px;border-radius:14px}
 .kpis .stat .n{font-size:clamp(34px,4vw,46px);letter-spacing:-.02em}
 .kpis .stat .l{font-size:15px;font-weight:600;color:var(--ink);margin-top:4px}
+.kpis .stat .sub{font-size:13px;color:var(--ink-2);margin-top:2px}
 .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative}
 .stat .n{font-family:var(--display);font-size:30px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
 .stat .l{font-size:13.5px;color:var(--ink-2);display:flex;align-items:center;gap:6px}
@@ -96,6 +100,15 @@ button:disabled{cursor:not-allowed;opacity:.55}
 .pbar span{position:absolute;top:0;bottom:0;left:0;border-radius:5px}
 .pbar i{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink)}
 .policy-line{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+/* replay */
+.replay{display:grid;grid-template-columns:auto minmax(220px,1fr) minmax(220px,1.1fr);gap:16px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
+.rp-top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.rp-top b{font-family:var(--display);font-size:17px}
+.replay input[type=range]{width:100%;accent-color:var(--accent)}
+.rp-events{display:flex;flex-wrap:wrap;gap:6px;min-height:26px}
+.rp-events .tag{font-weight:600}
+.pbar span{transition:width .25s linear}
+.replaying #sec-models,.replaying .kpis{box-shadow:0 0 0 2px var(--accent-soft)}
 /* collapsible panels */
 .fold-h{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;cursor:pointer;flex-wrap:wrap}
 .fold-h:focus-visible{outline:3px solid var(--accent);outline-offset:4px;border-radius:8px}
@@ -140,7 +153,12 @@ button:disabled{cursor:not-allowed;opacity:.55}
 .chip2{font-size:11.5px;background:var(--panel-2);color:var(--ink-2);border-radius:999px;padding:2px 8px;white-space:nowrap}
 .exlink{font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;white-space:nowrap}
 .exlink:hover{text-decoration:underline}
-/* suggestion anatomy */
+/* suggestion anatomy: during the tour the guide sits beside the first card */
+.explain .qwrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.explain .qwrap .queue{grid-template-columns:1fr}
+.explain .qwrap .sugg:not(:first-child){display:none}
+.explain .qwrap .guide{margin:0}
+.explain #more-wrap{display:none}
 .anat{margin:8px 0 0;padding-left:0;list-style:none;counter-reset:a;display:grid;gap:6px}
 .anat li{counter-increment:a;display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;align-items:start}
 .anat li::before{content:counter(a);width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:11.5px;font-weight:700;display:grid;place-items:center}
@@ -149,6 +167,21 @@ button:disabled{cursor:not-allowed;opacity:.55}
 .sby{font-size:13px;color:var(--ink-2);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .sby b{color:var(--ink)}
 .conf{font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink)}
+/* model choice */
+.choice-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.choice-c{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:4px;font-size:13.5px;color:var(--ink-2)}
+.choice-c b{font-family:var(--display);font-size:19px;color:var(--ink)}
+.choice-c.go{border:2px solid var(--go);background:var(--go-soft)}
+.choice-c.info{border:2px solid var(--accent)}
+.choice-c .tag{justify-self:start}
+/* price vs performance */
+#pp svg{width:100%;max-width:1360px;height:auto;display:block}
+#pp .pt circle{transition:none}
+#pp text{font-family:var(--body);font-size:12px;fill:var(--ink-2)}
+#pp .lbl{font-size:12.5px;fill:var(--ink);font-weight:600}
+#pp .ax{stroke:var(--line)}
+.ppkey{display:flex;gap:14px;font-size:12.5px;color:var(--ink-2);margin-top:6px}
+.ppkey i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
 /* calibration */
 .crow{display:grid;grid-template-columns:130px 1fr;gap:10px;align-items:center;padding:6px 0;font-size:13.5px}
 .track{position:relative;height:24px}
@@ -215,6 +248,32 @@ button:disabled{cursor:not-allowed;opacity:.55}
 .crow2{display:grid;grid-template-columns:minmax(140px,1.4fr) repeat(4,minmax(80px,1fr));gap:10px;padding:7px 4px;border-top:1px solid var(--line);font-size:13.5px;align-items:center}
 .crow2.head{border-top:0;font-size:13px;color:var(--ink);font-weight:700}
 .est{font-size:12.5px;color:var(--ink-2);margin-top:10px}
+/* live demo */
+.btn.gold{background:var(--gold-line);border-color:var(--gold-line);color:#1C1406}
+#demo{position:fixed;inset:0;z-index:75;background:var(--shade);display:grid;place-items:center;padding:16px}
+.demo-box{background:var(--panel);border:2px solid var(--gold-line);border-radius:18px;box-shadow:var(--shadow);width:min(1180px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:22px}
+.demo-h{display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:16px}
+.demo-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:22px}
+.demo-form{display:grid;gap:12px;align-content:start}
+.demo-form label{display:grid;gap:4px;font-weight:600;font-size:13.5px}
+.demo-form input,.demo-form select,.demo-form textarea{font:inherit;font-weight:400;border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:var(--panel);color:var(--ink)}
+.tpls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tpl{all:unset;box-sizing:border-box;cursor:pointer;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:13px;display:grid;gap:2px}
+.tpl b{font-size:13.5px}
+.tpl:hover,.tpl:focus-visible{border-color:var(--gold-line);background:var(--gold-soft);outline:none}
+.pipe{list-style:none;margin:0;padding:0;display:grid;gap:10px;align-content:start}
+.pipe li{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:6px;font-size:13.5px;opacity:.45;transition:opacity .3s}
+.pipe li.on{opacity:1}
+.pipe .ph{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px}
+.pipe .n{width:22px;height:22px;border-radius:50%;background:var(--panel-2);display:grid;place-items:center;font-size:12px}
+.pipe li.on .n{background:var(--gold-line);color:#1C1406}
+.outcome{border-width:2px !important}
+.outcome.auto{border-color:var(--go) !important;background:var(--go-soft)}
+.outcome.interrupt{border-color:var(--stop) !important;background:var(--stop-soft)}
+.outcome.review{border-color:var(--gold-line) !important;background:var(--gold-soft)}
+.outcome .big{font-family:var(--display);font-size:20px;font-weight:700}
+.sugg.demo{border:2px solid var(--gold-line);background:linear-gradient(0deg,var(--gold-soft),var(--gold-soft)) padding-box}
+.badge.demo{background:var(--gold-line);color:#1C1406}
 /* misc */
 .banner{border:1px solid var(--stop);background:var(--stop-soft);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .loading{padding:40px 10px;text-align:center;color:var(--ink-2)}
@@ -234,7 +293,7 @@ button:disabled{cursor:not-allowed;opacity:.55}
 #tour-tip p{margin:6px 0 12px;font-size:14.5px}
 #tour-tip .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .tour-live [data-tour-active]{position:relative;z-index:43}
-@media (max-width:1000px){.flowkey,.rstats{grid-template-columns:repeat(2,minmax(0,1fr))}.fprow2{grid-template-columns:1fr 1fr}.cols2{grid-template-columns:1fr}.kpis,.cost{grid-template-columns:repeat(2,minmax(0,1fr))}.exgrid,.queue,.fpgrid{grid-template-columns:1fr}.rgrid,.loads{grid-template-columns:1fr}
+@media (max-width:1000px){.demo-grid{grid-template-columns:1fr}.choice-grid{grid-template-columns:1fr 1fr}.replay{grid-template-columns:1fr}.explain .qwrap{grid-template-columns:1fr}.flowkey,.rstats{grid-template-columns:repeat(2,minmax(0,1fr))}.fprow2{grid-template-columns:1fr 1fr}.cols2{grid-template-columns:1fr}.kpis,.cost{grid-template-columns:repeat(2,minmax(0,1fr))}.exgrid,.queue,.fpgrid{grid-template-columns:1fr}.rgrid,.loads{grid-template-columns:1fr}
   .mrow{grid-template-columns:1fr 1fr;row-gap:6px}.mrow.head,.cov.head,.crow2.head{display:none}.cov{grid-template-columns:1fr 1fr}.crow2{grid-template-columns:1fr 1fr}}
 @media (max-width:520px){.pair{grid-template-columns:1fr}.arrow{transform:rotate(90deg);justify-self:center}.page{padding:18px 16px 60px}.top-in{padding:10px 16px}.stat .n{font-size:26px}}
 @media (prefers-reduced-motion:reduce){#tour-ring,.sugg{transition:none}.spin{animation:none}}
@@ -270,7 +329,8 @@ button:disabled{cursor:not-allowed;opacity:.55}
       <p class="muted" style="display:flex;align-items:center;gap:8px">Model choice, autonomy and corrections, decided on evidence. <button class="tip" data-info="i-hero" aria-label="About Assay">?</button></p>
       <div class="info" id="i-hero">Assay sits between AI agents and the people who review their work. It evaluates every model and every change against real outcomes, lets an agent act without review only where the record proves it, and routes each request to the cheapest proven model. The example agent triages the public Apache Jira (Spark, Kafka, Flink, Hive); everything runs on Databricks.</div>
     </div>
-    <button class="btn primary" id="run" data-tour="run"><svg class="i"><use href="#i-play"/></svg>Run agent on new tickets</button>
+    <div style="display:flex;align-items:center;gap:8px" data-tour="run"><button class="btn gold" id="open-demo"><svg class="i"><use href="#i-play"/></svg>Live demo</button><button class="tip" data-info="i-run" aria-label="About the live demo">?</button></div>
+    <div class="info" id="i-run">Write a Jira ticket (or pick a template) and watch Assay handle it live on Databricks: known patterns are handled automatically, suggestions known to be wrong are interrupted, and anything uncertain comes to you. Demo tickets carry a gold border and never reach Jira; they do not change the evaluation figures.</div>
   </section>
 
   <div id="err" hidden></div>
@@ -278,18 +338,27 @@ button:disabled{cursor:not-allowed;opacity:.55}
 
   <div id="content" hidden style="display:grid;gap:20px">
     <section class="kpis" data-tour="kpis" aria-label="Key figures">
-      <div class="stat"><div class="n" id="k1">–</div><div class="l">Tickets evaluated <button class="tip" data-info="i-k1" aria-label="About this figure">?</button></div><div class="info" id="i-k1"></div></div>
-      <div class="stat"><div class="n" id="k2">–</div><div class="l">Answers verified <button class="tip" data-info="i-k2" aria-label="About this figure">?</button></div><div class="info" id="i-k2"></div></div>
-      <div class="stat warn"><div class="n" id="k3">–</div><div class="l">High-confidence false positives <button class="tip" data-info="i-k3" aria-label="About this figure">?</button></div><div class="info" id="i-k3"></div></div>
-      <div class="stat"><div class="n" id="k4">–</div><div class="l">Claims decided <button class="tip" data-info="i-k4" aria-label="About this figure">?</button></div><div class="info" id="i-k4"></div></div>
+      <div class="stat"><div class="n" id="k1">–</div><div class="l">Tickets evaluated <button class="tip" data-info="i-k1" aria-label="About this figure">?</button></div><div class="sub" id="k1s"></div><div class="info" id="i-k1"></div></div>
+      <div class="stat"><div class="n" id="k2">–</div><div class="l">Answers verified <button class="tip" data-info="i-k2" aria-label="About this figure">?</button></div><div class="sub" id="k2s"></div><div class="info" id="i-k2"></div></div>
+      <div class="stat warn"><div class="n" id="k3">–</div><div class="l">High-confidence false positives <button class="tip" data-info="i-k3" aria-label="About this figure">?</button></div><div class="sub" id="k3s"></div><div class="info" id="i-k3"></div></div>
+      <div class="stat"><div class="n" id="k4">–</div><div class="l">Claims decided <button class="tip" data-info="i-k4" aria-label="About this figure">?</button></div><div class="sub" id="k4s"></div><div class="info" id="i-k4"></div></div>
+    </section>
+
+    <section class="replay" data-tour="replay" aria-label="Replay the evaluation" id="replay" hidden>
+      <button class="btn primary" id="rp-play" aria-label="Play the replay"><svg class="i"><use href="#i-play"/></svg><span id="rp-play-t">Replay</span></button>
+      <div class="rp-mid">
+        <div class="rp-top"><b id="rp-count">–</b><span class="muted small" id="rp-date"></span><button class="tip" data-info="i-replay" aria-label="About the replay">?</button></div>
+        <input type="range" id="rp-range" min="0" max="0" value="0" aria-label="Tickets processed">
+      </div>
+      <div class="rp-events" id="rp-events" aria-live="polite"></div>
+      <div class="info" id="i-replay">Replays the evaluation in the order the tickets were filed. The key figures and the model table show what Assay knew at each point: roles change, patterns are automated, and automation is revoked when a counterexample arrives. Precomputed from the real runs.</div>
     </section>
 
     <section class="panel" data-tour="models" aria-label="Model evaluation" id="sec-models">
       <div class="panel-h"><h2>Model evaluation <button class="tip" data-info="i-models" aria-label="About the model evaluation">?</button></h2><span class="meta" id="models-meta"></span></div>
       <div class="info" id="i-models">Every model answered the same tickets. Answers are graded against what the Apache maintainers actually did: duplicate links, parent tickets and how each ticket was closed. No human or AI labels. Hover a role for the reason.</div>
       <div id="mtable" role="table"></div>
-      <div class="policy-line" id="policy-line"></div>
-      <div class="info" id="i-rule"></div>
+      <p class="est">Assay's model choice and the cost-quality trade-off: see Detailed statistics.</p>
     </section>
 
     <section class="panel fold" data-tour="stats" aria-label="Detailed statistics" id="fold-stats">
@@ -297,6 +366,16 @@ button:disabled{cursor:not-allowed;opacity:.55}
         <h2>Detailed statistics</h2><span class="sum" id="stats-meta">Calibration · Definition ambiguity · Evidence coverage</span><span class="chev"><span class="chev-t">Open</span><svg class="i"><use href="#i-arrow"/></svg></span>
       </button>
       <div class="fold-b" id="stats-body" hidden>
+        <div class="subpanel choice" data-tour="choice">
+          <h3>Assay's model choice <button class="tip" data-info="i-choice" aria-label="About the model choice">?</button></h3>
+          <div class="info" id="i-choice"></div>
+          <div class="choice-grid" id="choice"></div>
+        </div>
+        <div class="subpanel" data-tour="priceperf">
+          <h3>Price vs performance <button class="tip" data-info="i-pp" aria-label="About price vs performance">?</button> <span class="muted small" style="font-weight:400">moves with the replay</span></h3>
+          <div class="info" id="i-pp">Each model's precision (answers the maintainer record confirms, among those it can settle) against its estimated cost per 1,000 tickets at list price, on a log scale. Color shows the role the selection rule assigns at that point: the primary is the cheapest model that meets the quality floor, so it sits at the left edge of the acceptable band, not necessarily at the top.</div>
+          <div id="pp"></div>
+        </div>
         <div class="cols2" id="sec-eval2">
           <div class="subpanel" data-tour="calibration">
             <h3>Calibration <button class="tip" data-info="i-cal" aria-label="About calibration">?</button></h3>
@@ -328,7 +407,7 @@ button:disabled{cursor:not-allowed;opacity:.55}
 
     <section class="panel" data-tour="routing" aria-label="Model routing">
       <div class="panel-h"><h2>Model routing <button class="tip" data-info="i-route" aria-label="About model routing">?</button></h2><span class="meta" id="route-meta"></span></div>
-      <div class="info" id="i-route">Every request goes to the primary model first. If it is rate-limited or returns unusable output, the router switches to the next backup immediately. Backup answers are delivered but held for review; if every model is unavailable, the request is escalated to a person. Figures are from a 300-request load test on Databricks Free Edition, where rate limits are low.</div>
+      <div class="info" id="i-route">Every request goes to the primary model first. If it is rate-limited or returns unusable output, the router switches to the next backup immediately. Backup answers are delivered but held for review; if every model is unavailable, the request is escalated to a person. Figures are from a load test over every stream ticket on Databricks Free Edition, where rate limits are low.</div>
       <div id="route-flow"></div>
       <div class="rstats" id="route-stats"></div>
       <div class="rgrid" id="policy" style="margin-top:14px"></div>
@@ -340,7 +419,11 @@ button:disabled{cursor:not-allowed;opacity:.55}
         <h2>Review queue</h2><span class="sum" id="queue-meta"></span><span class="chev"><span class="chev-t">Open</span><svg class="i"><use href="#i-arrow"/></svg></span>
       </button>
       <p class="fold-lead">Suggestions the maintainer record cannot settle, so a person decides. Each decision is saved to Databricks and counts toward automating that kind of case: once a kind is proven, matching suggestions resolve on their own. <button class="tip" data-info="i-queue" aria-label="How to read a suggestion">?</button></p>
-      <div class="info" id="i-queue"><b>How to read a suggestion</b>
+
+      <div class="fold-b" id="queue-body" hidden>
+        <div class="qwrap" data-tour="anatomy">
+          <div class="queue" id="queue"></div>
+          <div class="info guide" id="i-queue"><b>How to read a suggestion</b>
         <ol class="anat">
           <li><span><b>Type</b>: what the model proposes: a duplicate, part of a larger effort, or a related ticket.</span></li>
           <li><span><b>Suggested by</b>: the model, and its self-reported confidence. Confidence is the model's own estimate, not evidence.</span></li>
@@ -349,8 +432,7 @@ button:disabled{cursor:not-allowed;opacity:.55}
           <li><span><b>Similar past cases</b>: how reviewers and maintainers decided this kind of case before, and how many more consistent decisions would let Assay resolve it automatically.</span></li>
           <li><span><b>Your decision</b>: Accept applies the link, Reject keeps the tickets separate, Skip moves it to the end. Saved to the Delta table <code>actions</code>; undo within six seconds.</span></li>
         </ol></div>
-      <div class="fold-b" id="queue-body" hidden>
-        <div class="queue" id="queue"></div>
+        </div>
         <div class="more" id="more-wrap" hidden><button class="btn ghost" id="more">Show more</button></div>
       </div>
     </section>
@@ -364,6 +446,30 @@ button:disabled{cursor:not-allowed;opacity:.55}
     <p class="foot" id="foot"></p>
   </div>
 </main>
+
+<div id="demo" hidden role="dialog" aria-modal="true" aria-labelledby="demo-title">
+  <div class="demo-box">
+    <div class="demo-h"><div><p class="eyebrow" style="color:var(--gold)">Live demo · runs on Databricks now</p><h2 id="demo-title">Write a Jira ticket. See what Assay does with it.</h2></div>
+      <button class="btn ghost" id="demo-close" aria-label="Close the live demo">Close</button></div>
+    <div class="demo-grid">
+      <form class="demo-form" id="demo-form">
+        <p class="small muted">Start from a scenario, or write your own.</p>
+        <div class="tpls" id="tpls"></div>
+        <label>Model<select id="d-model"><option value="">Assay router (cost-optimized primary, with backups)</option>
+          <option value="databricks-meta-llama-3-1-8b-instruct">Force Llama 3.1 8B (cheapest; excluded by Assay)</option>
+          <option value="databricks-gemma-3-12b">Force Gemma 3 12B (excluded by Assay)</option>
+          <option value="databricks-gpt-oss-120b">Force gpt-oss 120B (most precise)</option></select></label>
+        <label>Project<select id="d-project"><option>SPARK</option><option>KAFKA</option><option>FLINK</option><option>HIVE</option></select></label>
+        <label>Title<input id="d-title" required minlength="5" placeholder="e.g. Upgrade Jackson to 2.22.3"></label>
+        <label>Description<textarea id="d-desc" rows="4" placeholder="Optional"></textarea></label>
+        <button class="btn gold" type="submit" id="d-send"><svg class="i"><use href="#i-play"/></svg>Send through Assay</button>
+        <p class="small muted">Demo tickets are marked with a gold border and written to a sandbox table, never to Jira.</p>
+        <button class="btn ghost" type="button" id="run" style="justify-self:start"><svg class="i"><use href="#i-refresh"/></svg>Or process 3 real new Jira tickets</button>
+      </form>
+      <ol class="pipe" id="pipe" aria-live="polite"></ol>
+    </div>
+  </div>
+</div>
 
 <div id="pop" hidden role="tooltip"></div>
 <div id="toast" hidden role="status"><span id="toast-text"></span><button id="toast-undo" hidden>Undo</button></div>
@@ -425,61 +531,216 @@ async function load(fresh) {
 }
 
 // ---------- rendering ----------
+// ---------- replay: smooth, looping interpolation between precomputed snapshots ----------
+let RP = null;                     // fractional snapshot index being shown, or null for the final state
+let rpPlaying = false, rpRaf = 0, rpLast = 0, rpHoldUntil = 0;
+const RP_SEG_MS = 1600, RP_HOLD_MS = 5000, RP_FROM = 100;
+const lerp = (a, b, f) => (a ?? 0) + ((b ?? 0) - (a ?? 0)) * f;
+function rpStart() { const s = S.eval.replay.snapshots, i = s.findIndex(x => x.tickets >= RP_FROM); return i < 0 ? 0 : i; }
+function snapAt(x) {  // interpolated snapshot at fractional index x
+  const S0 = S.eval.replay.snapshots, i = Math.floor(x), j = Math.min(S0.length - 1, i + 1), f = x - i, a = S0[i], b = S0[j];
+  const bm = Object.fromEntries(b.models.map(m => [m.model, m]));
+  const num = ["confirmed", "contradicted", "hi_confirmed", "hi_contradicted", "unusable", "tasks", "answered", "decided_lower", "usd_per_1k_tasks"];
+  const models = a.models.map(m => { const n = bm[m.model] || m, o = { ...m }; num.forEach(k => o[k] = lerp(m[k], n[k], f)); return o; });
+  const meta = { ...a.meta }; ["tickets", "graded", "hi_wrong", "hi_graded", "calls", "actions"].forEach(k => meta[k] = lerp(a.meta[k], b.meta[k], f));
+  let router = null;
+  if (a.router) {
+    const ra = a.router, rb = b.router || ra, L = k => lerp(ra[k], rb[k], f);
+    const names = new Set([...Object.keys(ra.answered_by || {}), ...Object.keys(rb.answered_by || {})]);
+    const P = k => ({ confirmed: lerp(ra[k].confirmed, rb[k].confirmed, f), contradicted: lerp(ra[k].contradicted, rb[k].contradicted, f) });
+    router = { requests: L("requests"), switches: L("switches"), held_for_review: L("held_for_review"), unanswered: L("unanswered"),
+               busy_events: L("busy_events"), latency_ms_p50: L("latency_ms_p50"), precision_trusted: P("precision_trusted"), precision_held: P("precision_held"),
+               answered_by: Object.fromEntries([...names].map(n => [n, lerp((ra.answered_by || {})[n], (rb.answered_by || {})[n], f)])) };
+  }
+  return { tickets: lerp(a.tickets, b.tickets, f), date: (f < 0.5 ? a : b).date, meta, models, primary: a.primary, idx: i, router };
+}
+function evalView() {
+  const E = S.eval;
+  if (!E || RP == null || !E.replay) return E;
+  const snap = snapAt(RP), by = Object.fromEntries(snap.models.map(m => [m.model, m]));
+  const models = E.models.map(m => by[m.model] ? { ...m, ...by[m.model], role_reason: `Role after ${fmt(Math.round(snap.tickets))} tickets`, vs_main: null }
+                                              : { ...m, confirmed: 0, contradicted: 0, hi_confirmed: 0, hi_contradicted: 0, unusable: 0, answered: 0, tasks: 0, role: null });
+  return { ...E, meta: { ...E.meta, ...snap.meta }, models, router: snap.router ? { ...(E.router || {}), normal: snap.router } : E.router,
+           policy: { ...(E.policy || {}), primary: snap.primary, backups: snap.models.filter(m => m.role === "backup").map(m => m.model), previous_primary: null } };
+}
+function renderReplay() {
+  const R = S.eval && S.eval.replay;
+  $("replay").hidden = !R;
+  if (!R) return;
+  const snaps = R.snapshots, x = RP == null ? snaps.length - 1 : RP, s = snapAt(x);
+  $("rp-range").min = rpStart(); $("rp-range").max = snaps.length - 1; $("rp-range").step = "any";
+  if (document.activeElement !== $("rp-range")) $("rp-range").value = x;
+  $("rp-count").textContent = `${fmt(Math.round(s.tickets))} tickets processed`;
+  $("rp-date").textContent = RP == null ? "final" : `filed up to ${s.date}`;
+  const recent = snaps.slice(0, s.idx + 1).flatMap(y => y.events.map(ev => [y.tickets, ev])).slice(-3).reverse();
+  const html = recent.map(([n, ev]) => `<span class="tag ${/Revoked|excluded/.test(ev) ? "stop" : /Automated|primary/i.test(ev) ? "go" : "info"}">${fmt(n)}: ${esc(ev)}</span>`).join("") || `<span class="muted small">Events appear here as the evidence builds up.</span>`;
+  if ($("rp-events").dataset.h !== html) { $("rp-events").innerHTML = html; $("rp-events").dataset.h = html; }
+  $("rp-play-t").textContent = rpPlaying ? "Pause" : "Play";
+}
+function renderEvalParts() {
+  const E = evalView();
+  if (E) { renderKpis(E); renderModels(E); renderPricePerf(E); }
+  renderRouting(E);
+  renderReplay();
+}
+function rpFrame(now) {
+  if (!rpPlaying) return;
+  const n = S.eval.replay.snapshots.length - 1, dt = Math.min(100, now - (rpLast || now)); rpLast = now;
+  if (rpHoldUntil) {                                  // holding on the final state, then loop
+    if (now >= rpHoldUntil) { rpHoldUntil = 0; RP = rpStart(); }
+  } else {
+    RP = Math.min(n, (RP ?? rpStart()) + dt / RP_SEG_MS);
+    if (RP >= n) { RP = null; rpHoldUntil = now + RP_HOLD_MS; }
+  }
+  renderEvalParts();
+  rpRaf = requestAnimationFrame(rpFrame);
+}
+function playReplay() {
+  if (!S || !S.eval || !S.eval.replay || rpPlaying || RM()) return;
+  rpPlaying = true; rpLast = 0; if (RP == null) RP = rpStart();
+  document.body.classList.add("replaying"); rpRaf = requestAnimationFrame(rpFrame);
+}
+function pauseReplay() { rpPlaying = false; cancelAnimationFrame(rpRaf); rpHoldUntil = 0; renderReplay(); }
+function showFinal() { pauseReplay(); RP = null; document.body.classList.remove("replaying"); renderEvalParts(); }
+$("rp-play").onclick = () => rpPlaying ? pauseReplay() : playReplay();
+$("rp-range").addEventListener("input", e => {
+  pauseReplay(); const v = +e.target.value, n = S.eval.replay.snapshots.length - 1;
+  RP = v >= n ? null : v; document.body.classList.toggle("replaying", RP != null); renderEvalParts();
+});
+
 function render() {
   $("loading").hidden = true; $("content").hidden = false;
-  $("run").hidden = !S.can_run;
+  $("run").hidden = !S.can_run; $("open-demo").hidden = !S.can_run;
   const E = S.eval;
   ["sec-models", "sec-eval2", "sec-examples", "sec-coverage"].forEach(id => $(id).hidden = !E);
-  if (E) { renderKpis(E); renderModels(E); renderCalibration(E); renderAmbiguity(E); renderFalsePositives(E); renderCoverage(E); }
-  renderQueue(); renderRouting(); renderCost();
+  if (E) { renderCalibration(E); renderAmbiguity(E); renderFalsePositives(E); renderCoverage(E); }
+  renderEvalParts();
+  renderQueue(); renderCost();
   $("foot").innerHTML = `Source: Unity Catalog <code>${esc(S.catalog)}</code>. Updated ${new Date(S.generated_at).toLocaleTimeString()}. Tickets are public Apache Jira issues; accepted suggestions are written to a sandbox table, never to Jira.`;
 }
 
-function renderKpis(E) {
+function renderKpis(E) {  // during the replay the headline figures step in tens instead of spinning
   const M = E.meta, sl = M.slices || {};
-  $("k1").textContent = fmt(M.tickets);
-  $("i-k1").innerHTML = `${fmt(sl.stream)} from the live stream, ${fmt(sl.dups)} known duplicates, ${fmt(sl.bumps)} version upgrades, ${fmt(sl.flaky)} test-failure reports. ${M.models} models, ${fmt(M.calls)} calls on Databricks.`;
-  $("k2").textContent = fmt(M.graded);
-  $("i-k2").innerHTML = `Answers the maintainer record can settle, out of ${fmt(M.actions)} proposed links. Graded from duplicate links, parent tickets and resolutions.`;
-  $("k3").textContent = `${fmt(M.hi_wrong)} / ${fmt(M.hi_graded)}`;
-  $("i-k3").innerHTML = `Answers rated ≥95% confident that the maintainer record contradicts, across all ${M.models} models (${pct(M.hi_wrong / Math.max(1, M.hi_graded))}).`;
-  $("k4").textContent = fmt(M.claims.proven + M.claims.disproven);
-  $("i-k4").innerHTML = `${M.claims.proven} proven, ${M.claims.disproven} ruled out, ${M.claims.undecided} awaiting more data. See Evidence coverage.`;
+  const r = n => fmt(RP == null ? Math.round(n) : Math.floor(n / 10) * 10);
+  $("k1").textContent = r(M.tickets); $("k1s").textContent = `${M.models} models · ${r(M.calls)} calls on Databricks`;
+  $("k2").textContent = r(M.graded); $("k2s").textContent = `checked against the maintainers' actions`;
+  $("k3").textContent = `${r(M.hi_wrong)} / ${r(M.hi_graded)}`; $("k3s").textContent = `${pct(M.hi_wrong / Math.max(1, M.hi_graded))} of answers rated ≥95% confident`;
+  $("k4").textContent = r(M.claims.proven + M.claims.disproven); $("k4s").textContent = `${M.claims.proven} proven · ${M.claims.disproven} ruled out · ${M.claims.undecided} pending`;
+  if (RP != null) return;  // the long explanations only need the final numbers
+  $("i-k1").innerHTML = `${fmt(sl.stream)} random tickets from the live stream (precision is measured on these), plus targeted slices: ${fmt(sl.dups)} known duplicates, ${fmt(sl.bumps)} version upgrades, ${fmt(sl.flaky)} test-failure reports${Object.keys(sl).some(k => k.startsWith("boost")) ? ", and booster slices for rare kinds of case" : ""}.`;
+  $("i-k2").innerHTML = `Answers the maintainer record can settle, out of ${fmt(M.actions)} proposed links. Graded from duplicate links, parent tickets and resolutions; no human or AI labels.`;
+  $("i-k3").innerHTML = `High-confidence false positives: answers rated ≥95% confident that the maintainer record contradicts, across all ${M.models} models.`;
+  $("i-k4").innerHTML = `Claims about models and patterns that reached a verdict: proven (95% interval above the 90% bar) or ruled out (below it). See Evidence coverage.`;
 }
 
+const MHEAD = [["Model", "Databricks-hosted model, and how many of the evaluation tickets it answered."],
+  ["Role", "Assigned by the selection rule: Primary answers first, Backups step in when it is unavailable, Excluded models are never used. Hover a role for the reason."],
+  ["Precision", "Share of answers confirmed by the maintainer record, among answers the record can settle. The marker is the 90% bar for acting without review; the lower bound is the 95% one-sided confidence limit."],
+  ["False positives", "High-confidence false positives: answers rated ≥95% confident that the record contradicts, out of all ≥95% answers the record can settle."],
+  ["Unreadable", "Responses that were not valid structured output and could not be used."],
+  ["Cost / 1k", "Estimated cost per 1,000 tickets at Databricks list price, from measured input and output tokens."],
+  ["Latency", "Median time per ticket, including retries after rate limits."]];
 function renderModels(E) {
-  const M = E.meta, PO = E.policy;
-  $("models-meta").textContent = `${M.models} models · ${fmt(M.tickets)} tickets`;
-  const H = [["Model", "Databricks-hosted model, and how many of the evaluation tickets it answered."],
-             ["Role", "Assigned by the selection rule: Primary answers first, Backups step in when it is unavailable, Excluded models are never used. Hover a role for the reason."],
-             ["Precision", "Share of answers confirmed by the maintainer record, among answers the record can settle. The marker is the 90% bar for acting without review; the lower bound is the 95% one-sided confidence limit."],
-             ["False positives", "High-confidence false positives: answers rated ≥95% confident that the record contradicts, out of all ≥95% answers the record can settle."],
-             ["Unreadable", "Responses that were not valid structured output and could not be used."],
-             ["Cost / 1k", "Estimated cost per 1,000 tickets at Databricks list price, from measured input and output tokens."],
-             ["Latency", "Median time per ticket, including retries after rate limits."]];
-  $("mtable").innerHTML = `<div class="mrow head" role="row">${H.map(([h, x]) => `<span role="columnheader">${h} <button class="tip" data-text="${esc(x)}" aria-label="About ${h}">?</button></span>`).join("")}</div>` +
-    E.models.map((m, i) => {
-      const dec = m.confirmed + m.contradicted, r = dec ? m.confirmed / dec : 0, ro = ROLE[m.role] || ["info", m.role || "–"];
-      const vs = m.vs_main && m.vs_main.p != null ? ` Against Llama 3.3 70B on the same tickets: better on ${m.vs_main.better}, worse on ${m.vs_main.worse}${m.vs_main.p < 0.05 ? " (significant)" : " (not significant)"}.` : "";
-      return `<div class="mrow" role="row">
-        <span class="nm"><b>${esc(m.name)}</b><small>${fmt(m.answered)} / ${fmt(m.tasks)} answered</small></span>
-        <span><button class="tag ${ro[0]} tip-host" data-text="${esc((m.role_reason || "") + "." + vs)}" style="border:0;cursor:help">${ro[1]}</button></span>
-        <span><div class="pbar" role="img" aria-label="precision ${pct(r)}"><span style="width:${100 * r}%;background:${COLOR(r)}"></span><i style="left:90%"></i></div>
-          <span class="num">${pct(r)} <small>${fmt(m.confirmed)} / ${fmt(dec)} · lower bound ${pct(m.decided_lower)}</small></span></span>
-        <span class="num">${fmt(m.hi_contradicted)}<small>of ${fmt(m.hi_contradicted + m.hi_confirmed)}</small></span>
-        <span class="num">${fmt(m.unusable)}<small>of ${fmt(m.tasks)}</small></span>
-        <span class="num">$${(m.usd_per_1k_tasks ?? 0).toFixed(2)}<small>${fmt(m.tokens?.per_task)} tok/ticket</small></span>
-        <span class="num">${((m.latency_ms?.p50 || 0) / 1000).toFixed(1)} s</span>
-        <span class="detail">${esc(m.role_reason || "")}.${esc(vs)}</span>
-      </div>`;
-    }).join("");
-  if (PO) {
-    const nm = id => (E.models.find(m => m.model === id) || {}).name || id;
-    $("policy-line").innerHTML = `<span><b>Primary:</b> ${esc(nm(PO.primary))}${PO.primary !== PO.previous_primary ? ` <span class="tag info">replaced ${esc(nm(PO.previous_primary))}</span>` : ""}</span>
-      <span><b>Backups:</b> ${PO.backups.map(nm).map(esc).join(", ")}</span>
-      <span><b>Autonomy:</b> none granted</span> <button class="tip" data-info="i-rule" aria-label="About the selection rule">?</button>`;
-    $("i-rule").innerHTML = `<b>Selection rule:</b> the cheapest model that is ${esc(PO.rule)} becomes primary. Re-evaluated whenever new evidence arrives. Next candidate: ${esc(PO.what_would_change_it)}.`;
+  const key = E.models.map(m => m.model).join();
+  if ($("mtable").dataset.key !== key) {  // structure once; values are filled in place so bars can animate
+    $("mtable").dataset.key = key;
+    $("mtable").innerHTML = `<div class="mrow head" role="row">${MHEAD.map(([h, x]) => `<span role="columnheader">${h} <button class="tip" data-text="${esc(x)}" aria-label="About ${h}">?</button></span>`).join("")}</div>` +
+      E.models.map(m => `<div class="mrow" role="row" data-m="${esc(m.model)}">
+        <span class="nm"><b>${esc(m.name)}</b><small class="f-ans"></small></span>
+        <span><button class="tag tip-host f-role" style="border:0;cursor:help"></button></span>
+        <span><div class="pbar"><span class="f-bar"></span><i style="left:90%"></i></div><span class="num"><span class="f-prec"></span> <small class="f-precsub"></small></span></span>
+        <span class="num"><span class="f-fp"></span><small class="f-fpsub"></small></span>
+        <span class="num"><span class="f-un"></span><small class="f-unsub"></small></span>
+        <span class="num"><span class="f-cost"></span><small class="f-costsub"></small></span>
+        <span class="num f-lat"></span>
+        <span class="detail f-detail"></span></div>`).join("");
   }
+  fillModels(E);
+}
+const stepN = n => RP == null ? Math.round(n) : Math.floor(n / 10) * 10;  // counts step in tens during the replay
+function renderChoice(E) {  // Assay's model choice: cost-optimized primary vs quality-optimized alternative
+  const PO = E.policy, by = Object.fromEntries(E.models.map(m => [m.model, m])), nm = id => (by[id] || {}).name || id;
+  const acc = m => (m && m.confirmed + m.contradicted) ? m.confirmed / (m.confirmed + m.contradicted) : 0;
+  const prim = by[PO.primary] || {}, reliable = E.models.filter(m => m.role && m.role !== "not used");
+  const best = reliable.slice().sort((a, b) => acc(b) - acc(a))[0] || prim;
+  const card = (tag, cls, name, line) => `<div class="choice-c ${cls}"><span class="tag ${cls}">${tag}</span><b>${esc(name)}</b><span>${line}</span></div>`;
+  $("choice").innerHTML =
+    card("Primary · cost-optimized", "go", nm(PO.primary), `${pct(acc(prim))} precision · $${(prim.usd_per_1k_tasks || 0).toFixed(2)} per 1,000 tickets`) +
+    (best.model && best.model !== PO.primary
+      ? card("Quality-optimized alternative", "info", best.name, `+${Math.round(100 * (acc(best) - acc(prim)))} points precision · ${(best.usd_per_1k_tasks / (prim.usd_per_1k_tasks || 1)).toFixed(1)}× the cost`)
+      : card("Quality-optimized alternative", "info", "same model", "the primary is also the most precise")) +
+    card("Backups, in order", "ask", (PO.backups || []).map(nm).join(" → ") || "none", "used when the primary is unavailable; answers held for review") +
+    card("Autonomy granted", "stop", "None", "no model reaches 90% on any kind of case");
+  if (PO.rule) $("i-choice").innerHTML = `The primary is the <b>cheapest</b> model that is ${esc(PO.rule)}. A more precise model costs more per ticket, so it serves as a backup, or as primary under a quality-first policy. The choice is re-evaluated whenever new evidence arrives. Next candidate: ${esc(PO.what_would_change_it || "none")}.`;
+}
+function rankRows(E) {  // best precision on top; rows slide to their new place (with a small margin against flicker)
+  const acc = m => { const d = m.confirmed + m.contradicted; return d ? m.confirmed / d - (d < 30 ? 2 : 0) : -3; };  // < 30 checkable answers: ranked last
+  const by = Object.fromEntries(E.models.map(m => [m.model, acc(m)]));
+  const box = $("mtable"), rows = [...box.querySelectorAll(".mrow[data-m]")];
+  const inverted = rows.some((r, i) => i && by[r.dataset.m] > by[rows[i - 1].dataset.m] + 0.01);
+  if (!inverted) return;
+  const before = new Map(rows.map(r => [r, r.getBoundingClientRect().top]));
+  rows.slice().sort((a, b) => by[b.dataset.m] - by[a.dataset.m]).forEach(r => box.appendChild(r));
+  rows.forEach(r => {
+    const dy = before.get(r) - r.getBoundingClientRect().top;
+    if (!dy || RM()) return;
+    r.style.transition = "none"; r.style.transform = `translateY(${dy}px)`;
+    requestAnimationFrame(() => { r.style.transition = "transform .6s ease"; r.style.transform = ""; });
+  });
+}
+function fillModels(E) {
+  const M = E.meta, PO = E.policy, by = Object.fromEntries(E.models.map(m => [m.model, m]));
+  $("models-meta").textContent = `${M.models} models · ranked by precision`;
+  rankRows(E);
+  document.querySelectorAll("#mtable .mrow[data-m]").forEach(row => {
+    const m = by[row.dataset.m]; if (!m) return;
+    const q = c => row.querySelector(c);
+    const dec = m.confirmed + m.contradicted, r = dec ? m.confirmed / dec : 0, ro = ROLE[m.role] || ["info", "–"];
+    const vs = m.vs_main && m.vs_main.p != null ? ` Against Llama 3.3 70B on the same tickets: better on ${m.vs_main.better}, worse on ${m.vs_main.worse}${m.vs_main.p < 0.05 ? " (significant)" : " (not significant)"}.` : "";
+    q(".f-ans").textContent = `${fmt(stepN(m.answered))} / ${fmt(stepN(m.tasks))} answered`;
+    const role = q(".f-role"); role.className = `tag tip-host f-role ${ro[0]}`; role.textContent = ro[1]; role.dataset.text = (m.role_reason || "") + "." + vs;
+    const bar = q(".f-bar"); bar.style.width = `${100 * r}%`; bar.style.background = COLOR(r);
+    q(".f-prec").textContent = pct(r);
+    q(".f-precsub").textContent = `${fmt(stepN(m.confirmed))} / ${fmt(stepN(dec))} · lower bound ${pct(m.decided_lower || 0)}`;
+    q(".f-fp").textContent = fmt(stepN(m.hi_contradicted)); q(".f-fpsub").textContent = `of ${fmt(stepN(m.hi_contradicted + m.hi_confirmed))}`;
+    q(".f-un").textContent = fmt(stepN(m.unusable)); q(".f-unsub").textContent = `of ${fmt(stepN(m.tasks))}`;
+    q(".f-cost").textContent = `$${(m.usd_per_1k_tasks ?? 0).toFixed(2)}`; q(".f-costsub").textContent = `${fmt(m.tokens?.per_task)} tok/ticket`;
+    q(".f-lat").textContent = `${((m.latency_ms?.p50 || 0) / 1000).toFixed(1)} s`;
+    q(".f-detail").textContent = `${m.role_reason || ""}.${vs}`;
+  });
+  if (!PO) return;
+  renderChoice(E);
+
+}
+
+function renderPricePerf(E) {
+  const W = 1360, H = 400, L = 70, R = 40, T = 20, B = 48, x0 = Math.log10(0.1), x1 = Math.log10(12);
+  const X = c => L + (Math.log10(Math.max(0.1, c)) - x0) / (x1 - x0) * (W - L - R), Y = p => T + (1 - p) * (H - T - B);
+  const col = { main: "var(--go)", backup: "var(--accent)", "not used": "var(--stop)" };
+  if (!$("pp").dataset.built) {
+    const ticks = [0.1, 0.2, 0.5, 1, 2, 5, 10];
+    $("pp").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Precision against cost per 1,000 tickets for each model">
+      ${[0, 0.25, 0.5, 0.75, 1].map(p => `<line class="ax" x1="${L}" x2="${W - R}" y1="${Y(p)}" y2="${Y(p)}"/><text x="${L - 8}" y="${Y(p) + 4}" text-anchor="end">${p * 100}%</text>`).join("")}
+      <line x1="${L}" x2="${W - R}" y1="${Y(0.9)}" y2="${Y(0.9)}" stroke="var(--go)" stroke-dasharray="5 4"/><text x="${W - R}" y="${Y(0.9) - 6}" text-anchor="end">90%: bar for acting without review</text>
+      ${ticks.map(c => `<text x="${X(c)}" y="${H - B + 18}" text-anchor="middle">$${c}</text>`).join("")}
+      <text x="${(L + W - R) / 2}" y="${H - 6}" text-anchor="middle">Estimated cost per 1,000 tickets (log scale)</text>
+      <text x="14" y="${(T + H - B) / 2}" text-anchor="middle" transform="rotate(-90 14 ${(T + H - B) / 2})">Precision</text>
+      ${E.models.map(m => `<g class="pt" data-m="${esc(m.model)}"><circle r="8"/><text class="lbl" dx="12" dy="4">${esc(m.name)}</text></g>`).join("")}
+    </svg><div class="ppkey"><span><i style="background:var(--go)"></i>Primary</span><span><i style="background:var(--accent)"></i>Backup</span><span><i style="background:var(--stop)"></i>Excluded</span></div>`;
+    $("pp").dataset.built = "1";
+  }
+  const by = Object.fromEntries(E.models.map(m => [m.model, m]));
+  document.querySelectorAll("#pp .pt").forEach(g => {
+    const m = by[g.dataset.m]; if (!m) return;
+    const dec = m.confirmed + m.contradicted, p = dec ? m.confirmed / dec : 0, x = X(m.usd_per_1k_tasks || 0.1), y = Y(p);
+    g.setAttribute("transform", `translate(${x.toFixed(1)},${y.toFixed(1)})`);
+    const lbl = g.querySelector("text"), right = x > W - 200;  // labels near the right edge sit to the left of the dot
+    lbl.setAttribute("text-anchor", right ? "end" : "start"); lbl.setAttribute("dx", right ? -12 : 12);
+    g.querySelector("circle").setAttribute("fill", col[m.role] || "var(--line)");
+    g.querySelector("circle").setAttribute("stroke", m.role === "main" ? "var(--ink)" : "var(--panel)");
+    g.querySelector("circle").setAttribute("stroke-width", m.role === "main" ? 3 : 2);
+    g.style.opacity = dec ? 1 : 0.3;
+  });
 }
 
 function renderCalibration(E) {
@@ -556,10 +817,10 @@ function hist(it) {
 function card(it, i) {
   const k = REL[it.relation], mk = n => i === 0 ? `<span class="mark" aria-hidden="true">${n}</span>` : "";
   const TYPE = { duplicate: "Possible duplicate", part_of: "Possibly part of a larger effort", related: "Possibly related" };
-  return `<article class="sugg${freshIds.has(it.id) ? " fresh" : ""}" id="c${i}" ${i === 0 ? 'data-tour="card"' : ""}>
-    <div class="kind">${mk(1)}<span class="ico" aria-hidden="true">${icon(k.ico)}</span>${TYPE[it.relation]}${it.new ? '<span class="badge new">New</span>' : ""}</div>
+  return `<article class="sugg${freshIds.has(it.id) ? " fresh" : ""}${it.demo ? " demo" : ""}" id="c${i}" ${i === 0 ? 'data-tour="card"' : ""}>
+    <div class="kind">${mk(1)}<span class="ico" aria-hidden="true">${icon(k.ico)}</span>${TYPE[it.relation]}${it.demo ? '<span class="badge demo">Demo</span>' : it.new ? '<span class="badge new">New</span>' : ""}</div>
     <div class="sby">${mk(2)}Suggested by <b>${esc(it.model || "the agent")}</b>${it.confidence != null ? ` · model confidence <span class="conf">${pct(it.confidence)}</span>` : ""}</div>
-    <div class="pair">${mk(3)}<div class="tk">${esc(it.a.title)}<small><a href="${jira(it.a.key)}" target="_blank" rel="noopener">${esc(it.a.key)} ↗</a> · new</small></div>
+    <div class="pair">${mk(3)}<div class="tk">${esc(it.a.title)}<small>${it.demo ? `${esc(it.a.key)} · demo ticket` : `<a href="${jira(it.a.key)}" target="_blank" rel="noopener">${esc(it.a.key)} ↗</a> · new`}</small></div>
       <span class="arrow" aria-hidden="true">${icon("arrow")}</span>
       <div class="tk">${esc(it.b.title)}<small><a href="${jira(it.b.key)}" target="_blank" rel="noopener">${esc(it.b.key)} ↗</a> · earlier</small></div></div>
     ${it.reason ? `<p class="why">${mk(4)} Model's reason: “${esc(it.reason)}”</p>` : ""}
@@ -580,25 +841,26 @@ function renderQueue() {
   $("more").textContent = `Show more (${fmt(items.length - shown)})`;
 }
 
-function renderRouting() {
-  const P = S.eval && S.eval.policy ? S.eval.policy : S.policy || {}, c = S.counts;
+function renderRouting(V) {
+  V = V || S.eval;
+  const P = (S.eval && S.eval.policy) || S.policy || {}, c = S.counts, r0 = n => fmt(Math.round(n));
   const nm = id => ((S.eval && S.eval.models.find(m => m.model === id)) || {}).name || id;
   const excluded = S.eval ? S.eval.models.filter(m => m.role === "not used") : [];
-  const RT = (S.eval && S.eval.router) || {}, N = RT.normal, ST = RT.stress;
-  $("route-meta").textContent = N ? `Load test · ${fmt(N.requests)} requests` : "";
+  const RT = (V && V.router) || {}, N = RT.normal, ST = (S.eval && S.eval.router || {}).stress;
+  $("route-meta").textContent = N ? `Load test · ${r0(N.requests)} requests` : "";
   if (N) {
     const ab = N.answered_by || {}, prim = nm(P.primary), backs = (P.backups || []).map(nm);
     const segs = [[prim, ab[prim] || 0, "var(--go)", "Primary"]]
       .concat(backs.map((b, i) => [b, ab[b] || 0, i ? "#6E8FCB" : "var(--accent)", "Backup"]))
       .concat([["Escalated to a person", N.unanswered, "var(--stop)", ""]]);
-    $("route-flow").innerHTML = `<p class="small muted" style="margin-bottom:8px">Where ${fmt(N.requests)} requests went</p>
+    $("route-flow").innerHTML = `<p class="small muted" style="margin-bottom:8px">Where ${r0(N.requests)} requests went</p>
       <div class="flow" role="img" aria-label="${segs.map(s => `${s[0]}: ${s[1]}`).join(", ")}">${segs.map(s => s[1] ? `<span style="width:${100 * s[1] / N.requests}%;background:${s[2]}">${Math.round(100 * s[1] / N.requests)}%</span>` : "").join("")}</div>
-      <div class="flowkey">${segs.map(s => `<div><i style="background:${s[2]}"></i>${esc(s[3] ? `${s[3]}: ${s[0]}` : s[0])}<b>${fmt(s[1])}</b></div>`).join("")}</div>`;
+      <div class="flowkey">${segs.map(s => `<div><i style="background:${s[2]}"></i>${esc(s[3] ? `${s[3]}: ${s[0]}` : s[0])}<b>${r0(s[1])}</b></div>`).join("")}</div>`;
     const dec = p => p.confirmed + p.contradicted;
     const pt = N.precision_trusted || {}, ph = N.precision_held || {};
     $("route-stats").innerHTML = `
-      <div class="stat"><div class="n">${pct((N.requests - N.unanswered) / N.requests)}</div><div class="l">answered without a person (${fmt(N.requests - N.unanswered)} / ${fmt(N.requests)})</div></div>
-      <div class="stat"><div class="n">${fmt(N.switches)}</div><div class="l">live switches after ${fmt(N.busy_events)} rate-limit responses</div></div>
+      <div class="stat"><div class="n">${pct((N.requests - N.unanswered) / N.requests)}</div><div class="l">answered without a person (${r0(N.requests - N.unanswered)} / ${r0(N.requests)})</div></div>
+      <div class="stat"><div class="n">${r0(N.switches)}</div><div class="l">live switches after ${r0(N.busy_events)} rate-limit responses</div></div>
       <div class="stat"><div class="n">${dec(ph) ? pct(ph.confirmed / dec(ph)) : "–"}</div><div class="l">precision of backup answers (primary: ${dec(pt) ? pct(pt.confirmed / dec(pt)) : "–"})</div></div>
       <div class="stat"><div class="n">${(N.latency_ms_p50 / 1000).toFixed(1)} s</div><div class="l">median time per request, switches included</div></div>`;
   }
@@ -696,29 +958,73 @@ $("toast-undo").onclick = async () => {
 };
 $("run").onclick = async () => {
   const b = $("run"); b.disabled = true;
-  b.innerHTML = `<span class="spin" style="width:16px;height:16px;border-width:2px"></span>Running on 3 tickets (10–40 s)`;
+  b.innerHTML = `<span class="spin" style="width:16px;height:16px;border-width:2px"></span>Processing 3 tickets (10–40 s)`;
   try {
     const r = await api("/api/run", { n: 3 });
     freshIds = new Set(r.state.inbox.filter(i => i.new && r.tickets.includes(i.key)).map(i => i.id));
     S = r.state; render();
     const sw = r.decisions.filter(d => d.switched).length;
-    toast(`${r.tickets.length} tickets processed · ${r.suggestions} suggestion${r.suggestions === 1 ? "" : "s"} added${sw ? ` · ${sw} model switch${sw === 1 ? "" : "es"}` : ""}.`);
+    const who = [...new Set(r.decisions.map(d => d.answered_by || "a person"))].join(", ");
+    toast(`${r.tickets.length} tickets processed by ${who} · ${r.suggestions} new suggestion${r.suggestions === 1 ? "" : "s"}${sw ? ` · ${sw} model switch${sw === 1 ? "" : "es"}` : ""}.`);
+    $("demo").hidden = true;
+    if (r.suggestions) {  // show the new cards: open the queue and scroll to it
+      setFold($("fold-queue"), true);
+      $("fold-queue").scrollIntoView({ block: "start", behavior: RM() ? "auto" : "smooth" });
+    }
   } catch (err) { toast("Run did not complete: " + err.message); }
-  b.disabled = false; b.innerHTML = `${icon("play")}Run agent on new tickets`;
+  b.disabled = false; b.innerHTML = `${icon("refresh")}Or process 3 real new Jira tickets`;
 };
+
+// ---------- live demo screen ----------
+const TPL = [  // [name, expected path, project, title, description, model]
+  ["Cheapest model on a version upgrade", "Usually handled automatically", "SPARK", "Upgrade `commons-codec` to 1.22.2", "Upgrade commons-codec from 1.22.1 to 1.22.2.", "databricks-meta-llama-3-1-8b-instruct"],
+  ["Copy from another project", "Usually interrupted", "KAFKA", "Support TimeType in RowToColumnConverter", "Add TimeType support to the row-to-column converter.", ""],
+  ["Genuinely new request", "Usually sent to you", "SPARK", "Add retry with exponential backoff to the Spark Connect client for transient gRPC failures", "Transient UNAVAILABLE errors fail long-running Spark Connect sessions; retry them with backoff.", ""],
+  ["Blank", "Write your own", "SPARK", "", "", ""]
+];
+$("tpls").innerHTML = TPL.map((x, i) => `<button type="button" class="tpl" data-t="${i}"><b>${x[0]}</b><span class="muted">${x[1]}</span></button>`).join("");
+$("tpls").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b) return; const x = TPL[+b.dataset.t];
+  $("d-project").value = x[2]; $("d-title").value = x[3]; $("d-desc").value = x[4]; $("d-model").value = x[5]; $("d-title").focus(); });
+const STEPS = ["Find earlier look-alikes", "Route to a model", "Model's suggestion", "Assay's decision"];
+function pipe(n, html) {
+  $("pipe").innerHTML = STEPS.map((s, i) => `<li class="${i < n ? "on" : ""}${i === 3 && html[3] ? " outcome " + html[3].cls : ""}"><div class="ph"><span class="n">${i + 1}</span>${s}</div>${i < n ? (html[i] ? html[i].body || html[i] : "") : ""}</li>`).join("");
+}
+$("open-demo").onclick = () => { pauseReplay(); $("demo").hidden = false; pipe(0, []); $("d-title").focus(); };
+$("demo-close").onclick = () => { $("demo").hidden = true; };
+$("demo-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const b = $("d-send"); b.disabled = true;
+  pipe(1, [`<span><span class="spin" style="width:14px;height:14px;border-width:2px"></span> Working on Databricks (5–40 s)…</span>`]);
+  try {
+    const r = await api("/api/demo", { title: $("d-title").value, description: $("d-desc").value, project: $("d-project").value, model: $("d-model").value });
+    const P = REL2 => ({ duplicate: "the same problem as", part_of: "part of", related: "related to" })[REL2] || REL2;
+    const s1 = r.candidates.length ? `<span>${r.candidates.length} found, e.g. ${r.candidates.slice(0, 3).map(c => `<b>${esc(c.key)}</b> “${esc(c.summary)}”`).join(" · ")}</span>` : "<span>None found.</span>";
+    const rt = r.routing, s2 = rt ? `<span>Answered by <b>${esc(rt.answered_by || "nobody")}</b>${rt.forced ? " (chosen for this demo, bypassing the router)" : ""}${rt.switched ? ` after ${rt.steps.filter(x => x.outcome !== "ok").map(x => `${esc(x.model)} was ${x.outcome === "busy" ? "rate-limited" : "unusable"}`).join(", ")}` : ""} · ${(rt.steps.reduce((a, x) => a + x.ms, 0) / 1000).toFixed(1)} s</span>` : "<span>Not needed.</span>";
+    const m = r.model, s3 = m && m.relation !== "none" ? `<span>This ticket is <b>${P(m.relation)}</b> ${esc(m.candidate.key)} “${esc(m.candidate.summary)}”${m.candidate.project !== r.ticket.project ? ` (${esc(m.candidate.project)})` : ""} · model confidence <b>${pct(m.confidence)}</b></span><span class="muted">Reason: “${esc(m.reason || "")}”</span>` : "<span>No link proposed.</span>";
+    const o = r.outcome, cls = { auto: "auto", interrupt: "interrupt", review: "review", none: "" }[o.path];
+    const s4 = { cls, body: `<span class="big">${esc(o.headline)}</span><span>${esc(o.why)}</span>${o.path === "review" ? `<button class="btn gold" id="to-queue" type="button" style="justify-self:start">Open it in the Review queue</button>` : ""}` };
+    const parts = [s1, s2, s3, s4];
+    for (let n = 1; n <= 4; n++) { pipe(n, parts); await new Promise(res => setTimeout(res, RM() ? 0 : 650)); }
+    if (r.state) { S = r.state; render(); }
+    const q = $("to-queue"); if (q) q.onclick = () => { $("demo").hidden = true; setFold($("fold-queue"), true); $("fold-queue").scrollIntoView({ block: "start" }); };
+  } catch (err) { pipe(1, [`<span>Did not complete: ${esc(err.message)}</span>`]); }
+  b.disabled = false;
+});
 
 // ---------- guided tour: the highlighted section's explanations are expanded ----------
 const TOUR = [
   ["hello", "Assay", "Evidence-based oversight for AI agents: which model to use, what an agent may do without review, and whether a change helped. The example agent triages the public Apache Jira."],
   ["kpis", "Key figures", "Scale of the evaluation, answers verified against the maintainer record, and how often high confidence was wrong."],
+  ["replay", "Replay", "Press play to watch the verdicts form as tickets arrive: roles change, patterns are automated, and automation is revoked when a counterexample appears."],
   ["models", "Model evaluation", "Eight models on the same tickets: role, precision, false positives, reliability, cost and latency. The cheapest proven model is primary."],
   ["stats", "Detailed statistics", "Calibration, definition ambiguity and evidence coverage: the analysis behind the model decisions."],
   ["cost", "Cost & savings", "Estimated cost of every token used, and the savings from routing and automated reviews."],
   ["routing", "Model routing", "Where requests went in the load test: the primary, each backup, or a person. Backup answers are held for review."],
-  ["queue", "Review queue", "Suggestions the record cannot settle. The numbers on the first card match the guide: type, model and confidence, tickets, reason, similar past cases, your decision."],
+  ["queue", "Review queue", "Suggestions the record cannot settle; only these need a person. Next: how to read one."],
+  ["anatomy", "How to read a suggestion", "The numbers on the card match the guide beside it: type, who suggested it and how confident it was, the two tickets, the model's reason, similar past cases, and your decision."],
   ["buttons", "Try it", "Accept or reject this suggestion. The decision is written to a Delta table and can be undone.", "try"],
   ["falsepos", "Why confident answers fail", "The most common mistakes behind high-confidence false positives, and the models that make them."],
-  ["run", "Live run", "Process new tickets now, on Databricks."],
+  ["run", "Live demo", "Write a Jira ticket, or pick a template, and watch Assay handle it live: known patterns are handled automatically, known-wrong suggestions are interrupted, and uncertain ones come to you."],
   ["help", "Tour", "Restart the tour at any time. Hover ? for one second for details."]
 ];
 let ti = -1;
@@ -735,23 +1041,29 @@ function place() {
   (el.closest(".panel, .kpis, .hero") || el).classList.add("explain");
   document.body.classList.toggle("tour-live", mode === "try");
   if (mode === "try") el.setAttribute("data-tour-active", "");
-  el.scrollIntoView({ block: el.offsetHeight > innerHeight - 260 ? "start" : "center", behavior: "auto" });
+  el.scrollIntoView({ block: el.offsetHeight > innerHeight * 0.6 ? "start" : "center", behavior: "auto" });
   $("tour-step").textContent = `Step ${ti + 1} of ${TOUR.length}`; $("tour-h").textContent = h; $("tour-text").textContent = text;
   $("tour-back").disabled = ti === 0;
   $("tour-next").textContent = mode === "try" ? "Skip this step" : ti === TOUR.length - 1 ? "Done" : "Next";
   position();
   if (mode !== "try") $("tour-next").focus({ preventScroll: true });
 }
-function position() {
+function position() {  // follows the element; the tip takes whichever side has room, or docks when the target is taller than the screen
   if (ti < 0) return;
   const el = tourEl(TOUR[ti][0]); if (!el) return;
-  const r = el.getBoundingClientRect(), ring = $("tour-ring"), tip = $("tour-tip");
-  Object.assign(ring.style, { left: r.left - 6 + "px", top: r.top - 6 + "px", width: r.width + 12 + "px", height: r.height + 12 + "px" });
-  const tw = Math.min(360, innerWidth - 32); tip.style.width = tw + "px";
-  let top = r.bottom + 14; const th = tip.offsetHeight || 190;
-  if (top + th > innerHeight - 12) top = r.top - th - 14;
-  if (top < 12) top = Math.min(innerHeight - th - 12, Math.max(12, r.top + 12));
-  tip.style.left = Math.max(16, Math.min(r.left, innerWidth - tw - 16)) + "px"; tip.style.top = top + "px";
+  const r = el.getBoundingClientRect(), ring = $("tour-ring"), tip = $("tour-tip"), vw = innerWidth, vh = innerHeight;
+  const top = Math.max(8, r.top - 6), bottom = Math.min(vh - 8, r.bottom + 6);
+  Object.assign(ring.style, { left: r.left - 6 + "px", top: top + "px", width: r.width + 12 + "px", height: Math.max(0, bottom - top) + "px" });
+  const tw = Math.min(360, vw - 32); tip.style.width = tw + "px";
+  const th = tip.offsetHeight || 190, gap = 14;
+  const spots = [
+    [r.bottom + gap + th <= vh - 12, Math.max(16, Math.min(r.left, vw - tw - 16)), r.bottom + gap],   // below
+    [r.top - gap - th >= 12, Math.max(16, Math.min(r.left, vw - tw - 16)), r.top - gap - th],         // above
+    [r.right + gap + tw <= vw - 16, r.right + gap, Math.max(12, Math.min(r.top, vh - th - 12))],       // right
+    [r.left - gap - tw >= 16, r.left - gap - tw, Math.max(12, Math.min(r.top, vh - th - 12))]          // left
+  ];
+  const s = spots.find(x => x[0]) || [true, vw - tw - 16, vh - th - 16];                              // docked
+  tip.style.left = s[1] + "px"; tip.style.top = s[2] + "px";
 }
 new ResizeObserver(position).observe(document.body);
 addEventListener("scroll", position, { passive: true });
@@ -760,9 +1072,11 @@ function tourAnswered() { if (ti >= 0 && TOUR[ti][3] === "try") { ti++; setTimeo
 function startTour() {
   $("welcome").hidden = true;
   if (!S) { toast("Still loading; try again in a moment."); return; }
+  showFinal();
   ti = 0; $("tour-ring").hidden = false; $("tour-tip").hidden = false; place();
 }
 function endTour() {
+  setTimeout(playReplay, 800);
   ti = -1; $("tour-ring").hidden = true; $("tour-tip").hidden = true; document.body.classList.remove("tour-live");
   document.querySelectorAll("[data-tour-active]").forEach(x => x.removeAttribute("data-tour-active"));
   document.querySelectorAll(".explain").forEach(x => x.classList.remove("explain"));
@@ -773,16 +1087,20 @@ $("tour-back").onclick = () => { if (ti > 0) { ti--; place(); } };
 $("tour-end").onclick = endTour;
 $("help").onclick = startTour;
 $("w-start").onclick = startTour;
-$("w-skip").onclick = () => { $("welcome").hidden = true; try { localStorage.setItem("assay-toured", "1"); } catch (e) {} };
-addEventListener("keydown", e => { if (e.key === "Escape") { endTour(); hidePop(); $("welcome").hidden = true; } });
+$("w-skip").onclick = () => { $("welcome").hidden = true; playReplay(); try { localStorage.setItem("assay-toured", "1"); } catch (e) {} };
+addEventListener("keydown", e => { if (e.key === "Escape") { endTour(); hidePop(); $("welcome").hidden = true; $("demo").hidden = true; } });
 
 load(false).then(() => {
   let toured = false; try { toured = localStorage.getItem("assay-toured") === "1"; } catch (e) {}
+  if (location.hash === "#play") { playReplay(); return; }  // #play starts the looping replay straight away
+  const rp = location.hash.match(/^#replay=(\d+)$/);  // #replay=3 opens the replay paused at snapshot 3
+  if (rp && S && S.eval && S.eval.replay) { RP = Math.min(+rp[1], S.eval.replay.snapshots.length - 1); document.body.classList.add("replaying"); renderEvalParts(); return; }
   const m = location.hash.match(/^#tour(?:=(\d+))?$/);  // #tour or #tour=5 opens the tour (at a step)
   if (m && S) { startTour(); if (m[1]) { ti = Math.min(TOUR.length, +m[1]) - 1; place(); } }
   else if (!toured && S) { $("welcome").hidden = false; $("w-start").focus(); }
+  else playReplay();
 });
-setInterval(() => { if (!busy && ti < 0 && document.visibilityState === "visible") load(false); }, 60000);
+setInterval(() => { if (!busy && ti < 0 && !rpPlaying && RP == null && document.visibilityState === "visible") load(false); }, 60000);
 </script>
 </body>
 </html>
