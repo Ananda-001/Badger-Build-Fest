@@ -35,10 +35,13 @@ It runs on Databricks.
 ## Run
 ```bash
 pip install -r requirements.txt
-python -m pytest -q tests
+python -m pytest -q tests                                                # 63 passed
 python -m assay_triage.ingest && python -m assay_triage.retrieve --k 10   # pulls public Jira data (~no login)
 python scripts/judge_eval.py --summary
-streamlit run app/app.py                                                 # has a sample-data toggle
+streamlit run app/app.py                                                 # first dashboard; has a sample-data toggle
+# the manager dashboard (needs .env with DATABRICKS_HOST, DATABRICKS_TOKEN, DATABRICKS_WAREHOUSE_ID)
+uvicorn app.manager.server:app --port 8000                               # locally, against the live tables
+python scripts/deploy_manager.py                                         # deploy to Databricks (see CLAUDE.md §6)
 ```
 
 Development started in a local folder at 11:00 on Sep 26 at the event and was moved into this repo at ~15:30.

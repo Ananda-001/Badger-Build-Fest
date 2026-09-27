@@ -11,7 +11,9 @@ workspace, tables, data and both apps **already exist**; to work on them you onl
 
 1. **Get access.** krish invites your email to the workspace (Settings → Identity and access → Users → Add user)
    and runs the grants (USE CATALOG `workspace`; all privileges on schema `workspace.assay_triage`; CAN_USE on the
-   SQL warehouse; CAN_MANAGE on the apps `assay-manager` and `assay`).
+   SQL warehouse; CAN_MANAGE on the apps `assay-manager` and `assay`). Anyone who will deploy or run
+   `sync_results.py` also needs `MANAGE` on the schema, granted by name: the deploy script runs `GRANT`s and the sync
+   replaces tables krish owns. Before deploying, follow `CLAUDE.md` §6 (whoever deploys last wins).
 2. **Make your own token** (never share one): profile → Settings → Developer → Access tokens → Generate new token.
 3. **Set up the repo:**
    ```bash
