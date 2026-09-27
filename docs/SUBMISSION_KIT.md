@@ -3,6 +3,10 @@
 Draft for Sun Sep 27 (Devpost closes 11:00 CDT). Every number comes from `results/` or the Unity Catalog tables;
 the source is in brackets. Edit the wording freely, but don't change a number without changing its source.
 
+Presentation update, September 27: the current local deck is `Assay_Presentation_v6.pptx` (seven slides).
+See `FINAL_HANDOFF.md` section 8 for its full path, external forecast sources and screenshot-versus-evaluation caveats.
+The Devpost story below retains earlier-run figures; reconcile them against the final handoff before submitting.
+
 ---
 
 ## 1. Devpost answers
@@ -73,19 +77,29 @@ more human reviews so patterns can be proven; more agents than Jira triage.
 
 ---
 
-## 2. Two-minute video script (screen capture + voice)
+## 2. Final deck: two-minute pitch timing
+
+Use the speaker notes in `Assay_Presentation_v6.pptx` for the spoken script. This structure follows the supplied
+*How to Make a Winning 2-Minute Pitch* guide: 25 seconds on the problem, 60 seconds demonstrating the solution,
+13 seconds on differentiation, 12 seconds on the team, and 10 seconds on next steps and the ask.
 
 | Time | Screen | Voice |
 |---|---|---|
-| 0:00–0:15 | Title card, then Apache Jira | "AI agents want more freedom: to act alone, to run on cheaper models, to learn from corrections. Most teams decide on gut feel. Assay decides with evidence." |
-| 0:15–0:30 | Dashboard, top of page | "This is Assay on Databricks. Our demo agent tidies the public Apache Jira. It read [N] tickets and suggested [M] tidy-ups (read them off the screen; they grow with every live run). It did zero on its own, because it hasn't earned that yet." |
-| 0:30–0:55 | Needs your OK: answer one card; point at "Seen before" | "Every suggestion is in plain words, with the agent's reason and what reviewers said on similar cases. My answer is saved to a Delta table. Version-upgrade look-alikes: reviewers said No 21 of 21 times. About 8 more and Assay handles that kind for me." |
-| 0:55–1:20 | Held back for your safety | "Here is what it was stopped from doing. A cheaper model said it was 95% sure about 19 merges; only 4 were right. Someone proposed a rule; tested first, it broke 16 decisions and fixed none. Blocked before it touched anything." |
-| 1:20–1:40 | Press "Check new tickets now"; then Which AI answered | "Now live: the agent reads three new tickets on Databricks. The main model answers; when it's busy, Assay switches to a backup on the spot and holds that answer for review." |
-| 1:40–1:55 | What it saved you | "All at zero AI cost on Databricks Free Edition, 31 wrong changes prevented, and every number is counted, not estimated." |
-| 1:55–2:00 | Logo + repo link | "Assay: agents earn their freedom." |
+| 0:00–0:05 | Slide 1: Assay | Introduce the manager for AI agents. |
+| 0:05–0:15 | Slide 2: market and risk | Explain why teams need evidence; label both external figures as forecasts. |
+| 0:15–0:25 | Slide 3: the manager's decision | Describe one approval moment and the 1,793-of-2,321 finding. |
+| 0:25–0:55 | Slide 4 + dashboard review queue | Show one suggestion, its evidence and the human decision. Jira is only the example. |
+| 0:55–1:15 | Slide 5 + model-choice panel | Show the price/precision trade-off, the primary and backups, and why no model earned general autonomy. |
+| 1:15–1:25 | Slide 6 + cost panel | Show estimated list-price cost versus actual $0 Free Edition spend. |
+| 1:25–1:38 | Slide 6: differentiation | Explain the evidence layer built on Databricks: checked outcomes, model choice and permission limits. |
+| 1:38–1:50 | Slide 7: team | State what the team built and tested; do not invent customer traction or founder experience. |
+| 1:50–2:00 | Slide 7: next steps and ask | Proposed next steps: security gaps, agent API and a real-team pilot. Ask for a pilot team and Databricks mentor. |
 
-Tip: open the dashboard with `#tour` for a clean first frame; record in one take and trim.
+The 60-second solution segment is 0:25–1:25. Use the actual dashboard for the demonstration when possible;
+screenshots are the fallback, not evidence that a live interaction happened. Live outputs can vary.
+Rehearse aloud with a timer; speaker-note timing is a plan, not a measured recording duration.
+Check manual fade transitions in PowerPoint, record clean audio and add captions. Do not claim the six documented
+security weaknesses were fixed: this presentation work did not change the application or rerun security tests.
 
 ---
 

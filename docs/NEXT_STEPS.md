@@ -39,6 +39,12 @@ learning gate) is **done**; it is in the git history of this file. Results are i
 
 ## Track D: Story (Sat night / Sun morning)
 
+**September 27 presentation update:** the final local deck is `Assay_Presentation_v6.pptx`, seven slides, saved in
+the parent workspace folder (full path in `FINAL_HANDOFF.md` section 8). It incorporates slide 3 from the Downloads
+v3 deck and follows the supplied two-minute pitch guide. Speaker notes include timing; the demo gets 60 seconds.
+The deck was rendered and checked, but PowerPoint playback and a timed rehearsal remain to do. Application code
+was unchanged, no security tests were rerun, and nothing was committed or pushed during this presentation update.
+
 Everything is drafted in `docs/SUBMISSION_KIT.md`; every number there has a source. Change wording freely, never a
 number without its source.
 - Video (≤ 2 min): script in §2 of the kit. Open the dashboard with `#tour` for a clean first frame.

@@ -325,6 +325,9 @@ version upgrades" pattern is 57 of 61 (lower bound 86%, below the 90% bar); 28 m
 
 ## 7. Demo scripts
 
+For the final seven-slide presentation, use the timing in `SUBMISSION_KIT.md` section 2 and the speaker notes in
+`Assay_Presentation_v6.pptx`. The scripts below are alternative dashboard-led formats, not the final deck's timing.
+
 ### 7.1 Two-minute video
 
 | Time | Screen | Voice |
@@ -349,26 +352,40 @@ Proven rows in Evidence coverage.
 
 ---
 
-## 8. Suggested slide deck (update `docs/Assay_Presentation.pptx` or the Slides artifact)
+## 8. Final seven-slide deck (updated September 27, 2026)
 
-The earlier deck (https://claude.ai/artifact/LYeqKRMGDFJ1ineLp8WjYq) has **old numbers**; replace them with these.
+The current local presentation is **Assay_Presentation_v6.pptx**, saved at:
 
-1. **Cover:** Assay · AI agents, verified · BuildFest 2026 · Xorbix + Art of the Break.
-2. **The problem:** agents ask for three freedoms; teams answer on gut feel.
-3. **Statement slide:** "When models said 95% sure, they were wrong **1,793 of 2,321** times."
-4. **What Assay is:** agents → Assay (4 questions) → act / ask / hold → people; every answer becomes evidence.
-5. **The evaluation:** 1,362 tickets × 8 models, 9,841 calls, graded by the maintainers' record; random stream for
-   precision, targeted slices for rare cases.
-6. **Model evaluation table** (4.2) with roles.
-7. **Price vs performance / model choice:** primary gpt-oss 20B (57% cheaper), quality alternative +13 points at 1.9×.
-8. **Confidence vs reality** (4.4) and **why confident answers fail** (4.5).
-9. **Learned patterns:** 248/249 · 219/219 · 44/44; leave-one-out 511 of 512; cross-project 0 of 137.
-10. **Live demo:** three paths (handled / interrupted / sent to you) with the Netty example.
-11. **Model routing:** 800 requests, 568 switches, 94% answered without a person.
-12. **Built on Databricks:** Unity Catalog tables, Foundation Model APIs (8 models), Databricks App, service principal.
-13. **The Art of the Break** (section 9).
-14. **What we don't claim + what's next** (sections 12, 13).
-15. **Close:** Agents earn their freedom · dashboard link · repo.
+`C:/Users/mohit/OneDrive - UW-Madison/Desktop/Project/Badger-Build-Fest/Assay_Presentation_v6.pptx`
+
+It is outside the nested Git repository; it has not been committed or pushed. Versions v3–v5 are retained, but v6
+supersedes them for this pitch. The earlier Slides artifact and `docs/Assay_Presentation.pptx` are not the final deck.
+
+1. **Assay:** the manager for your AI agents; agents earn their freedom with evidence.
+2. **Market and risk:** incorporates slide 3 from the user's Downloads copy of `Assay_Presentation_v3.pptx`.
+3. **The manager's decision:** approve, reject, or let the agent act; 1,793 of 2,321 checkable high-confidence answers
+   were wrong, followed by Assay's four functions.
+4. **Assay in action:** the review-queue screenshot and the four-step workflow. Jira is the example, not the product's limit.
+5. **Model cost and precision:** annotated screenshot, with dotted guides and shaded comparison regions.
+6. **Measured cost and evidence-based control:** cost screenshot and the Databricks components; estimated cost is
+   distinguished from actual Free Edition spend of $0.
+7. **Team and next steps:** implementation experience, proposed next 6–12 months, a pilot-team/Databricks-mentor ask,
+   and the repository QR code.
+
+The external figures on slide 2 are forecasts, not Assay test results or a measured Assay addressable market:
+
+- [MarketsandMarkets AI Agents Market report](https://www.marketsandmarkets.com/Market-Reports/ai-agents-market-15761548.html):
+  $7.84B estimate for 2025 and $52.62B forecast for 2030 (rounded on the slide).
+- [Gartner, June 25, 2025](https://www.gartner.com/en/newsroom/press-releases/2025-06-25-gartner-predicts-over-40-percent-of-agentic-ai-projects-will-be-canceled-by-end-of-2027):
+  predicts over 40% of agentic AI projects will be canceled by the end of 2027 because of cost, unclear value and risk controls.
+
+Screenshot values are a dashboard snapshot: 59% primary precision, 58% lower cost and +12 points for the quality
+alternative. Section 4's frozen evaluation reports 58%, 57% and +13 respectively. Do not silently mix the two snapshots.
+
+The graph annotations affect the presentation image only; application code was not changed. The deck includes
+manual fade transitions and speaker notes structured for 120 seconds, following the supplied winning-pitch guide.
+Package integrity, geometry/font checks and re-import passed; all seven slides were rendered and visually reviewed.
+Native PowerPoint playback and the actual spoken duration have not been verified. Rehearse before recording.
 
 ---
 
@@ -495,7 +512,8 @@ links, decided up front) · more human reviews so more patterns can be proven ·
 
 - [ ] Run the assisted-review `--write` (section 4.9) if the team wants the "related" pattern proven.
 - [ ] Redeploy the dashboard (`python scripts/deploy_manager.py`) and open it once; test the three demo templates.
-- [ ] Update the slides with section 4 numbers (the Slides artifact and `docs/Assay_Presentation.pptx` are stale).
+- [x] Prepare the final seven-slide local deck: `Assay_Presentation_v6.pptx` (section 8).
+- [ ] Rehearse the two-minute notes and check the deck's fades in PowerPoint before recording.
 - [ ] Record the video (section 7.1); keep a clip of the Netty demo as a fallback.
 - [ ] Devpost: paste from `docs/SUBMISSION_KIT.md` with numbers updated from this file; declare Xorbix + Art of the Break.
 - [ ] Commit and push the latest changes; rotate the API key that was pasted in chat earlier.
