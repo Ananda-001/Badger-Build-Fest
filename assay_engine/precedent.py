@@ -33,6 +33,14 @@ KINDS = {
 SOURCE_RANK = {"human": 3, "maintainer": 2, "ai": 1}
 
 
+def agreeing_needed(agree: int, n: int, target: float, alpha: float = 0.05, cap: int = 100_000) -> int | None:
+    """Smallest number of further decisions, all agreeing, that proves the pattern (lower bound >= target)."""
+    for x in range(cap):
+        if lower_bound(agree + x, n + x, alpha) >= target:
+            return x
+    return None
+
+
 def _norm(s: str | None) -> str:
     return re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()
 
@@ -95,9 +103,11 @@ def build_memory(decisions: list[dict], tickets: dict, *, target: float = 0.90, 
         low = lower_bound(agree, n, alpha)
         enabled = kind != "other" and low >= target  # "no recognised pattern" is never a precedent
         need = 0 if enabled else (extra_needed(agree, n, target, alpha) if kind != "other" else None)
+        need_all = 0 if enabled else (agreeing_needed(agree, n, target, alpha) if kind != "other" else None)
         memory[f"{relation}/{kind}"] = {
             "relation": relation, "kind": kind, "kind_text": KINDS[kind], "n": n, "agree": agree, "answer": answer,
             "lower": round(low, 4), "target": target, "alpha": alpha, "enabled": enabled, "needs_more": need,
+            "needs_agreeing": need_all,
             "sources": {s: sum(d["source"] == s for d in ds) for s in SOURCE_RANK},
             "examples": [f"{d['key']}->{d['candidate']}" for d in ds[:6]]}
     return memory
@@ -114,8 +124,11 @@ def resolve(new: dict, cand: dict, relation: str, memory: dict) -> dict:
         return {"mode": "auto-" + m["answer"], "kind": kind, "precedent": m,
                 "reason": f"Reviewers {said} this kind of case ({m['kind_text']}) {m['agree']} of {m['n']} times; "
                           f"proven at {int(100 * m['target'])}%+, so it is handled without asking."}
-    more = f" About {m['needs_more']} more consistent reviews would let it be handled automatically." \
-        if m.get("needs_more") else ""
+    more = ""
+    if m.get("needs_agreeing"):
+        more = f" {m['needs_agreeing']} more agreeing reviews would prove it"
+        more += (f" (about {m['needs_more']} at today's {100 * m['agree'] / m['n']:.0f}% agreement rate)."
+                 if m.get("needs_more") and m["agree"] < m["n"] else ".")
     return {"mode": "ask", "kind": kind, "precedent": m,
             "reason": f"Reviewers {said} this kind of case {m['agree']} of {m['n']} times: not proven yet.{more}"}
 

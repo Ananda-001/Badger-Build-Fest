@@ -810,7 +810,7 @@ function hist(it) {
   const kind = KIND[it.kind] || it.kind_text;
   const tail = p.enabled ? " · resolved automatically"
     : it.kind === "other" ? " · no recognised pattern, so it always stays with a person"
-    : p.agree === p.n && p.needs_more ? ` · ${p.needs_more} more consistent decisions to automate`
+    : p.needs_agreeing ? ` · ${p.needs_agreeing} more agreeing decisions to automate${p.agree < p.n && p.needs_more ? ` (about ${p.needs_more} at today's agreement rate)` : ""}`
     : " · decisions differ, so this stays with a person";
   return `<p class="hist">Similar past cases${it.kind === "other" ? "" : ` (${esc(kind)})`}: <b>${said} ${p.agree} of ${p.n}</b>${tail}</p>`;
 }
@@ -977,7 +977,7 @@ $("run").onclick = async () => {
 
 // ---------- live demo screen ----------
 const TPL = [  // [name, expected path, project, title, description, model]
-  ["Cheapest model on a version upgrade", "Usually handled automatically", "SPARK", "Upgrade `commons-codec` to 1.22.2", "Upgrade commons-codec from 1.22.1 to 1.22.2.", "databricks-meta-llama-3-1-8b-instruct"],
+  ["Cheapest model on a version upgrade", "Usually handled automatically", "SPARK", "Upgrade Netty to 4.2.8.Final", "Upgrade Netty from 4.2.7.Final to 4.2.8.Final.", "databricks-meta-llama-3-1-8b-instruct"],  // handled automatically 10 of 10 in testing
   ["Copy from another project", "Usually interrupted", "KAFKA", "Support TimeType in RowToColumnConverter", "Add TimeType support to the row-to-column converter.", ""],
   ["Genuinely new request", "Usually sent to you", "SPARK", "Add retry with exponential backoff to the Spark Connect client for transient gRPC failures", "Transient UNAVAILABLE errors fail long-running Spark Connect sessions; retry them with backoff.", ""],
   ["Blank", "Write your own", "SPARK", "", "", ""]

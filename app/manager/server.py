@@ -104,6 +104,17 @@ def eval_state(raw: dict) -> dict | None:
             "replay": summ.get("replay")}
 
 
+def resolve_guarded(new: dict, cand: dict, relation: str, memory: dict) -> dict:
+    """Precedent resolution, except that a link across Apache projects is never accepted automatically
+    (the assisted review of 2026-09-27 rejected every cross-project pair it saw)."""
+    res = P.resolve(new, cand, relation, memory)
+    new_p, cand_p = (new.get("key") or "").split("-")[0], (cand.get("key") or "").split("-")[0]
+    if res["mode"] == "auto-accept" and new_p and cand_p and new_p != cand_p:
+        return {**res, "mode": "ask", "reason": f"The pattern is proven, but {new_p} and {cand_p} are different projects: "
+                                               "cross-project links are never accepted automatically."}
+    return res
+
+
 def click_id(key: str, cand: str, relation: str) -> str:
     return "manager:" + hashlib.sha256(f"{key}|{cand}|{relation}".encode()).hexdigest()[:40]
 
@@ -144,10 +155,10 @@ def build_state(raw: dict) -> dict:
                 "b": {"key": r["candidate"], "title": r.get("cand_summary"), "date": r.get("cand_created")}}
         if k in clicked:
             continue
-        res = P.resolve(tickets[r["key"]], tickets[r["candidate"]], r["relation"], memory)
+        res = resolve_guarded(tickets[r["key"]], tickets[r["candidate"]], r["relation"], memory)
         item["kind"], item["kind_text"] = res["kind"], P.KINDS[res["kind"]]
-        item["precedent"] = res.get("precedent") and {x: res["precedent"][x] for x in
-                                                      ("n", "agree", "answer", "needs_more", "enabled")}
+        item["precedent"] = res.get("precedent") and {x: res["precedent"].get(x) for x in
+                                                      ("n", "agree", "answer", "needs_more", "needs_agreeing", "enabled")}
         item["precedent_reason"] = res["reason"]
         (handled if res["mode"].startswith("auto-") else open_items).append({**item, "mode": res["mode"]})
 
@@ -436,7 +447,7 @@ def run_demo(title: str, description: str, project: str, model: str | None = Non
     trace["model"] = {"relation": a["relation"], "confidence": a["confidence"], "reason": a.get("reason"),
                       "candidate": {k: cand.get(k) for k in ("key", "summary", "project")}, "kind": kind, "kind_text": P.KINDS[kind]}
     tickets = {ticket["key"]: ticket, cand["key"]: cand}
-    res = P.resolve(ticket, cand, a["relation"], st.get("memory") or {})
+    res = resolve_guarded({**ticket, "key": f"{project}-DEMO"}, cand, a["relation"], st.get("memory") or {})
     wrong, why_wrong = known_wrong(E, a["relation"], kind, cand.get("project") != project)
     if res["mode"].startswith("auto-"):
         said = "accepted" if res["mode"] == "auto-accept" else "rejected"
