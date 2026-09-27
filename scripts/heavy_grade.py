@@ -344,14 +344,19 @@ def grade_all() -> dict:
     for c in cases:
         if c.get("candidate") and c["relation"] in RELS:
             pooled[c["relation"]].append(c)
+    # the record can never contradict "connected" (nothing says two tickets are unconnected), so for it only the
+    # strict count is honest: unlinked answers count as not shown to be right
+    denom = lambda rel, p_: p_["n"] if rel == "related" else p_["confirmed"] + p_["contradicted"]  # noqa: E731
     for rel, rows in pooled.items():  # every kind together ("part of" can only be confirmed through the parent field)
         p_ = prec(rows)
-        claim(f"\"{plain[rel]}\" suggestions are right (all models, all kinds of case)", p_["confirmed"], p_["confirmed"] + p_["contradicted"])
+        claim(f"\"{plain[rel]}\" suggestions are right (all models, all kinds of case"
+              + (", unlinked counted as not shown" if rel == "related" else "") + ")", p_["confirmed"], denom(rel, p_))
     for e in edge:
         if e["kind"] in STRUCTURAL or e["relation"] == "part_of":
             continue
         what = P.KINDS.get(e["kind"], "tickets in different Apache projects").replace("no recognised pattern", "tickets with no special pattern")
-        claim(f"\"{plain[e['relation']]}\" suggestions are right, for {what}", e["confirmed"], e["confirmed"] + e["contradicted"])
+        claim(f"\"{plain[e['relation']]}\" suggestions are right, for {what}", e["confirmed"],
+              e["n"] if e["relation"] == "related" else e["confirmed"] + e["contradicted"])
     examples, seen_models = [], Counter()
     for c in sorted((c for c in cases if (c.get("confidence") or 0) >= 0.95 and c["grade"] == "contradicted"),
                     key=lambda c: (c["model"], -c["confidence"], c["key"])):
