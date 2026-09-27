@@ -256,7 +256,7 @@ re-proven, which the replay can show when evidence flips.)
 
 ## 5. The dashboard (the demo)
 
-**URL:** https://assay-manager-7474649367590010.aws.databricksapps.com (Databricks login; the Databricks App
+**URL:** https://assay-manager-7474654480147366.aws.databricksapps.com (Databricks login; the Databricks App
 `assay-manager`, FastAPI + one page, code in `app/manager/`). **Free Edition apps stop 24 h after a deploy:** run
 `python scripts/deploy_manager.py` before judging and open the page once to wake the SQL warehouse (first load up to
 a minute).

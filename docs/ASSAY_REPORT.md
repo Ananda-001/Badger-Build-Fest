@@ -9,8 +9,8 @@ Status as of **Saturday 26 September 2026, 21:45 CDT** (submissions close Sunday
 | | Link |
 |---|---|
 | Code | https://github.com/Ananda-001/Badger-Build-Fest (branch `main`) |
-| **Manager dashboard on Databricks (the demo)** | https://assay-manager-7474649367590010.aws.databricksapps.com (Databricks login required; stops 24 h after each deploy). Add `#tour` to the link to open the guided tour. |
-| Review workbench on Databricks (technical view) | https://assay-7474649367590010.aws.databricksapps.com |
+| **Manager dashboard on Databricks (the demo)** | https://assay-manager-7474654480147366.aws.databricksapps.com (Databricks login required; stops 24 h after each deploy). Add `#tour` to the link to open the guided tour. |
+| Review workbench on Databricks (technical view) | Not redeployed after the move to the new workspace (Sep 27); run `python scripts/databricks_deploy.py` to bring it back |
 | Early UI mock (superseded by the dashboard) | https://claude.ai/artifact/MURyj2T5F6QH6ZC4JqfHad |
 | Verdicts in one page | `results/stage-2-3-runs/VERDICTS.md` |
 

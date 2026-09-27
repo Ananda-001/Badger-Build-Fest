@@ -7,13 +7,13 @@ Databricks App.
 ## Quick start for a teammate taking over (current, Sat Sep 26 21:45 CDT)
 
 Everything below the line is the original setup guide (written at 15:00, before the workspace existed). The
-workspace, tables, data and both apps **already exist**; to work on them you only need access and a `.env`.
+workspace, tables, data and the `assay-manager` app **already exist** (the workbench app `assay` was not redeployed after the Sep 27 move); to work on them you only need access and a `.env`.
 
-1. **Get access.** krish invites your email to the workspace (Settings → Identity and access → Users → Add user)
+1. **Get access.** Mohith (`nikesh@wisc.edu`, workspace owner since Sep 27) invites your email to the workspace (Settings → Identity and access → Users → Add user)
    and runs the grants (USE CATALOG `workspace`; all privileges on schema `workspace.assay_triage`; CAN_USE on the
    SQL warehouse; CAN_MANAGE on the apps `assay-manager` and `assay`). Anyone who will deploy or run
    `sync_results.py` also needs `MANAGE` on the schema, granted by name: the deploy script runs `GRANT`s and the sync
-   replaces tables krish owns. Before deploying, follow `CLAUDE.md` §6 (whoever deploys last wins).
+   replaces tables Mohith owns. Before deploying, follow `CLAUDE.md` §6 (whoever deploys last wins).
 2. **Make your own token** (never share one): profile → Settings → Developer → Access tokens → Generate new token.
 3. **Set up the repo:**
    ```bash
@@ -21,8 +21,8 @@ workspace, tables, data and both apps **already exist**; to work on them you onl
    python3 -m venv .venv && source .venv/bin/activate     # Git Bash on Windows: source .venv/Scripts/activate
    pip install -r requirements.txt
    cat > .env <<'ENV'
-   DATABRICKS_HOST=https://dbc-f374519f-f1e1.cloud.databricks.com
-   DATABRICKS_WAREHOUSE_ID=6de382ea82d4b218
+   DATABRICKS_HOST=https://dbc-d5f34a78-6d29.cloud.databricks.com
+   DATABRICKS_WAREHOUSE_ID=7caadfc08a5174fd
    DATABRICKS_TOKEN=<your own token>
    ENV
    python scripts/fetch_data.py        # data/*.jsonl from the volume (git-ignored, 60 MB)

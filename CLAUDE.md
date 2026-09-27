@@ -62,7 +62,7 @@ prove before you trust.
 whether it's a `duplicate` of an earlier ticket, `part_of` an umbrella, `related`, or `none`. It runs on
 **Databricks Free Edition**. Jira is the proving ground; Assay is the product.
 
-**The demo is the manager dashboard**, a Databricks App: https://assay-manager-7474649367590010.aws.databricksapps.com
+**The demo is the manager dashboard**, a Databricks App: https://assay-manager-7474654480147366.aws.databricksapps.com
 (Databricks login; add `#tour` for the guided tour). Report §8.8 describes every panel.
 
 **Challenges:** Applied AI & Automation track, plus **Databricks Real-World Workflows (Xorbix)** and **The Art of
@@ -195,11 +195,11 @@ prints 12 tables. On Windows PowerShell, put multi-line Python in a file; inline
 
 ## 6. Working with Databricks (shared workspace)
 
-**Workspace:** `https://dbc-f374519f-f1e1.cloud.databricks.com`, Free Edition, SQL warehouse `6de382ea82d4b218`.
+**Workspace:** `https://dbc-d5f34a78-6d29.cloud.databricks.com`, Free Edition, SQL warehouse `7caadfc08a5174fd`.
 `.env` needs `DATABRICKS_HOST`, `DATABRICKS_WAREHOUSE_ID` and your own `DATABRICKS_TOKEN`. Access steps are at the
 top of `docs/DATABRICKS_SETUP.md`.
 
-**What lives where** (Unity Catalog `workspace.assay_triage`, owned by krish, `guruvayoorra@wisc.edu`):
+**What lives where** (Unity Catalog `workspace.assay_triage`, owned by Mohith, `nikesh@wisc.edu`, since the Sep 27 move off the old workspace):
 
 | What | Where |
 |---|---|
@@ -213,7 +213,7 @@ top of `docs/DATABRICKS_SETUP.md`.
 **Permissions a teammate needs:** `USE CATALOG` on `workspace`; `USE SCHEMA, SELECT, MODIFY, CREATE TABLE,
 READ VOLUME, WRITE VOLUME` on the schema; `CAN_USE` on the warehouse; `CAN_MANAGE` on both apps. **Also `MANAGE` on
 the schema** for anyone who deploys or rebuilds tables: `deploy_manager.py` runs `GRANT`s for the app's service
-principal, and `sync_results.py` / `precedents.py` use `CREATE OR REPLACE TABLE` on tables krish owns. Without it
+principal, and `sync_results.py` / `precedents.py` use `CREATE OR REPLACE TABLE` on tables Mohith owns. Without it
 they fail partway (deploy uploads the files, then stops at the `GRANT`). Grant `MANAGE` explicitly by name.
 
 **Before any deploy (`deploy_manager.py` or `databricks_deploy.py`), Claude:**

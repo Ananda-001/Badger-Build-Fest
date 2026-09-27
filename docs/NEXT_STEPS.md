@@ -22,7 +22,7 @@ learning gate) is **done**; it is in the git history of this file. Results are i
 
 ## Track B: Test the dashboard like a manager would (30 min, everyone)
 
-1. Open https://assay-manager-7474649367590010.aws.databricksapps.com (add `#tour`), take the 12-step tour.
+1. Open https://assay-manager-7474654480147366.aws.databricksapps.com (add `#tour`), take the 12-step tour.
 2. Answer a few suggestions; watch "answered by you" and the trust bars move. Press "Check new tickets now" once.
 3. Write anything confusing, broken or ugly into the **Log** below (time, who, what, screenshot if it helps).
 4. Don't answer suggestions at random: every Yes / No is saved to `actions` and becomes evidence.

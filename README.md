@@ -15,7 +15,7 @@ and whether a change actually helped. Built on Databricks.**
 
 **Badger BuildFest 2026** · Applied AI & Automation · Databricks Real-World Workflows (Xorbix) · The Art of the Break
 
-[**Live dashboard**](https://assay-manager-7474649367590010.aws.databricksapps.com) ·
+[**Live dashboard**](https://assay-manager-7474654480147366.aws.databricksapps.com) ·
 [**Final handoff**](docs/FINAL_HANDOFF.md) ·
 [**Full report**](docs/ASSAY_REPORT.md) ·
 [**Break Card**](docs/META_ART_OF_BREAK_CARD.md) ·
@@ -160,7 +160,7 @@ raw evidence: [`results/heavy-eval/`](results/heavy-eval/).
 
 ## The dashboard
 
-**[assay-manager-7474649367590010.aws.databricksapps.com](https://assay-manager-7474649367590010.aws.databricksapps.com)**
+**[assay-manager-7474654480147366.aws.databricksapps.com](https://assay-manager-7474654480147366.aws.databricksapps.com)**
 (a Databricks App; workspace login required). Designed for a manager who has never written a prompt.
 
 - **Key figures** and a **live replay**: press play and watch the verdicts form as tickets arrive. Models change
