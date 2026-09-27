@@ -356,7 +356,7 @@ Proven rows in Evidence coverage.
 
 The current presentation is **`docs/Assay_Presentation_v7.pptx`**, in the repository. v7 is v6 with the Assay
 logo on the title slide; nothing else changed. Versions v3–v6 are kept locally, outside the repository, and v7
-supersedes them for this pitch. The earlier Slides artifact and `docs/Assay_Presentation.pptx` are not the final deck.
+supersedes them for this pitch. The earlier Slides artifact and the first deck (kept on the `old` branch) are not the final deck.
 
 1. **Assay:** the manager for your AI agents; agents earn their freedom with evidence.
 2. **Market and risk:** incorporates slide 3 from the user's Downloads copy of `Assay_Presentation_v3.pptx`.

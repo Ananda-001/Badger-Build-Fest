@@ -13,7 +13,7 @@ workspace, tables, data and the `assay-manager` app **already exist** (the workb
    and runs the grants (USE CATALOG `workspace`; all privileges on schema `workspace.assay_triage`; CAN_USE on the
    SQL warehouse; CAN_MANAGE on the apps `assay-manager` and `assay`). Anyone who will deploy or run
    `sync_results.py` also needs `MANAGE` on the schema, granted by name: the deploy script runs `GRANT`s and the sync
-   replaces tables Mohith owns. Before deploying, follow `CLAUDE.md` §6 (whoever deploys last wins).
+   replaces tables Mohith owns. Before deploying, agree who deploys: the last deploy replaces the app for everyone.
 2. **Make your own token** (never share one): profile → Settings → Developer → Access tokens → Generate new token.
 3. **Set up the repo:**
    ```bash

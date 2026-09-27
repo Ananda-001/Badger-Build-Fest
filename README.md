@@ -284,7 +284,6 @@ tests/            engine, app, grader, precedent and security tests
 | [`docs/ASSAY_REPORT.md`](docs/ASSAY_REPORT.md) ([PDF](docs/ASSAY_REPORT.pdf)) | the build story, methods and earlier results |
 | [`docs/SUBMISSION_KIT.md`](docs/SUBMISSION_KIT.md) | Devpost answers and video script |
 | [`results/heavy-eval/REPORT.md`](results/heavy-eval/REPORT.md) | the evaluation's generated report |
-| [`CLAUDE.md`](CLAUDE.md) | the team's working rules |
 
 ## Team
 
